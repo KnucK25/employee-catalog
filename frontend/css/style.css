@@ -1,0 +1,222 @@
+:root {
+    --alt: #F1EEE6;       /* бежевый для акцентных секций */
+    --white: #FFFFFF;     /* белый для карточек */
+    --black: #000000;      /* черный */
+    --accent-gold: #C29F64;  /* золотой акцентный */
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-hero);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* НАВИГАЦИЯ */
+.navbar {
+    background-color: var(--black) !important;
+    padding: 1.2rem 0;
+}
+
+.navbar-brand {
+    color: var(--accent-gold) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-left: 1rem;
+}
+
+.nav-link.active, .nav-link:hover {
+    color: var(--accent-gold) !important;
+}
+
+/* HERO СЕКЦИЯ */
+header {
+    background-color:var(--white);
+    background-image: url(../img/hero2.png);
+    background-size: cover;       
+    background-position: center;
+    background-repeat: no-repeat; 
+    padding-bottom: 4rem;
+    min-height: 75vh; 
+}
+
+header h1 {
+    font-weight: 800;
+    font-size: 3rem;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+header .lead {
+    color: var(--accent-gold);
+    font-size: 1.15rem;
+    margin-bottom: 2rem;
+}
+
+header .mx-auto {
+    color: var(--alt);
+    font-size: 1rem;
+    max-width: 650px;
+    margin-bottom: 4rem;
+    opacity: 75%;
+}
+
+/* КНОПКИ */
+header .btn {
+    padding: 1rem 2rem;
+    font-weight: 600;
+    border-radius: 0;
+    min-width: 220px;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+header .btn:first-child {
+    background-color: var(--accent-gold);
+    color: #111;
+    border: 1px solid var(--accent-gold);
+}
+
+header .btn:first-child:hover {
+    background-color: transparent;
+    color: #fff;
+}
+
+header .btn:last-child {
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255);
+}
+
+header .btn:last-child:hover {
+    background-color: #fff;
+    color: #111;
+    border-color: #111;
+}
+
+/* Золотая линия под заголовками секций */
+section h2 {
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 3rem;
+    position: relative;
+    display: inline-block;
+}
+
+section h2::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 2px;
+    background-color: var(--accent-gold);
+    margin: 1.25rem auto 0;
+}
+
+/* СЕКЦИЯ 1: О НАС*/
+
+.about-section .fs-1 {
+    color: var(--accent-gold);
+    font-weight: 700;
+    font-size: 3rem !important;
+}
+
+.about-section .small {
+    color: var(--black);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* СЕКЦИЯ 2: НАШИ ПРЕИМУЩЕСТВА*/
+.advantages-section {
+    background-color: var(--alt);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.advantages-section .h-100 {
+    background-color: var(--white);
+    padding: 3.5rem 2rem;
+    text-align: center;
+    border: 1px solid rgba(194, 160, 106, 0.4);
+    outline: 1px solid rgba(194, 160, 106, 0.4);
+    outline-offset: -6px;
+}
+
+.advantages-section h4 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.advantages-section p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* СЕКЦИЯ 3: СТАТИСТИКА*/
+.stats-section {
+    background-color: var(--black);
+}
+
+.stats-section .fs-1 {
+    color: var(--accent-gold);
+    font-weight: 700;
+    font-size: 3.5rem !important;
+    margin-bottom: 0.25rem;
+}
+
+.stats-section .small {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+}
+
+/* СЕКЦИЯ 4:КОМАНДА*/
+.team-section {
+    background-color: var(--alt);
+}
+
+.team-section img {
+    border: 1px solid rgba(194, 160, 106, 0.8);
+    padding: 3px;
+    background-color: var(--bg-cards);
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: cover;
+}
+
+.team-section .col-md-4 .text-center{
+    background-color: var(--white);
+    padding: 3rem 0.5rem;
+    text-align: center;
+    border: 1px solid rgba(194, 160, 106, 0.4);
+    outline: 1px solid rgba(194, 160, 106, 0.4);
+    outline-offset: -6px;
+}
+
+.team-section h4 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--black);
+}
+
+.team-section .text-secondary {
+    color: var(--black) !important;
+    font-weight: 500;
+}
+/* ФУТЕР */
+footer {
+    background-color: var(--black);
+}
+
+footer p {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+}
+
