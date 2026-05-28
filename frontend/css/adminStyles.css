@@ -1,0 +1,250 @@
+/* -- Цветовая палитра -- */
+:root {
+    --alt: #F1EEE6;           /* бежевый для акцентных секций */
+    --white: #FFFFFF;         /* белый для карточек */
+    --black: #000000;          /* черный */
+    --accent-gold: #C29F64;  /* золотой акцентный */
+}
+
+/* --- Общие стили --- */
+body {
+    background-color: var(--white);
+    color: var(--black);
+    font-family: 'Arial', sans-serif;
+}
+
+/* --- Шапка --- */
+.navbar-custom {
+    background-color: var(--black);
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    color: var(--accent-gold);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar-nav .nav-link {
+    color: var(--white);
+    margin-left: 1rem;
+    position: relative;
+    transition: color 0.3s ease-in-out;
+    opacity: 0.7;
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--accent-gold);
+    opacity: 1;
+}
+
+.navbar-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background-color: var(--accent-gold);
+    transition: width 0.3s ease-in-out;
+}
+
+.navbar-nav .nav-link:hover::after {
+    width: 100%;
+}
+
+/* --- поиск сотрудников --- */
+.search-section-dark {
+    background-color: var(--black);
+    width: 75%;
+    margin: 0 auto 2rem auto;
+    border-radius: 0px;
+    padding: 2.5rem 0;
+}
+
+.search-section-dark .container {
+    max-width: 100%;
+    padding: 0 2rem;
+}
+
+/* Карточка внутри темной секции */
+.search-section-dark .card {
+    background-color: transparent;
+}
+
+/* Заголовок "ПОИСК СОТРУДНИКА" */
+.search-section-dark .card-title-search {
+    color: var(--accent-gold);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+}
+
+/* Группа input */
+.search-section-dark .container {
+    max-width: 75%;
+    padding: 0 2rem;
+}
+
+
+.search-section-dark .input-group {
+    background-color: var(--white);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+/* Иконка поиска */
+.search-section-dark .input-group-text {
+    background-color: var(--white);
+    border: none;
+    color: #999;
+    padding: 0.75rem 1rem;
+}
+
+/* Поле ввода */
+.search-section-dark .form-control {
+    border: none;
+    padding: 0.75rem 0.5rem;
+    font-size: 0.95rem;
+    color: var(--black);
+}
+
+.search-section-dark .form-control:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.search-section-dark .form-control::placeholder {
+    color: #aaa;
+}
+
+/* Кнопка "Найти" */
+.search-section-dark .btn-gold-search {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease;
+}
+
+.search-section-dark .btn-gold-search:hover {
+    background-color: var(--black);
+}
+
+.search-section-dark .btn-gold-search:active {
+    background-color: var(--black);
+}
+
+/* Выпадающий список */
+.search-section-dark .dropdown-toggle {
+    background-color: var(--white);
+    border: none;
+    color: var(--black);
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    width: 100%;
+    text-align: left;
+    border-radius: 6px;
+}
+
+.search-section-dark .dropdown-toggle:hover {
+    background-color: var(--alt);
+}
+
+.search-section-dark .dropdown-toggle:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+.search-section-dark .dropdown-menu {
+    border: 1px solid var(--alt);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 0.5rem;
+}
+
+.search-section-dark .dropdown-item {
+    padding: 0.6rem 1.2rem;
+    color: var(--black);
+    font-size: 0.9rem;
+    transition: all 0.15s ease;
+}
+
+.search-section-dark .dropdown-item:hover {
+    background-color: var(--alt);
+    color: var(--accent-gold);
+}
+
+.search-section-dark .dropdown-item.active {
+    background-color: var(--accent-gold);
+    color: var(--white);
+}
+
+/* --- Дополнительные цвета для статистики, кнопок и т.д. --- */
+.btn-gold {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: 1px solid var(--accent-gold);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.btn-gold:hover {
+    background-color: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+}
+
+.btn-outline-dark-primary {
+    background-color: transparent;
+    color: var(--black);
+    border: 1px solid var(--black);
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.btn-outline-dark-primary:hover {
+    background-color: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+}
+
+/* --- Общая обертка с обводкой --- */
+.admin-table-wrapper {
+    background-color: var(--white);
+    border: 2px solid var(--accent-gold);
+}
+
+/* --- Заголовки столбцов --- */
+.admin-header-row {
+    background-color: var(--alt);
+    border-bottom: 2px solid var(--accent-gold);
+}
+
+.admin-header-row h6 {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: var(--black);
+}
+
+/* --- Карточка сотрудника --- */
+.admin-employee-row {
+    background-color: var(--white);
+    border-bottom: 1px solid var(--alt);
+}
+
+.admin-employee-row:last-child {
+    border-bottom: none;
+}
+
+/* --- Фото сотрудника с закруглением --- */
+.admin-employee-row img.rounded-circle {
+    border-radius: 8px !important;
+    border: 2px solid var(--accent-gold);
+}
