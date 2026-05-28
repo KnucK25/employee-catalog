@@ -13,46 +13,28 @@ body {
     font-family: 'Arial', sans-serif;
 }
 
-/* --- Шапка --- */
-.navbar-custom {
-    background-color: var(--black);
-    padding: 1rem 0;
+/* НАВИГАЦИЯ */
+.navbar {
+    background-color: var(--black) !important;
+    padding: 1.2rem 0;
 }
 
 .navbar-brand {
-    color: var(--accent-gold);
-    font-size: 1.5rem;
-    font-weight: bold;
+    color: var(--accent-gold) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.3rem;
 }
 
-.navbar-nav .nav-link {
-    color: var(--white);
+.nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
     margin-left: 1rem;
-    position: relative;
-    transition: color 0.3s ease-in-out;
-    opacity: 0.7;
 }
 
-.navbar-nav .nav-link.active {
-    color: var(--accent-gold);
-    opacity: 1;
+.nav-link.active, .nav-link:hover {
+    color: var(--accent-gold) !important;
 }
 
-.navbar-nav .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 3px;
-    background-color: var(--accent-gold);
-    transition: width 0.3s ease-in-out;
-}
-
-.navbar-nav .nav-link:hover::after {
-    width: 100%;
-}
 
 /* --- поиск сотрудников --- */
 .search-section-dark {
@@ -334,3 +316,14 @@ body {
     max-width: 75%;
     padding: 0 2rem;
 }
+
+/* ФУТЕР */
+footer {
+    background-color: var(--black);
+}
+
+footer p {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+}
+

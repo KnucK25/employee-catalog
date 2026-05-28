@@ -13,33 +13,20 @@
   <body>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-custom">
+        <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <!-- Название компании -->
+                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;"><br>
                 <a class="navbar-brand" href="#">Staff</a>
 
-                <!-- Разделитель, чтобы ссылки были справа -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button>
+                </button> <!-- бургер для телефонов -->
 
-                <!-- Ссылки на страницы -->
-                <!-- Добавляем класс 'active' к той ссылке, которая соответствует текущей странице -->
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            
-                            <a class="nav-link" href="#">Главная</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#">Сотрудники</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Отделы</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Профиль</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Профиль</a></li>                
                     </ul>
                 </div>
             </div>
@@ -169,14 +156,13 @@
 
     </main>
 
-    <footer>
+    <!-- ФУТЕР -->
+    <footer class="text-center py-5">
         <div class="container">
-            <p class="mb-0">© 2026 Название.<br>
-            <span class="footer-copyright">Все права защищены.</span></p>
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
         </div>
     </footer>
-
-
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
