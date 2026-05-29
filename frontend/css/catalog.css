@@ -6,62 +6,53 @@
     --accent-gold: #C29F64;   /* золотой акцентный */
 }
 
-/* Фикс для прижатия футера к низу */
+/* ГЛОБАЛЬНЫЕ СТИЛИ  */
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    /* Верхняя часть страницы (заголовок) должна быть на белом фоне */
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background-color: var(--white); 
     color: var(--black);
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* Контент занимает всё свободное место */
 main {
-    flex: 1;
+    flex: 1 0 auto;
 }
 
 /* НАВИГАЦИЯ */
-header {
-    background-color: var(--black);
-}
-
-.navbar {
+.navbar.navbar {
     background-color: var(--black) !important;
-    padding: 1.2rem 0;
+    padding: 1.2rem 0 !important;
 }
 
-.navbar-brand {
+.navbar .navbar-brand {
     color: var(--accent-gold) !important;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1.3rem;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
 }
 
-.nav-link {
-    color: var(--white) !important;
-    opacity: 0.9;
-    margin-left: 1rem;
+.navbar .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
 }
 
-.nav-link.active, .nav-link:hover {
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
     color: var(--accent-gold) !important;
-    opacity: 1;
 }
 
-.navbar-toggler {
-    border-color: var(--white);
-}
-
-/* ЗАГОЛОВОК И ОТСТУПЫ*/
-
+/* ЗАГОЛОВКИ СТРАНИЦ  */
 .display-3 {
     font-size: 2.5rem;
     letter-spacing: -1px;
@@ -69,7 +60,8 @@ header {
 }
 
 .text-secondary {
-    color: var(--gray-text) !important;
+    color: var(--black) !important;
+    opacity: 0.6;
 }
 
 /* БЛОК ПОИСКА */
@@ -78,22 +70,15 @@ header {
     width: 75%;
     margin: 0 auto !important; 
     border-radius: 0;
-    padding: 2.5rem 0;
-    
-    /* Сдвигаем блок вниз ровно на половину его высоты */
+    padding: 2.5rem 0; 
     position: relative;
     z-index: 10;
-    transform: translateY(50%);
+    transform: translateY(50%); /* Сдвиг для наложения */
 }
 
 .search-section-dark .container {
     max-width: 100%;
     padding: 0 2rem;
-}
-
-.search-section-dark .card {
-    background-color: transparent !important;
-    border-radius: 0;
 }
 
 .search-section-dark .card-title-search {
@@ -105,27 +90,21 @@ header {
     text-transform: uppercase;
 }
 
-/* Инпуты и выпадающие списки */
+/* Поле ввода + кнопка */
 .search-section-dark .input-group {
     background-color: var(--white);
     border-radius: 0;
-}
-
-.search-section-dark .input-group-text {
-    background-color: var(--white);
-    border: none;
-    color: var(--gray-text); 
-    padding: 0.75rem 1rem;
-    border-radius: 0;
+    height: 45px; 
 }
 
 .search-section-dark .form-control {
     border: none;
-    padding: 0.75rem 0.5rem;
+    padding: 0.75rem 1rem;
     font-size: 0.95rem;
     color: var(--black);
     background-color: var(--white) !important;
     border-radius: 0;
+    height: 100%;
 }
 
 .search-section-dark .form-control:focus {
@@ -134,65 +113,67 @@ header {
 }
 
 .search-section-dark .form-control::placeholder {
-    color: var(--gray-text);
+    color: var(--black);
+    opacity: 0.4;
 }
 
 .search-section-dark .btn-gold-search {
     background-color: var(--accent-gold);
     color: var(--white);
     border: none;
-    padding: 0.75rem 2rem;
+    padding: 0 2rem;
     font-size: 0.9rem;
     font-weight: 500;
     letter-spacing: 0.5px;
     text-transform: uppercase;
     border-radius: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
 }
 
 .search-section-dark .btn-gold-search:hover {
-    background-color: #A98751; 
+    background-color: var(--white); 
+    color: var(--black);
 }
 
-.search-section-dark .dropdown-toggle {
+/* Выпадающий список отделов */
+.custom-select-flat {
     background-color: var(--white);
-    border: none;
     color: var(--black);
+    border: none;
+    border-radius: 0 !important;
     padding: 0.75rem 1rem;
     font-size: 0.95rem;
+    box-shadow: none !important;
+    cursor: pointer;
+    height: 45px;
     width: 100%;
-    text-align: left;
-    border-radius: 0;
 }
 
-.search-section-dark .dropdown-menu {
-    border: 1px solid var(--accent-gold);
-    border-radius: 0;
-    margin-top: 0.5rem;
-    background-color: var(--white);
+.custom-select-flat:focus {
+    box-shadow: none;
+    outline: none;
+    border: none;
 }
 
-.search-section-dark .dropdown-item:hover {
-    background-color: var(--alt);
-    color: var(--accent-gold);
-}
-
-/*  СЕКЦИЯ С КАРТОЧКАМИ СОТРУДНИКОВ*/
+/*  ОСНОВНАЯ СЕКЦИЯ  */
 .employees-section-full-width {
     background-color: var(--alt);
     width: 100%;
-    padding-top: 10rem; /* Отступ сверху под сдвинутый блок поиска */
+    padding-top: 10rem; /* Отступ под наложенную черную панель */
     padding-bottom: 4rem;
     position: relative;
     z-index: 1;
     border-top: 2px solid var(--accent-gold);
 }
 
-/* КАРТОЧКА СОТРУДНИКА */
+/* КАРТОЧКИ СОТРУДНИКОВ  */
 .employee-card {
     background-color: var(--white);
-    
     border: 2px solid var(--accent-gold);
-    
     border-radius: 0;
     height: 100%;
     padding: 20px;
@@ -200,7 +181,7 @@ header {
     flex-direction: column;
 }
 
-/* Фото сотрудника */
+/* Фото сотрудника (круглое) */
 .employee-photo {
     width: 150px;
     height: 150px;
@@ -217,7 +198,7 @@ header {
     object-fit: cover;
 }
 
-/* Информация */
+/* Информация о сотруднике */
 .employee-info {
     padding: 0;
     display: flex;
@@ -243,10 +224,11 @@ header {
 
 .employee-department {
     font-size: 0.85rem;
-    color: var(--gray-text);
+    color: var(--black);
+    opacity: 0.6;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--gray-light);
+    border-bottom: 1px solid var(--alt);
     width: 100%;
 }
 
@@ -277,15 +259,17 @@ header {
     color: var(--white);
 }
 
-/* ФУТЕР*/
+/* ФУТЕР */
 footer {
     background-color: var(--black);
-    height: 120px;
-    display: flex;
-    align-items: center;
+    flex-shrink: 0;
+    width: 100%;
+    padding: 2rem 0;
 }
 
 footer p {
     color: var(--accent-gold);
     font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
 }

@@ -6,109 +6,107 @@
     <title>Карточка сотрудника</title>
     
     <!-- Подключение Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Ваш файл стилей -->
     <link rel="stylesheet" href="css/card.css">
 </head>
-<body class="bg-light">
+<body>
 
-    <!-- ШАПКА САЙТА (Заполните сами) -->
-    <header>
-        <nav class="navbar navbar-expand-lg sticky-top">
-            <div class="container">
-                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;"><br>
-                <a class="navbar-brand" href="#">Staff</a>
+    <!-- НАВИГАЦИЯ -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+            <a class="navbar-brand" href="#">Staff</a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button> <!-- бургер для телефонов -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
-                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Профиль</a></li>                
-                    </ul>
-                </div>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                    <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Профиль</a></li>               
+                </ul>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
 
-    <main class="container my-5 d-flex justify-content-center">
-        
-        <div class="card employee-card shadow-sm w-100">
-            
-            <div class="card-header dark-header py-3 px-4">
-                <h5 class="mb-0 text-white">Информация о сотруднике</h5>
-            </div>
+    <main>
+        <div class="container my-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card employee-card w-100">
+                        <div class="card-header dark-header py-3 px-4">
+                            <h5 class="mb-0 text-white">Информация о сотруднике</h5>
+                        </div>
 
-            <div class="card-body p-4">
-                <div class="row g-4">
-                    
-                    <div class="col-md-5 col-lg-4">
-                        <img src="img/team3.png" alt="Фото сотрудника" class="img-fluid rounded employee-photo w-100">
-                    </div>
-
-                    <div class="col-md-7 col-lg-8">
-                        <h3 class="fw-bold mb-1 employee-name"></h3>
-                        <p class="text-muted mb-3"></p>
-
-                        <div class="info-box p-3 p-md-4">
-                            <div class="row g-3 mb-3">
-                                
-                                <div class="col-sm-6 d-flex align-items-start">
-                                    <img class="fa-solid fa-envelope info-icon mt-1 me-2" src="img/gmail.png">
-                                    <div>
-                                        <div class="info-label">EMAIL</div>
-                                        <div class="info-value"></div>
-                                    </div>
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-5 col-lg-4">
+                                    <img src="" alt="Фото сотрудника" class="img-fluid employee-photo w-100">
                                 </div>
-                         
-                                <div class="col-sm-6 d-flex align-items-start">
-                                    <img src="img/phone.png" class="fa-solid fa-phone info-icon mt-1 me-2">
-                                    <div>
-                                        <div class="info-label">ТЕЛЕФОН</div>
-                                        <div class="info-value"></div>
-                                    </div>
-                                </div>
-                         
-                                <div class="col-sm-6 d-flex align-items-start">
-                                    <img src="img/otdel.png" class="fa-solid fa-location-dot info-icon mt-1 me-2">
-                                    <div>
-                                        <div class="info-label">ОТДЕЛ</div>
-                                        <div class="info-value"></div>
-                                    </div>
-                                </div>
-                             
-                                <div class="col-sm-6 d-flex align-items-start">
-                                    <img src="img/calendar.png" class="fa-calendar-days info-icon mt-1 me-2">
-                                    <div>
-                                        <div class="info-label">ДАТА НАЙМА</div>
-                                        <div class="info-value"></div>
-                                    </div>
-                                </div>
-                            </div>
 
-                          
-                            <div class="d-flex align-items-start">
-                                <img src="img/bio.png" class="fa-solid fa-user-tie info-icon mt-1 me-2">
-                                <div>
-                                    <div class="info-label">БИОГРАФИЯ</div>
-                                    <div class="info-value bio-text">
+                                <div class="col-md-7 col-lg-8">
+                                    <h3 class="fw-bold mb-1 employee-name"></h3>
+                                    <p class="text-muted mb-3"></p>
+
+                                    <div class="info-box p-3 p-md-4">
+                                        <div class="row g-3 mb-3">
+                                            <div class="col-sm-6 d-flex align-items-start">
+                                                <img src="img/gmail.png" class="info-icon mt-1 me-2" style="width: 20px; height: 20px;">
+                                                <div>
+                                                    <div class="info-label">EMAIL</div>
+                                                    <div class="info-value"></div>
+                                                </div>
+                                            </div>
+                                     
+                                            <div class="col-sm-6 d-flex align-items-start">
+                                                <img src="img/phone.png" class="info-icon mt-1 me-2" style="width: 20px; height: 20px;">
+                                                <div>
+                                                    <div class="info-label">ТЕЛЕФОН</div>
+                                                    <div class="info-value"></div>
+                                                </div>
+                                            </div>
+                                     
+                                            <div class="col-sm-6 d-flex align-items-start">
+                                                <img src="img/otdel.png" class="info-icon mt-1 me-2" style="width: 20px; height: 20px;">
+                                                <div>
+                                                    <div class="info-label">ОТДЕЛ</div>
+                                                    <div class="info-value"></div>
+                                                </div>
+                                            </div>
+                                         
+                                            <div class="col-sm-6 d-flex align-items-start">
+                                                <img src="img/calendar.png" class="info-icon mt-1 me-2" style="width: 20px; height: 20px;">
+                                                <div>
+                                                    <div class="info-label">ДАТА НАЙМА</div>
+                                                    <div class="info-value"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-start">
+                                            <img src="img/bio.png" class="info-icon mt-1 me-2" style="width: 20px; height: 20px;">
+                                            <div>
+                                                <div class="info-label">БИОГРАФИЯ</div>
+                                                <div class="info-value bio-text"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
+                        <div class="card-footer bg-transparent border-0 text-end pb-4 pe-4">
+                            <button type="button" class="btn btn-custom-outline ms-2">
+                                <a class="nav-link" href="catalog.html" style="display: inline-block; padding: 0;">Назад</a>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="card-footer bg-transparent border-0 text-end pb-4 pe-4">
-                <!-- <button type="button" class="btn btn-custom-outline">Редактировать</button> -->
-                <button type="button" class="btn btn-custom-outline ms-2"><a class="nav-link" href="catalog.html">Назад</button>
-            </div>
-
         </div>
     </main>
 
@@ -120,7 +118,7 @@
         </div>
     </footer>
 
-    <!-- Скрипт Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/pages/card.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
