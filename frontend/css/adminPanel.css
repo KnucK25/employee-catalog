@@ -1,4 +1,4 @@
-/* -- Цветовая палитра -- */
+/* -- Цветовая палитра (СТРОГО 4 ЦВЕТА) -- */
 :root {
     --alt: #F1EEE6;           /* бежевый для акцентных секций */
     --white: #FFFFFF;         /* белый для карточек */
@@ -6,7 +6,7 @@
     --accent-gold: #C29F64;   /* золотой акцентный */
 }
 
-/* Фикс для прижатия футера к низу */
+/* --- Общие стили --- */
 html, body {
     height: 100%;
     margin: 0;
@@ -16,23 +16,17 @@ html, body {
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    /* Верхняя часть страницы (заголовок) должна быть на белом фоне */
+    font-family: 'Inter', 'Arial', sans-serif;
     background-color: var(--white); 
     color: var(--black);
     flex: 1;
 }
 
-/* Контент занимает всё свободное место */
 main {
     flex: 1;
 }
 
 /* НАВИГАЦИЯ */
-header {
-    background-color: var(--black);
-}
-
 .navbar {
     background-color: var(--black) !important;
     padding: 1.2rem 0;
@@ -46,21 +40,17 @@ header {
 }
 
 .nav-link {
-    color: var(--white) !important;
-    opacity: 0.9;
+    color: rgba(255, 255, 255, 0.9) !important;
     margin-left: 1rem;
 }
 
 .nav-link.active, .nav-link:hover {
     color: var(--accent-gold) !important;
-    opacity: 1;
 }
-
-.navbar-toggler {
-    border-color: var(--white);
+/* --- ЗАГОЛОВОК И ОТСТУПЫ --- */
+section.container.mt-5.mb-5 {
+    margin-bottom: 0.5rem !important; 
 }
-
-/* ЗАГОЛОВОК И ОТСТУПЫ*/
 
 .display-3 {
     font-size: 2.5rem;
@@ -69,7 +59,8 @@ header {
 }
 
 .text-secondary {
-    color: var(--gray-text) !important;
+    color: var(--black) !important;
+    opacity: 0.6;
 }
 
 /* БЛОК ПОИСКА */
@@ -176,113 +167,102 @@ header {
     color: var(--accent-gold);
 }
 
-/*  СЕКЦИЯ С КАРТОЧКАМИ СОТРУДНИКОВ*/
+/* --- БЕЖЕВАЯ СЕКЦИЯ (Нижний фон) --- */
 .employees-section-full-width {
     background-color: var(--alt);
     width: 100%;
-    padding-top: 10rem; /* Отступ сверху под сдвинутый блок поиска */
+    padding-top: 10rem; /* Место под блок поиска */
     padding-bottom: 4rem;
     position: relative;
     z-index: 1;
     border-top: 2px solid var(--accent-gold);
 }
 
-/* КАРТОЧКА СОТРУДНИКА */
-.employee-card {
+/* --- ТАБЛИЦА АДМИНА --- */
+.admin-table-wrapper {
     background-color: var(--white);
-    
     border: 2px solid var(--accent-gold);
-    
     border-radius: 0;
-    height: 100%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+    margin-bottom: 2rem;
 }
 
-/* Фото сотрудника */
-.employee-photo {
-    width: 150px;
-    height: 150px;
-    margin: 0 auto 15px;
-    overflow: hidden;
-    border-radius: 50%;
-    border: 3px solid var(--accent-gold);
-    flex-shrink: 0;
-}
-
-.employee-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Информация */
-.employee-info {
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    flex-grow: 1;
-}
-
-.employee-name {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--black);
-    margin-bottom: 0.25rem;
-}
-
-.employee-position {
-    font-size: 0.9rem;
-    color: var(--accent-gold);
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-}
-
-.employee-department {
-    font-size: 0.85rem;
-    color: var(--gray-text);
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--gray-light);
-    width: 100%;
-}
-
-/* Кнопка "Подробнее" */
-.btn-details {
+/* Шапка таблицы */
+.admin-header-row {
     background-color: var(--black);
     color: var(--white);
-    border: 1px solid var(--black);
-    padding: 0;
-    font-size: 0.9rem;
-    font-weight: 500;
+    margin: 0;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid var(--accent-gold);
+}
+
+.admin-header-row h6 {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+/* Строка сотрудника */
+.admin-employee-row {
+    background-color: var(--white);
+    margin: 0;
+    padding: 1rem 1.5rem;
+    border-bottom: 2px solid var(--alt);
+}
+
+.admin-employee-row:last-child {
+    border-bottom: none;
+}
+
+.admin-employee-row:hover {
+    background-color: var(--alt); 
+}
+
+/* Фото сотрудника  */
+.admin-employee-photo {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important; /* Убираем круги */
+    background-color: var(--white);
+}
+
+/* Тексты в таблице */
+.admin-employee-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--black);
+    margin-bottom: 0.2rem;
+}
+
+.admin-employee-text {
+    font-size: 0.85rem;
+    color: var(--black);
+    opacity: 0.6;
+}
+
+/* Кнопки действий (Редактировать / Удалить) */
+.btn-action-icon {
+    background-color: transparent;
+    border: 2px solid transparent;
+    padding: 0.4rem;
     border-radius: 0;
-    margin-top: auto;
-    width: 100%;
-    height: 35px;
 }
 
-.btn-details a {
-    color: inherit;
-    text-decoration: none;
-    display: block;
-    padding: 0.5rem 1rem;
+.btn-action-icon:focus,
+.btn-action-icon:active,
+.btn-action-icon:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: transparent !important; /* Жестко оставляем рамку прозрачной при клике */
 }
 
-.btn-details:hover {
-    background-color: var(--accent-gold);
-    border-color: var(--accent-gold);
-    color: var(--white);
-}
-
-/* ФУТЕР*/
+/* ФУТЕР */
 footer {
     background-color: var(--black);
     height: 120px;
-    display: flex;
-    align-items: center;
 }
 
 footer p {
