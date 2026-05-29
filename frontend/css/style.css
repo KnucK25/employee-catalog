@@ -12,25 +12,31 @@ body {
     line-height: 1.6;
 }
 
-/* НАВИГАЦИЯ */
-.navbar {
+/* ============================================ */
+/* НАВИГАЦИЯ (усиленные селекторы для переопределения Bootstrap) */
+/* ============================================ */
+.navbar.navbar {
     background-color: var(--black) !important;
-    padding: 1.2rem 0;
+    padding: 1.2rem 0 !important;
 }
 
-.navbar-brand {
+.navbar .navbar-brand {
     color: var(--accent-gold) !important;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1.3rem;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
 }
 
-.nav-link {
+.navbar .navbar-nav .nav-link {
     color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
 }
 
-.nav-link.active, .nav-link:hover {
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
     color: var(--accent-gold) !important;
 }
 
@@ -222,3 +228,128 @@ footer p {
     font-size: 0.9rem;
 }
 
+
+
+/* ===== Стили для модального окна авторизации ===== */
+
+/* Контейнер модального окна — убираем тени и скругления */
+.modal-content {
+    background-color: var(--white);
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Шапка модального окна */
+.modal-header {
+    background-color: var(--black);
+    border: none;
+    border-radius: 0 !important;
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: -0.3px;
+}
+
+/* Кнопка закрытия (крестик) — делаем золотой */
+.modal-header .btn-close {
+    filter: invert(1) brightness(100%);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+    filter: invert(1) brightness(100%);
+}
+
+/* Тело модального окна */
+.modal-body {
+    background-color: var(--alt);
+    padding: 1.5rem;
+}
+
+/* Стили для форм */
+.modal-body .form-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-text);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.modal-body .form-control {
+    background-color: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 0 !important;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.modal-body .form-control:focus {
+    border-color: var(--accent-gold);
+    box-shadow: none;
+    outline: none;
+}
+
+/* Кнопки в модалке */
+.modal-body .btn-dark {
+    background-color: var(--black);
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.modal-body .btn-dark:hover {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--black);
+}
+
+/* Ссылки внутри модалки (переключение форм) */
+.modal-body a {
+    color: var(--black);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-gold);
+    transition: color 0.2s;
+}
+
+.modal-body a:hover {
+    color: var(--accent-gold);
+    border-bottom-color: var(--black);
+}
+
+/* Разделитель hr */
+.modal-body hr {
+    border-top: 1px solid var(--gray-light);
+    opacity: 0.5;
+    margin: 1.5rem 0;
+}
+
+/* Сообщения об ошибках (если добавите) */
+.modal-body .alert {
+    border-radius: 0 !important;
+    border: none;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.modal-body .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.modal-body .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}

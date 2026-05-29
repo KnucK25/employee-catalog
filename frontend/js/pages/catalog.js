@@ -1,3 +1,4 @@
+// временно
 const employees = [
     { id: 1, name: "Кристина Лелуш", position: "Руководитель", department: "Управление", email: "k.lelush@staff.ru", phone: "+7 (999) 123-45-67", hireDate: "15.03.2020", bio: "Руководитель проекта...", avatar: "img/team1.png" },
     { id: 2, name: "Аманда Спирс", position: "Маркетолог", department: "Маркетинг", email: "a.spirs@staff.ru", phone: "+7 (999) 234-56-78", hireDate: "22.07.2021", bio: "Специалист по маркетингу...", avatar: "img/team3.png" },

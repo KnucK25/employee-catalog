@@ -1,71 +1,66 @@
+/* -- Цветовая палитра -- */
 :root {
     --alt: #F1EEE6;           /* бежевый для акцентных секций */
     --white: #FFFFFF;         /* белый для карточек */
     --black: #000000;         /* черный */
     --accent-gold: #C29F64;   /* золотой акцентный */
-    --gray-light: #EBEBEB;
-    --gray-text: #858585;
 }
 
-/* Фикс для прижатия футера к низу */
+/* ============================================ */
+/* ГЛОБАЛЬНЫЕ СТИЛИ И ФИКС ФУТЕРА */
+/* ============================================ */
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: var(--alt);
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--white); 
     color: var(--black);
-    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-/* Контент занимает всё свободное место */
 main {
-    flex: 1;
+    flex: 1 0 auto;
 }
 
-/* Ссылки и навигация */
-header {
-    background-color: var(--black);
+/* НАВИГАЦИЯ  */
+.navbar.navbar {
+    background-color: var(--black) !important;
+    padding: 1.2rem 0 !important;
 }
 
-header .navbar-brand,
-header .nav-link {
-    color: var(--white) !important;
+.navbar .navbar-brand {
+    color: var(--accent-gold) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
 }
 
-header .nav-link.active {
+.navbar .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
+}
+
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
     color: var(--accent-gold) !important;
 }
 
-header .navbar-toggler {
-    border-color: var(--white);
-}
-
-/* Контейнер карточки */
-.employee-card-container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-}
-
-/* Карточка — без теней, без скруглений, с золотой окантовкой */
+/*  КАРТОЧКА СОТРУДНИКА*/
 .employee-card {
     background-color: var(--white);
     border: 2px solid var(--accent-gold);
     border-radius: 0 !important;
-    box-shadow: none !important;
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
 }
 
-/* Тёмная шапка — чёрный фон */
 .dark-header {
     background-color: var(--black);
     border: none;
@@ -78,37 +73,24 @@ header .navbar-toggler {
     margin: 0;
 }
 
-/* Тело карточки */
-.employee-card .card-body {
-    padding: 1.5rem;
-    flex: 1;
-}
-
-/* Фото сотрудника */
 .employee-photo {
     width: 100%;
     object-fit: cover;
     border: 1px solid var(--gray-light);
-    border-radius: 0 !important;
     aspect-ratio: 1 / 1;
 }
 
-/* Имя сотрудника */
 .employee-name {
     color: var(--black);
-    letter-spacing: -0.3px;
     font-weight: 700;
 }
 
-/* Бежевый блок с информацией — без скруглений */
 .info-box {
     background-color: var(--alt);
     border-left: 4px solid var(--accent-gold);
     border-radius: 0 !important;
-    padding: 1rem;
 }
 
-/* Стили текстовых элементов внутри бежевого блока */
 .info-label {
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -130,12 +112,9 @@ header .navbar-toggler {
 }
 
 .info-icon {
-    color: var(--accent-gold);
-    font-size: 1rem;
     width: 20px;
-    text-align: center;
+    height: 20px;
 }
-
 
 .btn-custom-outline {
     border: 2px solid var(--accent-gold);
@@ -145,6 +124,7 @@ header .navbar-toggler {
     border-radius: 0 !important;
     font-weight: 500;
     cursor: pointer;
+    background: transparent;
 }
 
 .btn-custom-outline:hover {
@@ -153,13 +133,21 @@ header .navbar-toggler {
     border-color: var(--accent-gold);
 }
 
-/* ФУТЕР */
+.btn-custom-outline a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* ФУТЕР  */
 footer {
     background-color: var(--black);
+    flex-shrink: 0;
+    width: 100%;
     height: 120px;
 }
 
 footer p {
     color: var(--accent-gold);
     font-size: 0.9rem;
+    margin: 0;
 }
