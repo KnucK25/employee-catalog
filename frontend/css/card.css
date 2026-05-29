@@ -1,0 +1,165 @@
+:root {
+    --alt: #F1EEE6;           /* бежевый для акцентных секций */
+    --white: #FFFFFF;         /* белый для карточек */
+    --black: #000000;         /* черный */
+    --accent-gold: #C29F64;   /* золотой акцентный */
+    --gray-light: #EBEBEB;
+    --gray-text: #858585;
+}
+
+/* Фикс для прижатия футера к низу */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--alt);
+    color: var(--black);
+    flex: 1;
+}
+
+/* Контент занимает всё свободное место */
+main {
+    flex: 1;
+}
+
+/* Ссылки и навигация */
+header {
+    background-color: var(--black);
+}
+
+header .navbar-brand,
+header .nav-link {
+    color: var(--white) !important;
+}
+
+header .nav-link.active {
+    color: var(--accent-gold) !important;
+}
+
+header .navbar-toggler {
+    border-color: var(--white);
+}
+
+/* Контейнер карточки */
+.employee-card-container {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Карточка — без теней, без скруглений, с золотой окантовкой */
+.employee-card {
+    background-color: var(--white);
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Тёмная шапка — чёрный фон */
+.dark-header {
+    background-color: var(--black);
+    border: none;
+    border-radius: 0 !important;
+}
+
+.dark-header h5 {
+    color: var(--white);
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Тело карточки */
+.employee-card .card-body {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+/* Фото сотрудника */
+.employee-photo {
+    width: 100%;
+    object-fit: cover;
+    border: 1px solid var(--gray-light);
+    border-radius: 0 !important;
+    aspect-ratio: 1 / 1;
+}
+
+/* Имя сотрудника */
+.employee-name {
+    color: var(--black);
+    letter-spacing: -0.3px;
+    font-weight: 700;
+}
+
+/* Бежевый блок с информацией — без скруглений */
+.info-box {
+    background-color: var(--alt);
+    border-left: 4px solid var(--accent-gold);
+    border-radius: 0 !important;
+    padding: 1rem;
+}
+
+/* Стили текстовых элементов внутри бежевого блока */
+.info-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-text);
+    margin-bottom: 2px;
+}
+
+.info-value {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--black);
+    word-break: break-word;
+}
+
+.bio-text {
+    line-height: 1.5;
+    font-size: 0.85rem;
+}
+
+.info-icon {
+    color: var(--accent-gold);
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+
+.btn-custom-outline {
+    border: 2px solid var(--accent-gold);
+    color: var(--black);
+    font-size: 0.85rem;
+    padding: 0.4rem 1.2rem;
+    border-radius: 0 !important;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-custom-outline:hover {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border-color: var(--accent-gold);
+}
+
+/* ФУТЕР */
+footer {
+    background-color: var(--black);
+    height: 120px;
+}
+
+footer p {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+}
