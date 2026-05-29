@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Каталог сотрудников</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="../frontend/css/catalogStyles.css">
+    <link rel="stylesheet" href="css/catalog.css">
 
   </head>
 
@@ -13,33 +13,20 @@
   <body>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-custom">
+        <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <!-- Название компании -->
+                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;"><br>
                 <a class="navbar-brand" href="#">Staff</a>
 
-                <!-- Разделитель, чтобы ссылки были справа -->
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button>
+                </button> <!-- бургер для телефонов -->
 
-                <!-- Ссылки на страницы -->
-                <!-- Добавляем класс 'active' к той ссылке, которая соответствует текущей странице -->
-                <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            
-                            <a class="nav-link" href="#">Главная</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#">Сотрудники</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Отделы</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">Профиль</a>
-                        </li>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Профиль</a></li>                
                     </ul>
                 </div>
             </div>
@@ -47,15 +34,15 @@
     </header>
 
 <main>
-<section class="container mt-5 mb-5"> <!-- Добавлен mb-5 для отступа после заголовка -->
+<section class="container mt-5 mb-1"> <!-- Добавлен mb-5 для отступа после заголовка -->
     <div class="text-center">
-        <h1 class="display-3 fw-bold mb-2">РЕЕСТР СОТРУДНИКОВ</h1>
-        <p class="text-secondary">крутые челиксы</p>
+        <h1 class="display-3 fw-bold mb-1">РЕЕСТР СОТРУДНИКОВ</h1>
+        <p class="text-secondary mb-1">крутые челиксы</p>
     </div>
 </section>
 
 <!-- Секция 2: Поиск сотрудников -->
-<section class="search-section-dark container-fluid py-4 mb-4">
+<section class="search-section-dark container-fluid py-1 mb-1">
     <div class="container">
         <div class="row g-4">
             <!-- Левая часть: Поиск сотрудника -->
@@ -100,7 +87,6 @@
 
 
 <section class="employees-section-full-width">
-    <!-- Используем container для центрирования row внутри полной ширины -->
     <div class="container">
         <div class="row justify-content-center">
             <!-- Карточка сотрудника 1 -->
@@ -113,7 +99,7 @@
                         <h5 class="employee-name">Сотрудников Сотрудник</h5>
                         <p class="employee-position">Руководитель</p>
                         <p class="employee-department">Название отдела</p>
-                        <button class="btn btn-details w-100">Подробнее</button>
+                        <button class="btn btn-details w-100"><a class="nav-link" href="card.html">Подробнее</a> </button>
                     </div>
                 </div>
             </div>
@@ -148,20 +134,7 @@
                 </div>
             </div>
 
-            <!-- Карточка сотрудника 4 -->
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="employee-card">
-                    <div class="employee-photo">
-                        <img src="../frontend/img/icon_00.png" alt="Сотрудников Сотрудник">
-                    </div>
-                    <div class="employee-info">
-                        <h5 class="employee-name">Сотрудников Сотрудник</h5>
-                        <p class="employee-position">Руководитель</p>
-                        <p class="employee-department">Название отдела</p>
-                        <button class="btn btn-details w-100">Подробнее</button>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </div>
 </section>
@@ -169,14 +142,13 @@
 
     </main>
 
-    <footer>
+    <!-- ФУТЕР -->
+    <footer class="text-center py-5">
         <div class="container">
-            <p class="mb-0">© 2026 Название.<br>
-            <span class="footer-copyright">Все права защищены.</span></p>
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
         </div>
     </footer>
-
-
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
