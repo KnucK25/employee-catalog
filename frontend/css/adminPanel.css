@@ -47,6 +47,7 @@ main {
 .nav-link.active, .nav-link:hover {
     color: var(--accent-gold) !important;
 }
+
 /* --- ЗАГОЛОВОК И ОТСТУПЫ --- */
 section.container.mt-5.mb-5 {
     margin-bottom: 0.5rem !important; 

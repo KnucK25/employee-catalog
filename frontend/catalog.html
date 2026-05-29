@@ -1,18 +1,16 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Каталог сотрудников</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/catalog.css">
-
-  </head>
-
-
-  <body>
+</head>
 <body>
-    <header>
+
+    <!-- НАВИГАЦИЯ -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
                 <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;"><br>
@@ -31,115 +29,52 @@
                 </div>
             </div>
         </nav>
-    </header>
 
-<main>
-<section class="container mt-5 mb-1"> <!-- Добавлен mb-5 для отступа после заголовка -->
-    <div class="text-center">
-        <h1 class="display-3 fw-bold mb-1">РЕЕСТР СОТРУДНИКОВ</h1>
-        <p class="text-secondary mb-1">крутые челиксы</p>
-    </div>
-</section>
+    <main>
+        <!-- ЗАГОЛОВОК -->
+        <section class="container mt-5 mb-1 text-center">
+            <h1 class="display-3 fw-bold mb-1">РЕЕСТР СОТРУДНИКОВ</h1>
+            <p class="text-secondary mb-1">крутые челиксы</p>
+        </section>
 
-<!-- Секция 2: Поиск сотрудников -->
-<section class="search-section-dark container-fluid py-1 mb-1">
-    <div class="container">
-        <div class="row g-4">
-            <!-- Левая часть: Поиск сотрудника -->
-            <div class="col-md-8">
-                <div class="card border-0 shadow">
-                    <div class="card-body p-4">
-                        <h5 class="card-title-search mb-3 fw-bold">ПОИСК СОТРУДНИКА</h5>
+        <!-- ЧЕРНАЯ ПАНЕЛЬ ПОИСКА (Наложение 50/50) -->
+        <section class="search-section-dark container-fluid">
+            <div class="container">
+                <div class="row g-4 align-items-end">
+                    <!-- Поиск -->
+                    <div class="col-md-8">
+                        <h5 class="card-title-search">ПОИСК СОТРУДНИКА</h5>
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-search text-secondary"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0 border-end-0" placeholder="Введите имя, фамилию или должность...">
-                            <button class="btn btn-gold-search" type="button">Найти</button>
+                            <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
+                            <button class="btn btn-gold-search" type="button">НАЙТИ</button>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Правая часть: Фильтры -->
-            <div class="col-md-4">
-                <div class="card border-0 shadow h-100">
-                    <div class="card-body p-4">
-                        <h5 class="card-title-search mb-3 fw-bold">ОТДЕЛЫ</h5>
-                        <div class="dropdown w-100">
-                            <button class="btn btn-outline-light dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
-                                Все отделы
-                            </button>
-                            <ul class="dropdown-menu w-100">
-                                <li><a class="dropdown-item" href="#">Все отделы</a></li>
-                                <li><a class="dropdown-item" href="#">Разработка</a></li>
-                                <li><a class="dropdown-item" href="#">Дизайн</a></li>
-                                <li><a class="dropdown-item" href="#">Маркетинг</a></li>
-                            </ul>
-                        </div>
+                    <!-- Фильтр -->
+                    <div class="col-md-4">
+                        <h5 class="card-title-search">ОТДЕЛЫ</h5>
+                        <!-- Используем класс custom-select-flat как в админке -->
+                        <select id="departmentFilter" class="custom-select-flat">
+                            <option value="all">Все отделы</option>
+                            <option value="Управление">Управление</option>
+                            <option value="Маркетинг">Маркетинг</option>
+                            <option value="Административный отдел">Административный отдел</option>
+                        </select>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</section>
+        </section>
 
-
-
-<section class="employees-section-full-width">
-    <div class="container">
-        <div class="row justify-content-center">
-            <!-- Карточка сотрудника 1 -->
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="employee-card">
-                    <div class="employee-photo">
-                        <img src="../frontend/img/icon_00.png" alt="Сотрудников Сотрудник">
-                    </div>
-                    <div class="employee-info">
-                        <h5 class="employee-name">Сотрудников Сотрудник</h5>
-                        <p class="employee-position">Руководитель</p>
-                        <p class="employee-department">Название отдела</p>
-                        <button class="btn btn-details w-100"><a class="nav-link" href="card.html">Подробнее</a> </button>
+        <!-- БЕЖЕВАЯ СЕКЦИЯ С КАРТОЧКАМИ -->
+        <section class="employees-section-full-width">
+            <div class="container">
+                <!-- Контейнер для JS -->
+                <div class="row justify-content-center" id="catalogContainer">
+                    <div class="col-12 text-center text-muted py-5">
+                        Загрузка сотрудников...
                     </div>
                 </div>
             </div>
-
-            <!-- Карточка сотрудника 2 -->
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="employee-card">
-                    <div class="employee-photo">
-                        <img src="../frontend/img/icon_00.png" alt="Сотрудников Сотрудник">
-                    </div>
-                    <div class="employee-info">
-                        <h5 class="employee-name">Сотрудников Сотрудник</h5>
-                        <p class="employee-position">Руководитель</p>
-                        <p class="employee-department">Название отдела</p>
-                        <button class="btn btn-details w-100">Подробнее</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Карточка сотрудника 3 -->
-            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
-                <div class="employee-card">
-                    <div class="employee-photo">
-                        <img src="../frontend/img/icon_00.png" alt="Сотрудников Сотрудник">
-                    </div>
-                    <div class="employee-info">
-                        <h5 class="employee-name">Сотрудников Сотрудник</h5>
-                        <p class="employee-position">Руководитель</p>
-                        <p class="employee-department">Название отдела</p>
-                        <button class="btn btn-details w-100">Подробнее</button>
-                    </div>
-                </div>
-            </div>
-
-            
-        </div>
-    </div>
-</section>
-
-
+        </section>
     </main>
 
     <!-- ФУТЕР -->
@@ -150,7 +85,7 @@
         </div>
     </footer>
 
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  </body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/pages/catalog.js"></script>
+</body>
 </html>

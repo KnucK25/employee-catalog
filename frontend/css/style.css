@@ -213,6 +213,8 @@ section h2::after {
 /* ФУТЕР */
 footer {
     background-color: var(--black);
+    height: 120px;
+
 }
 
 footer p {
