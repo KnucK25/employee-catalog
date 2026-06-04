@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 const employees = [
-=======
-export const employees = [
->>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9
     {
         id: 1,
         name: "Кристина Лелуш",
