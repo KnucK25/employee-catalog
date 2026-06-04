@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Панель администратора</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/adminPanel.css">
+  </head>
+  <body>
+    <!-- НАВИГАЦИЯ -->
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container">
+                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                <a class="navbar-brand" href="#">Staff</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button> <!-- бургер для телефонов -->
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Профиль</a></li>               
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+    <main>
+        <!-- ЗАГОЛОВОК -->
+        <section class="container mt-5 mb-1">
+            <div class="text-center">
+                <h1 class="display-3 fw-bold mb-1">АДМИН ПАНЕЛЬ</h1>
+                <p class="text-secondary mb-1">крутые челиксы</p>
+            </div>
+        </section>
+
+<<<<<<< HEAD
+        <!-- ПАНЕЛЬ ИНСТРУМЕНТОВ -->
+        <section class="search-section-dark container-fluid py-1 mb-1">
+=======
+        <!-- ЧЕРНАЯ ПАНЕЛЬ ПОИСКА (Наложение 50/50) -->
+        <section class="search-section-dark container-fluid">
+>>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9
+            <div class="container">
+                <div class="row g-4 align-items-end">
+                    <!-- Поиск -->
+                    <div class="col-md-8">
+<<<<<<< HEAD
+                        <div class="card border-0 shadow">
+                            <div class="card-body p-4">
+                                <h5 class="card-title-search mb-3 fw-bold">ПОИСК СОТРУДНИКА</h5>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="bi bi-search text-secondary"></i>
+                                    </span>
+                                    <input type="text" id="searchInput" class="form-control border-start-0 border-end-0" placeholder="Введите имя, фамилию или должность...">
+                                    <button class="btn btn-gold-search" type="button" onclick="searchEmployees()">Найти</button>
+                                </div>
+                            </div>
+=======
+                        <h5 class="card-title-search">ПОИСК СОТРУДНИКА</h5>
+                        <div class="input-group">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
+                            <button class="btn btn-gold-search" type="button">НАЙТИ</button>
+>>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9
+                        </div>
+                    </div>
+                    <!-- Фильтр -->
+                    <div class="col-md-4">
+<<<<<<< HEAD
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4">
+                                <h5 class="card-title-search mb-3 fw-bold">ОТДЕЛЫ</h5>
+                                <div class="dropdown w-100">
+                                    <button class="btn btn-outline-light dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" id="departmentDropdown">
+                                        Все отделы
+                                    </button>
+                                    <ul class="dropdown-menu w-100" id="departmentMenu">
+                                        <li><a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+=======
+                        <h5 class="card-title-search">ОТДЕЛЫ</h5>
+                        <!-- Используем класс custom-select-flat как в админке -->
+                        <select id="departmentFilter" class="custom-select-flat">
+                            <option value="all">Все отделы</option>
+                            <option value="Управление">Управление</option>
+                            <option value="Маркетинг">Маркетинг</option>
+                            <option value="Административный отдел">Административный отдел</option>
+                        </select>
+>>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- СЕКЦИЯ С ТАБЛИЦЕЙ -->
+        <section class="employees-section-full-width">
+            <div class="container">
+                <div class="admin-table-wrapper" id="employeesContainer">
+                    <!-- Заголовки столбцов -->
+                    <div class="row admin-header-row d-none d-md-flex align-items-center">
+                        <div class="col-md-4"><h6>Сотрудник</h6></div>
+                        <div class="col-md-3"><h6>Отдел / Должность</h6></div>
+                        <div class="col-md-3"><h6>Контакты</h6></div>
+                        <div class="col-md-2 text-md-end"><h6>Действия</h6></div>
+                    </div>
+<<<<<<< HEAD
+                    <!-- Строки сотрудников будут генерироваться здесь -->
+=======
+
+                    <!-- Строка сотрудника 1 -->
+                    <div class="row admin-employee-row align-items-center">
+                        <!-- Фото и ФИО -->
+                        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+                            <!-- Изображение БЕЗ закруглений (.rounded-circle убрано) -->
+                            <img src="https://i.pinimg.com/736x/8f/c9/77/8fc977e5d2b1f81cf0508a8e100e4e5e.jpg" alt="Фото" class="admin-employee-photo me-3">
+                            <div>
+                                <div class="admin-employee-name">Андреев Андрей Андреевич</div>
+                                <div class="admin-employee-text">ID: 0001</div>
+                            </div>
+                        </div>
+                        <!-- Отдел -->
+                        <div class="col-md-3 mb-2 mb-md-0">
+                            <div class="admin-employee-name" style="font-size: 0.9rem;">Разработка</div>
+                            <div class="admin-employee-text">Руководитель</div>
+                        </div>
+                        <!-- Контакты -->
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="admin-employee-text">+7 (999) 123-45-67</div>
+                            <div class="admin-employee-text">lololol@gmail.com</div>
+                        </div>
+                        <!-- Кнопки -->
+                        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+                            <button class="btn btn-action-icon" title="Редактировать">
+                                <img src="img/button_00.png" alt="Ред." style="width: 20px; height: 20px;">
+                            </button>
+                            <button class="btn btn-action-icon" title="Удалить">
+                                <img src="img/button_01.png" alt="Уд." style="width: 20px; height: 20px;">
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Строка сотрудника 2 -->
+                    <div class="row admin-employee-row align-items-center">
+                        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+                            <img src="https://i.pinimg.com/736x/8f/c9/77/8fc977e5d2b1f81cf0508a8e100e4e5e.jpg" alt="Фото" class="admin-employee-photo me-3">
+                            <div>
+                                <div class="admin-employee-name">Иванов Иван Иванович</div>
+                                <div class="admin-employee-text">ID: 0002</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2 mb-md-0">
+                            <div class="admin-employee-name" style="font-size: 0.9rem;">Дизайн</div>
+                            <div class="admin-employee-text">Арт-директор</div>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <div class="admin-employee-text">+7 (900) 000-00-00</div>
+                            <div class="admin-employee-text">ivan@gmail.com</div>
+                        </div>
+                        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+                            <button class="btn btn-action-icon" title="Редактировать">
+                                <img src="../frontend/img/button_00.png" alt="Ред." style="width: 20px; height: 20px;">
+                            </button>
+                            <button class="btn btn-action-icon" title="Удалить">
+                                <img src="../frontend/img/button_01.png" alt="Уд." style="width: 20px; height: 20px;">
+                            </button>
+                        </div>
+                    </div>
+
+>>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ФУТЕР -->
+    <footer class="text-center py-5">
+        <div class="container">
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
+        </div>
+    </footer>
+
+<<<<<<< HEAD
+    <!-- 1. Данные (массив employees) -->
+    <script src="js/data/employees.js"></script>
+
+    <!-- 2. Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- 3. Ваша логика админ-панели -->
+    <script src="js/pages/admin.js"></script>
+
+</body>
+</html>
+=======
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    
+  </body>
+</html>
+>>>>>>> 2f32255878bd2c5daa20c3b308f345e4c6f082c9

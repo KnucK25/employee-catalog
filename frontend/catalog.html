@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог сотрудников</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/catalog.css">
+</head>
+<body>
+
+    <!-- НАВИГАЦИЯ -->
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container">
+                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                <a class="navbar-brand" href="#">Staff</a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button> <!-- бургер для телефонов -->
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Профиль</a></li>               
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+    <main>
+        <!-- ЗАГОЛОВОК -->
+        <section class="container mt-5 mb-1 text-center">
+            <h1 class="display-3 fw-bold mb-1">РЕЕСТР СОТРУДНИКОВ</h1>
+            <p class="text-secondary mb-1">крутые челиксы</p>
+        </section>
+
+        <!-- ЧЕРНАЯ ПАНЕЛЬ ПОИСКА (Наложение 50/50) -->
+        <section class="search-section-dark container-fluid">
+            <div class="container">
+                <div class="row g-4 align-items-end">
+                    <!-- Поиск -->
+                    <div class="col-md-8">
+                        <h5 class="card-title-search">ПОИСК СОТРУДНИКА</h5>
+                        <div class="input-group">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
+                            <button class="btn btn-gold-search" type="button">НАЙТИ</button>
+                        </div>
+                    </div>
+                    <!-- Фильтр -->
+                    <div class="col-md-4">
+                        <h5 class="card-title-search">ОТДЕЛЫ</h5>
+                        <!-- Используем класс custom-select-flat как в админке -->
+                        <select id="departmentFilter" class="custom-select-flat">
+                            <option value="all">Все отделы</option>
+                            <option value="Управление">Управление</option>
+                            <option value="Маркетинг">Маркетинг</option>
+                            <option value="Административный отдел">Административный отдел</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- БЕЖЕВАЯ СЕКЦИЯ С КАРТОЧКАМИ -->
+        <section class="employees-section-full-width">
+            <div class="container">
+                <!-- Контейнер для JS -->
+                <div class="row justify-content-center" id="catalogContainer">
+                    <div class="col-12 text-center text-muted py-5">
+                        Загрузка сотрудников...
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ФУТЕР -->
+    <footer class="text-center py-5">
+        <div class="container">
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script  src="js/pages/catalog.js"></script>
+
+
+</body>
+</html>
