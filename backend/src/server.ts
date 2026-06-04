@@ -20,6 +20,8 @@ async function startServer() {
     const PORT = process.env.PORT || 3000
     app.listen(PORT, () => {
         console.log(`Сервер запущен на порту ${PORT}`)
+        console.log(`Открыть http://localhost:${PORT}`);
+
     })
 }
 
