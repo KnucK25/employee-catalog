@@ -171,14 +171,10 @@ async function saveEmployee(employeeId) {
     // Разбиваем имя на части для отправки в API
     const nameParts = employee.name.split(' ');
 
-    try {
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+    const json_body = JSON.stringify({
                 firstname: nameParts[0] ?? '',
                 lastname: nameParts[1] ?? '',
-                middlename: nameParts[2] ?? employee.middlename ?? '',
+                middlename: nameParts[2] ?? '',
                 email: employee.email,
                 phone: employee.phone,
                 date_admission: employee.hireDate,
@@ -186,7 +182,13 @@ async function saveEmployee(employeeId) {
                 departament_id: employee.departament_id,
                 post_id: employee.post_id,
                 image_id: employee.image_id ?? null
-            })
+    })
+    
+    try {
+        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: json_body
         });
     } catch (err) {
         console.warn('Ошибка сохранения на сервере:', err);
