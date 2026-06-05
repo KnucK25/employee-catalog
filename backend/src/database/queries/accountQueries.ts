@@ -1,7 +1,7 @@
 export const accountQueries = {
   /**
    * Принимает логин.
-   * Отдает аккаунт.
+   * Отдает аккаунт(id, login, hash, salt, emloyee_id, root.level).
    */
   getByLogin: `
     SELECT

@@ -1,7 +1,7 @@
 export const employeeQueries = {
   /**
    * Ничего не принимает.
-   * Отдает все профили со всеми вложенимя.
+   * Отдает все профили со всеми вложенимя(id, firstname, lastname, middlename, email, phone, date_admission, description, departament_id, departament_name, post_id, post_name, image_id).
    */
   getAll: `
     SELECT

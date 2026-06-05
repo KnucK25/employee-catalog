@@ -2,7 +2,7 @@ export const departamentQueries = {
 
   /**
    * Ничего не принимает.
-   * Возвращает 
+   * Возвращает отделы(id, name).
    */
   getAll: `
     SELECT id, name
