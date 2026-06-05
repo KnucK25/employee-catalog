@@ -4,10 +4,6 @@ import { initDB } from './database/init';
 import { Database } from 'sqlite';
 import * as path from 'path'; // Импортируем модуль для работы с путями
 
-// ... здесь ваши импорты контроллеров и сервисов ...
-// import { EmployeeController } from './controllers/EmployeeController';
-// и так далее
-
 import { employeeQueries } from './database/queries/employeeQueries';
 import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
@@ -76,17 +72,17 @@ async function seedDB() {
     await db.run(
         employeeQueries.create,
         ['Кристина', 'Лелуш', 'Александровна', 'k.lelush@staff.ru', '+7 (999) 123-45-67',
-         '15.03.2020', 'Руководитель проекта с 10-летним опытом в IT-менеджменте.', 1, 1, null]
+            '15.03.2020', 'Руководитель проекта с 10-летним опытом в IT-менеджменте.', 1, 1, null]
     );
     await db.run(
         employeeQueries.create,
         ['Аманда', 'Спирс', 'Джоновна', 'a.spirs@staff.ru', '+7 (999) 234-56-78',
-         '22.07.2021', 'Специалист по цифровому маркетингу.', 2, 2, null]
+            '22.07.2021', 'Специалист по цифровому маркетингу.', 2, 2, null]
     );
     await db.run(
         employeeQueries.create,
         ['Генри', 'Крил', 'Уолтерович', 'h.kril@staff.ru', '+7 (999) 345-67-89',
-         '10.01.2023', 'Помощник руководителя. Координирует встречи и документооборот.', 3, 3, null]
+            '10.01.2023', 'Помощник руководителя. Координирует встречи и документооборот.', 3, 3, null]
     );
 
     console.log('Seed-данные вставлены');
@@ -106,7 +102,7 @@ app.get('/api/employees', async (req: Request, res: Response) => {
 app.get('/api/employees/search', async (req: Request, res: Response) => {
     try {
         const q = `%${req.query.q ?? ''}%`;
-        const rows = await db.all(employeeQueries.search, [q, q, q, q, q]);
+        const rows = await db.all(employeeQueries.search, { search: q });
         res.json(rows.map(mapEmployee));
     } catch (err) {
         res.status(500).json({ error: 'Ошибка поиска' });
