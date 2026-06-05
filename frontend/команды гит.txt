@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>яя | Главная</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Шрифты: Playfair Display и Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet">
+    <!-- FontAwesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* =========================================
+           ПАЛИТРА ФОНТЕЙНА
+        ========================================= */
+        :root {
+            --f-navy-dark: #121A25;      
+            --f-navy-main: #1D2A3B;      
+            --f-gold-main: #CBA564;      
+            --f-gold-light: #E7D19E;     
+            --f-marble: #F8F8F8;         
+            --f-cream: #EFECE6;          
+            --f-water-blue: #7BA1C5;     
+            --f-text-dark: #232B32;      
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--f-cream);
+            color: var(--f-text-dark);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3, h4, h5, .serif-font {
+            font-family: 'Playfair Display', serif;
+            color: var(--f-navy-dark);
+            font-weight: 700;
+        }
+
+        /* =========================================
+           НАВИГАЦИЯ
+        ========================================= */
+        .navbar {
+            background-color: var(--f-navy-dark) !important;
+            padding: 1rem 0;
+            border-bottom: 2px solid var(--f-gold-main);
+            box-shadow: 0 4px 20px rgba(18, 26, 37, 0.4);
+        }
+
+        .navbar-brand {
+            color: var(--f-gold-light) !important;
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .navbar-brand i { color: var(--f-gold-main); font-size: 1.8rem; }
+
+        .nav-link {
+            color: var(--f-marble) !important;
+            font-weight: 300; margin-left: 1.5rem;
+            text-transform: uppercase; font-size: 0.85rem;
+            letter-spacing: 1.5px; transition: color 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active { color: var(--f-gold-light) !important; }
+
+        /* =========================================
+           ОБЩИЕ ЭЛЕМЕНТЫ И КНОПКИ
+        ========================================= */
+        .section-padding { padding: 6rem 0; }
+        .section-title { text-align: center; margin-bottom: 4rem; }
+        .section-title h2 { font-size: 2.5rem; position: relative; display: inline-block; }
+        .section-title h2::after {
+            content: ''; position: absolute; bottom: -15px; left: 50%;
+            transform: translateX(-50%); width: 60px; height: 2px;
+            background-color: var(--f-gold-main);
+        }
+
+        .btn-gold {
+            background-color: var(--f-gold-main); color: var(--f-navy-dark);
+            font-family: 'Outfit', sans-serif; text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 600; padding: 1rem 2.5rem;
+            border: 1px solid var(--f-gold-main); border-radius: 2px; 
+            transition: all 0.3s;
+        }
+        .btn-gold:hover { background-color: var(--f-navy-dark); color: var(--f-gold-light); border-color: var(--f-navy-dark); }
+
+        .btn-outline-navy {
+            background-color: transparent; color: var(--f-navy-dark);
+            border: 1px solid var(--f-navy-dark); font-family: 'Outfit', sans-serif;
+            text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+            padding: 1rem 2.5rem; border-radius: 2px; transition: all 0.3s;
+        }
+        .btn-outline-navy:hover { background-color: var(--f-navy-dark); color: var(--f-marble); }
+
+        /* =========================================
+           СЕКЦИЯ: HERO
+        ========================================= */
+        .hero-section {
+            background-color: var(--f-marble); padding: 7rem 0 6rem 0;
+            text-align: center; position: relative; overflow: hidden;
+            border-bottom: 1px solid var(--f-gold-main);
+        }
+        .hero-section::before, .hero-section::after {
+            content: ''; position: absolute; top: 20px; bottom: 20px;
+            width: 1px; background-color: var(--f-gold-light); opacity: 0.5;
+        }
+        .hero-section::before { left: 40px; } .hero-section::after { right: 40px; }
+        .hero-section h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 1.5rem; color: var(--f-navy-dark); }
+        .hero-subtitle { font-family: 'Playfair Display', serif; font-style: italic; font-size: 1.5rem; color: var(--f-water-blue); margin-bottom: 2.5rem; }
+
+        /* =========================================
+           СЕКЦИЯ: ПРИНЦИПЫ
+        ========================================= */
+        .feature-card {
+            background-color: var(--f-marble); padding: 3rem 2rem; height: 100%;
+            text-align: center; position: relative; border: 1px solid var(--f-gold-light);
+            outline: 1px solid var(--f-gold-light); outline-offset: -6px; transition: all 0.3s ease;
+        }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(29, 42, 59, 0.1); background-color: #FFFFFF; }
+        .feature-icon { font-size: 2.5rem; color: var(--f-navy-main); margin-bottom: 1.5rem; }
+
+        /* =========================================
+           СЕКЦИЯ: ПРОЦЕСС (Новая)
+        ========================================= */
+        .step-card {
+            position: relative; padding: 2rem; text-align: center; z-index: 1;
+        }
+        .step-number {
+            position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+            font-family: 'Playfair Display', serif; font-size: 6rem; font-weight: 700;
+            color: var(--f-gold-main); opacity: 0.15; z-index: -1;
+        }
+        .step-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 1rem; color: var(--f-navy-dark); }
+
+        /* =========================================
+           СЕКЦИЯ: КОМАНДА
+        ========================================= */
+        .team-card {
+            background-color: var(--f-cream); padding: 2.5rem 2rem; text-align: center;
+            border: 1px solid rgba(203, 165, 100, 0.3); transition: all 0.3s ease;
+        }
+        .team-card:hover { background-color: var(--f-marble); border-color: var(--f-gold-main); box-shadow: 0 10px 25px rgba(29, 42, 59, 0.08); }
+        .team-img-wrapper { width: 130px; height: 130px; margin: 0 auto 1.5rem auto; border-radius: 50%; border: 2px solid var(--f-gold-main); padding: 4px; }
+        .team-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; filter: grayscale(20%) sepia(10%); }
+        .team-role { color: var(--f-water-blue); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 500; }
+
+        /* =========================================
+           СЕКЦИЯ: СТАТИСТИКА
+        ========================================= */
+        .stats-section {
+            background-color: var(--f-navy-dark); border-top: 1px solid var(--f-gold-main); border-bottom: 1px solid var(--f-gold-main);
+            padding: 4rem 0; background-image: radial-gradient(circle at center, rgba(29, 42, 59, 0.8) 0%, var(--f-navy-dark) 100%);
+        }
+        .stat-number { font-family: 'Playfair Display', serif; font-size: 3.5rem; font-weight: 700; color: var(--f-gold-light); line-height: 1; margin-bottom: 0.5rem;}
+        .stat-label { color: var(--f-marble); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+
+        /* =========================================
+           СЕКЦИЯ: ПАРТНЕРЫ (Новая)
+        ========================================= */
+        .partners-section { background-color: var(--f-marble); border-bottom: 1px solid rgba(203, 165, 100, 0.3); }
+        .partner-logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--f-navy-main); opacity: 0.6; transition: opacity 0.3s; text-align: center; }
+        .partner-logo:hover { opacity: 1; color: var(--f-gold-main); }
+
+        /* =========================================
+           СЕКЦИЯ: МАНИФЕСТ
+        ========================================= */
+        .manifesto-section { background-color: var(--f-navy-main); color: var(--f-marble); padding: 0; }
+        .manifesto-image {
+            background: url('https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=1000&auto=format&fit=crop') center/cover no-repeat;
+            min-height: 400px; height: 100%; border-right: 4px solid var(--f-gold-main); filter: sepia(0.3) hue-rotate(180deg) brightness(0.8) contrast(1.2);
+        }
+        .manifesto-content { padding: 6rem 4rem; }
+        .manifesto-content h2 { color: var(--f-gold-light); font-size: 2.5rem; margin-bottom: 1.5rem; }
+
+        /* =========================================
+           СЕКЦИЯ: ОТЗЫВЫ
+        ========================================= */
+        .testimonial-card {
+            background-color: var(--f-cream); padding: 3rem; position: relative; border-left: 3px solid var(--f-gold-main); height: 100%;
+        }
+        .testimonial-icon { position: absolute; top: 2rem; right: 2rem; font-size: 3rem; color: var(--f-water-blue); opacity: 0.15; }
+        .testimonial-text { font-size: 1.05rem; font-style: italic; line-height: 1.8; color: var(--f-text-dark); margin-bottom: 2rem; position: relative; z-index: 1; }
+        .testimonial-author { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--f-navy-dark); font-weight: 700; margin-bottom: 0.2rem; }
+        .testimonial-company { font-size: 0.85rem; color: var(--f-gold-main); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+
+        /* =========================================
+           СЕКЦИЯ: FAQ (Новая - Аккордеон)
+        ========================================= */
+        .accordion-item { border: 1px solid rgba(203, 165, 100, 0.4); margin-bottom: 1rem; background-color: transparent; border-radius: 0 !important; }
+        .accordion-button { background-color: var(--f-marble); color: var(--f-navy-dark); font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700; border-radius: 0 !important; box-shadow: none !important; }
+        .accordion-button:not(.collapsed) { background-color: var(--f-navy-main); color: var(--f-gold-light); }
+        .accordion-button::after { filter: grayscale(100%); opacity: 0.5; }
+        .accordion-button:not(.collapsed)::after { filter: invert(80%) sepia(50%) saturate(500%) hue-rotate(350deg); opacity: 1; }
+        .accordion-body { background-color: var(--f-marble); color: var(--f-text-dark); line-height: 1.7; }
+
+        /* =========================================
+           СЕКЦИЯ: ПУБЛИКАЦИИ (Новая)
+        ========================================= */
+        .news-card { background-color: var(--f-marble); border: 1px solid rgba(203, 165, 100, 0.3); transition: all 0.3s ease; height: 100%; display: flex; flex-direction: column;}
+        .news-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); border-color: var(--f-gold-main); }
+        .news-img { width: 100%; height: 200px; object-fit: cover; border-bottom: 2px solid var(--f-gold-main); }
+        .news-date { font-size: 0.8rem; color: var(--f-water-blue); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; margin-bottom: 0.5rem; }
+        .news-card h4 { font-size: 1.3rem; margin-bottom: 1rem; }
+
+        /* =========================================
+           СЕКЦИЯ: КОНТАКТЫ (Новая)
+        ========================================= */
+        .contact-section { background-color: var(--f-navy-dark); color: var(--f-marble); }
+        .contact-box { background-color: var(--f-navy-main); padding: 4rem; border: 1px solid var(--f-gold-main); }
+        .form-control { background-color: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.2); border-radius: 0; color: #fff; padding-left: 0; }
+        .form-control:focus { background-color: transparent; color: #fff; box-shadow: none; border-color: var(--f-gold-main); }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); font-weight: 300; }
+        .contact-info-item i { color: var(--f-gold-main); width: 30px; font-size: 1.2rem;}
+
+        /* =========================================
+           ФУТЕР
+        ========================================= */
+        footer { background-color: var(--f-navy-dark); color: var(--f-gold-light); text-align: center; padding: 3rem 0; border-top: 1px solid var(--f-gold-main); font-weight: 300; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand serif-font" href="#">
+                <i class="fa-solid fa-scale-balanced"></i>
+                Mermonia Solutions
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fa-solid fa-bars" style="color: var(--f-gold-main); font-size: 1.5rem;"></i>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link active" href="#">Практика</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Прецеденты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Специалисты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#">Канцелярия</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главный экран -->
+    <header class="hero-section">
+        <div class="container">
+            <h1>Безукоризненный консалтинг.<br>Абсолютная прозрачность.</h1>
+            <p class="hero-subtitle">«Закон суров, но в его рамках мы создаем шедевры.»</p>
+            <p class="mx-auto mb-5" style="max-width: 600px; color: var(--f-text-dark); font-weight: 300;">
+                Mermonia Solutions обеспечивает правовую и технологическую безопасность вашего бизнеса. Выверенные контракты, аудит процессов и внедрение передовых механизмов управления.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#contact" class="btn btn-gold">Получить консультацию</a>
+                <a href="#" class="btn btn-outline-navy">Открыть реестр услуг</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- СЕКЦИЯ 1: Принципы -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="section-title">
+                <h2>Эксклюзивные компетенции</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fa-solid fa-file-signature"></i></div>
+                        <h4 class="serif-font">Юридическое сопровождение</h4>
+                        <p>Составление контрактов любой сложности, урегулирование споров и защита интересов в Палате Управления.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                        <h4 class="serif-font">Финансовый аудит</h4>
+                        <p>Глубокий анализ активов и оптимизация налогообложения. Мы настраиваем денежные потоки с точностью часов.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <h4 class="serif-font">Корпоративная безопасность</h4>
+                        <p>Защита интеллектуальной собственности и коммерческой тайны. Внедрение систем строгого контроля.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 2 (НОВАЯ): Алгоритм взаимодействия -->
+    <section class="section-padding" style="background-color: var(--f-marble);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Алгоритм Правосудия</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">01</div>
+                        <div class="step-title serif-font">Первичное слушание</div>
+                        <p class="small text-muted mb-0">Анализ текущей ситуации, постановка целей и подписание соглашения о конфиденциальности.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">02</div>
+                        <div class="step-title serif-font">Глубокий аудит</div>
+                        <p class="small text-muted mb-0">Сбор доказательной базы, проверка документации и выявление уязвимостей в процессах.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">03</div>
+                        <div class="step-title serif-font">Настройка механизмов</div>
+                        <p class="small text-muted mb-0">Разработка правовой стратегии, оптимизация налогов и внедрение новых регламентов.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="step-card">
+                        <div class="step-number">04</div>
+                        <div class="step-title serif-font">Триумфальный вердикт</div>
+                        <p class="small text-muted mb-0">Успешное завершение дела в суде или подписание безупречного контракта.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 3 (НОВАЯ): Доверители (Партнеры) -->
+    <section class="section-padding partners-section py-5">
+        <div class="container">
+            <div class="row text-center align-items-center g-4">
+                <div class="col-md-3 col-6 partner-logo">
+                    <i class="fa-solid fa-anchor d-block mb-2 text-gold"></i> Спина-ди-Росула
+                </div>
+                <div class="col-md-3 col-6 partner-logo">
+                    <i class="fa-solid fa-flask d-block mb-2 text-gold"></i> Институт натурфилософии
+                </div>
+                <div class="col-md-3 col-6 partner-logo">
+                    <i class="fa-solid fa-newspaper d-block mb-2 text-gold"></i> Паровая птица
+                </div>
+                <div class="col-md-3 col-6 partner-logo">
+                    <i class="fa-solid fa-gears d-block mb-2 text-gold"></i> Мастерская Бомонта
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 4: Статистика -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-md-3 stat-item">
+                    <div class="stat-number">450+</div>
+                    <div class="stat-label">Выигранных дел</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">Лет практики</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item">
+                    <div class="stat-number">0%</div>
+                    <div class="stat-label">Допустимых погрешностей</div>
+                </div>
+                <div class="col-6 col-md-3 stat-item">
+                    <div class="stat-number">2.5B</div>
+                    <div class="stat-label">Спасенных активов (Мора)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 5: Команда -->
+    <section class="section-padding" style="background-color: var(--f-marble);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Ведущие арбитры</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300&auto=format&fit=crop" alt="Специалист" class="team-img">
+                        </div>
+                        <h4 class="serif-font">Лоран Эверье</h4>
+                        <div class="team-role">Старший аудитор</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300&auto=format&fit=crop" alt="Специалист" class="team-img">
+                        </div>
+                        <h4 class="serif-font">Амелия Фонтес</h4>
+                        <div class="team-role">Партнер по корпоративному праву</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="team-card">
+                        <div class="team-img-wrapper">
+                            <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=300&auto=format&fit=crop" alt="Специалист" class="team-img">
+                        </div>
+                        <h4 class="serif-font">Виктор Ренар</h4>
+                        <div class="team-role">Глава службы безопасности</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 6 (НОВАЯ): Регламент (FAQ) -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-5 mb-5 mb-lg-0">
+                    <h2 class="serif-font mb-4" style="font-size: 2.5rem;">Регламент и процедуры</h2>
+                    <p class="text-muted fw-light lh-lg mb-4">В Дворце Мермония нет места недосказанности. Ниже приведены разъяснения к наиболее частым процессуальным вопросам, задаваемым нашими клиентами перед началом сотрудничества.</p>
+                    <a href="#" class="btn btn-outline-navy">Скачать полный кодекс</a>
+                </div>
+                <div class="col-lg-7">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Как обеспечивается конфиденциальность?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Все данные передаются исключительно через защищенные пневмусией каналы. Договор о неразглашении подписывается до начала первичных слушаний. Нарушение влечет немедленное разбирательство в Палате Управления.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Возможен ли аудит иностранных активов?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Да. Наши юристы имеют аккредитацию для работы с торговыми гильдиями Ли Юэ и образовательными фондами Сумеру, что позволяет проводить полноценный международный аудит.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Какова стоимость первичного слушания?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Базовая консультация проводится безвозмездно для оценки подсудности дела. Расчет гонорара происходит индивидуально, в зависимости от количества вовлеченных шестеренок правового механизма.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 7: Манифест -->
+    <section class="manifesto-section">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-5 p-0 d-none d-lg-block">
+                    <div class="manifesto-image"></div>
+                </div>
+                <div class="col-lg-7 d-flex align-items-center">
+                    <div class="manifesto-content">
+                        <h2 class="serif-font">Стратегия, не терпящая компромиссов</h2>
+                        <p>Консалтинговое бюро <strong>Mermonia Solutions</strong> создано для тех, кто ценит порядок превыше всего. В мире стремительно меняющихся законов и технологий мы предлагаем вашему бизнесу монолитную стабильность и уверенность в завтрашнем дне.</p>
+                        <p>Мы не просто решаем возникшие проблемы — мы выстраиваем архитектуру процессов, при которой появление проблем становится невозможным.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 8 (НОВАЯ): Публикации (Новости) -->
+    <section class="section-padding" style="background-color: var(--f-marble);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Сводки "Паровой птицы"</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="news-card">
+                        <img src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?q=80&w=500&auto=format&fit=crop" class="news-img" alt="Новость">
+                        <div class="p-4 flex-grow-1">
+                            <div class="news-date">12 Октября 2026</div>
+                            <h4 class="serif-font">Новые поправки к закону о торговых патентах</h4>
+                            <p class="text-muted small">Подробный анализ влияния новых регламентов Дворца Мермония на средний бизнес и владельцев мастерских.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="news-card">
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=500&auto=format&fit=crop" class="news-img" alt="Новость">
+                        <div class="p-4 flex-grow-1">
+                            <div class="news-date">05 Октября 2026</div>
+                            <h4 class="serif-font">Как защитить активы при слиянии гильдий</h4>
+                            <p class="text-muted small">Мнение нашего старшего партнера о превентивных мерах безопасности во время корпоративных поглощений.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="news-card">
+                        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=500&auto=format&fit=crop" class="news-img" alt="Новость">
+                        <div class="p-4 flex-grow-1">
+                            <div class="news-date">28 Сентября 2026</div>
+                            <h4 class="serif-font">Прецедент: Дело о потерянных чертежах</h4>
+                            <p class="text-muted small">Кейс из практики. Как мы доказали кражу интеллектуальной собственности на заседании в Эпиклезе.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 9: Отзывы -->
+    <section class="section-padding">
+        <div class="container">
+            <div class="section-title">
+                <h2>Архив прецедентов</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="testimonial-card">
+                        <i class="fa-solid fa-quote-right testimonial-icon"></i>
+                        <p class="testimonial-text">«Их способность структурировать контракты сродни работы идеального часового механизма. Каждое слушание, которое они курировали для нас, завершалось безоговорочной победой.»</p>
+                        <div class="testimonial-author">Каллус Каспар</div>
+                        <div class="testimonial-company">Глава торговой гильдии «Спина-ди-Росула»</div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="testimonial-card">
+                        <i class="fa-solid fa-quote-right testimonial-icon"></i>
+                        <p class="testimonial-text">«Mermonia Solutions провели глубокий финансовый аудит наших верфей. Найденные ими уязвимости и предложенные решения сэкономили нам колоссальные средства.»</p>
+                        <div class="testimonial-author">Элоди Бофор</div>
+                        <div class="testimonial-company">Директор верфи «Кур-де-Фонтейн»</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- СЕКЦИЯ 10 (НОВАЯ): Канцелярия (Форма контактов) -->
+    <section id="contact" class="section-padding contact-section">
+        <div class="container">
+            <div class="row g-0 justify-content-center">
+                <div class="col-lg-10">
+                    <div class="contact-box shadow-lg">
+                        <div class="row g-5">
+                            <!-- Информация -->
+                            <div class="col-md-5">
+                                <h3 class="serif-font text-gold-light mb-4">Обращение в Канцелярию</h3>
+                                <p class="fw-light text-white opacity-75 mb-5">
+                                    Оставьте заявку, и дежурный аудитор свяжется с вами для назначения даты первичных слушаний.
+                                </p>
+                                <div class="d-flex align-items-center mb-4 contact-info-item">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    <span class="fw-light">Район Кур-де-Фонтейн, Дворец Мермония, Сектор А</span>
+                                </div>
+                                <div class="d-flex align-items-center mb-4 contact-info-item">
+                                    <i class="fa-solid fa-envelope"></i>
+                                    <span class="fw-light">chancellery@mermonia.com</span>
+                                </div>
+                                <div class="d-flex align-items-center contact-info-item">
+                                    <i class="fa-solid fa-phone"></i>
+                                    <span class="fw-light">+7 (999) 000-ФОНТ</span>
+                                </div>
+                            </div>
+                            <!-- Форма -->
+                            <div class="col-md-7">
+                                <form>
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <input type="text" class="form-control" placeholder="Ваше Имя / Организация">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <input type="email" class="form-control" placeholder="Способ связи (Email)">
+                                        </div>
+                                        <div class="col-12">
+                                            <select class="form-control text-muted">
+                                                <option selected disabled>Предмет слушания (Услуга)</option>
+                                                <option>Юридическое сопровождение</option>
+                                                <option>Финансовый аудит</option>
+                                                <option>Корпоративная защита</option>
+                                                <option>Иное</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-12">
+                                            <textarea class="form-control" rows="4" placeholder="Краткая суть дела..."></textarea>
+                                        </div>
+                                        <div class="col-12 mt-4 text-end">
+                                            <button type="button" class="btn btn-gold w-100">Подать прошение</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>цф
+
+    <!-- Подвал -->
+    <footer>
+        <div class="container">
+            <div class="mb-3">
+                <i class="fa-solid fa-gavel" style="color: var(--f-gold-light); font-size: 1.2rem;"></i>
+            </div>
+            <p class="mb-0">&copy; 2026 Mermonia Solutions. Право, Аналитика, Безопасность.<br>
+            <span style="opacity: 0.6; font-size: 0.8rem;">Все права защищены. Лицензия Палаты Управления №402-A.</span></p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Script -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

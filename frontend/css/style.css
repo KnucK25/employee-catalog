@@ -1,0 +1,355 @@
+:root {
+    --alt: #F1EEE6;       /* бежевый для акцентных секций */
+    --white: #FFFFFF;     /* белый для карточек */
+    --black: #000000;      /* черный */
+    --accent-gold: #C29F64;  /* золотой акцентный */
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-hero);
+    color: var(--text-main);
+    line-height: 1.6;
+}
+
+/* ============================================ */
+/* НАВИГАЦИЯ (усиленные селекторы для переопределения Bootstrap) */
+/* ============================================ */
+.navbar.navbar {
+    background-color: var(--black) !important;
+    padding: 1.2rem 0 !important;
+}
+
+.navbar .navbar-brand {
+    color: var(--accent-gold) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
+}
+
+.navbar .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
+}
+
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
+    color: var(--accent-gold) !important;
+}
+
+/* HERO СЕКЦИЯ */
+header {
+    background-color:var(--white);
+    background-image: url(../img/hero2.png);
+    background-size: cover;       
+    background-position: center;
+    background-repeat: no-repeat; 
+    padding-bottom: 4rem;
+    min-height: 75vh; 
+}
+
+header h1 {
+    font-weight: 800;
+    font-size: 3rem;
+    text-transform: uppercase;
+    color: var(--white);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+header .lead {
+    color: var(--accent-gold);
+    font-size: 1.15rem;
+    margin-bottom: 2rem;
+}
+
+header .mx-auto {
+    color: var(--alt);
+    font-size: 1rem;
+    max-width: 650px;
+    margin-bottom: 4rem;
+    opacity: 75%;
+}
+
+/* КНОПКИ */
+header .btn {
+    padding: 1rem 2rem;
+    font-weight: 600;
+    border-radius: 0;
+    min-width: 220px;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+header .btn:first-child {
+    background-color: var(--accent-gold);
+    color: #111;
+    border: 1px solid var(--accent-gold);
+}
+
+header .btn:first-child:hover {
+    background-color: transparent;
+    color: #fff;
+}
+
+header .btn:last-child {
+    background-color: transparent;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255);
+}
+
+header .btn:last-child:hover {
+    background-color: #fff;
+    color: #111;
+    border-color: #111;
+}
+
+/* Золотая линия под заголовками секций */
+section h2 {
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 3rem;
+    position: relative;
+    display: inline-block;
+}
+
+section h2::after {
+    content: '';
+    display: block;
+    width: 50px;
+    height: 2px;
+    background-color: var(--accent-gold);
+    margin: 1.25rem auto 0;
+}
+
+/* СЕКЦИЯ 1: О НАС*/
+
+.about-section .fs-1 {
+    color: var(--accent-gold);
+    font-weight: 700;
+    font-size: 3rem !important;
+}
+
+.about-section .small {
+    color: var(--black);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* СЕКЦИЯ 2: НАШИ ПРЕИМУЩЕСТВА*/
+.advantages-section {
+    background-color: var(--alt);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.advantages-section .h-100 {
+    background-color: var(--white);
+    padding: 3.5rem 2rem;
+    text-align: center;
+    border: 1px solid rgba(194, 160, 106, 0.4);
+    outline: 1px solid rgba(194, 160, 106, 0.4);
+    outline-offset: -6px;
+}
+
+.advantages-section h4 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--black);
+    margin-bottom: 1rem;
+}
+
+.advantages-section p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* СЕКЦИЯ 3: СТАТИСТИКА*/
+.stats-section {
+    background-color: var(--black);
+}
+
+.stats-section .fs-1 {
+    color: var(--accent-gold);
+    font-weight: 700;
+    font-size: 3.5rem !important;
+    margin-bottom: 0.25rem;
+}
+
+.stats-section .small {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 600;
+}
+
+/* СЕКЦИЯ 4:КОМАНДА*/
+.team-section {
+    background-color: var(--alt);
+}
+
+.team-section img {
+    border: 1px solid rgba(194, 160, 106, 0.8);
+    padding: 3px;
+    background-color: var(--bg-cards);
+    width: 150px !important;
+    height: 150px !important;
+    object-fit: cover;
+}
+
+.team-section .col-md-4 .text-center{
+    background-color: var(--white);
+    padding: 3rem 0.5rem;
+    text-align: center;
+    border: 1px solid rgba(194, 160, 106, 0.4);
+    outline: 1px solid rgba(194, 160, 106, 0.4);
+    outline-offset: -6px;
+}
+
+.team-section h4 {
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--black);
+}
+
+.team-section .text-secondary {
+    color: var(--black) !important;
+    font-weight: 500;
+}
+/* ФУТЕР */
+footer {
+    background-color: var(--black);
+    height: 120px;
+
+}
+
+footer p {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+}
+
+
+
+/* ===== Стили для модального окна авторизации ===== */
+
+/* Контейнер модального окна — убираем тени и скругления */
+.modal-content {
+    background-color: var(--white);
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Шапка модального окна */
+.modal-header {
+    background-color: var(--black);
+    border: none;
+    border-radius: 0 !important;
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+    color: var(--white);
+    font-weight: 600;
+    letter-spacing: -0.3px;
+}
+
+/* Кнопка закрытия (крестик) — делаем золотой */
+.modal-header .btn-close {
+    filter: invert(1) brightness(100%);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+    filter: invert(1) brightness(100%);
+}
+
+/* Тело модального окна */
+.modal-body {
+    background-color: var(--alt);
+    padding: 1.5rem;
+}
+
+/* Стили для форм */
+.modal-body .form-label {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-text);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.modal-body .form-control {
+    background-color: var(--white);
+    border: 1px solid var(--gray-light);
+    border-radius: 0 !important;
+    padding: 0.6rem 0.75rem;
+    font-size: 0.9rem;
+    transition: border-color 0.2s;
+}
+
+.modal-body .form-control:focus {
+    border-color: var(--accent-gold);
+    box-shadow: none;
+    outline: none;
+}
+
+/* Кнопки в модалке */
+.modal-body .btn-dark {
+    background-color: var(--black);
+    border: 2px solid var(--accent-gold);
+    border-radius: 0 !important;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.modal-body .btn-dark:hover {
+    background-color: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--black);
+}
+
+/* Ссылки внутри модалки (переключение форм) */
+.modal-body a {
+    color: var(--black);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-gold);
+    transition: color 0.2s;
+}
+
+.modal-body a:hover {
+    color: var(--accent-gold);
+    border-bottom-color: var(--black);
+}
+
+/* Разделитель hr */
+.modal-body hr {
+    border-top: 1px solid var(--gray-light);
+    opacity: 0.5;
+    margin: 1.5rem 0;
+}
+
+/* Сообщения об ошибках (если добавите) */
+.modal-body .alert {
+    border-radius: 0 !important;
+    border: none;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.modal-body .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.modal-body .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
