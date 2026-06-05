@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3000';
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
 function getEmployeeIdFromURL() {
     const params = new URLSearchParams(window.location.search);
