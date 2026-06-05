@@ -36,7 +36,7 @@ let db: Database;
 function mapEmployee(row: any) {
     return {
         id: row.id,
-        name: `${row.firstname} ${row.lastname}`,
+        name: `${row.firstname} ${row.lastname} ${row.middlename}`,
         firstname: row.firstname,
         lastname: row.lastname,
         middlename: row.middlename,
@@ -149,13 +149,25 @@ app.post('/api/employees', async (req: Request, res: Response) => {
 });
 
 app.put('/api/employees/:id', async (req: Request, res: Response) => {
+    interface body {
+        firstname: string,
+        lastname: String,
+        middlename: String,
+        email: String,
+        phone: String,
+        date_admission: String,
+        description: String,
+        departament_id: number,
+        post_id: number,
+        image_id: number;
+    }
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body;
+        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body as body
 
         await db.run(employeeQueries.update, [
             firstname,
             lastname,
-            middlename ?? '',
+            middlename,
             email,
             phone,
             date_admission,
@@ -177,6 +189,7 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка обновления' });
     }
+    return;
 });
 
 app.delete('/api/employees/:id', async (req: Request, res: Response) => {
