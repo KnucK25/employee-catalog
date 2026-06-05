@@ -23,6 +23,7 @@ export const employeeQueries = {
     INNER JOIN post ON post.id = employee.post_id
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
+
   /**
    * Принимает id профиля.
    * Отдает один профиль со всем содержимым
@@ -77,6 +78,7 @@ export const employeeQueries = {
        OR post.name LIKE :search COLLATE NOCASE
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
+
   /**
    * Принимает id отдела.
    * Возвращает все профили относящиеся к выбранному отделу.
@@ -102,6 +104,7 @@ export const employeeQueries = {
     WHERE employee.departament_id = ?
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
+
   /**
    * Принимает имя, фамилию, отчество, емайл, телефон, дату создания, описание, id отдела, id должности, id фотографии.
    * Создает аккаунт.
