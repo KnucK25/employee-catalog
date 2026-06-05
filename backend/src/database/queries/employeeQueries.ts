@@ -1,4 +1,8 @@
 export const employeeQueries = {
+  /**
+   * Ничего не принимает.
+   * Отдает все профили со всеми вложенимя.
+   */
   getAll: `
     SELECT
       employee.id,
@@ -19,7 +23,10 @@ export const employeeQueries = {
     INNER JOIN post ON post.id = employee.post_id
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
-
+  /**
+   * Принимает id профиля.
+   * Отдает один профиль со всем содержимым
+   */
   getById: `
     SELECT
       employee.id,
@@ -41,6 +48,10 @@ export const employeeQueries = {
     WHERE employee.id = ?;
   `,
 
+  /**
+   * Принимает один параметр с ключем search: имя | фамилию | отчество | название | отдела или название должности.
+   * Отдает все совпадающие профили
+   */
   search: `
     SELECT
       employee.id,
@@ -59,14 +70,17 @@ export const employeeQueries = {
     FROM employee
     INNER JOIN departament ON departament.id = employee.departament_id
     INNER JOIN post ON post.id = employee.post_id
-    WHERE employee.firstname LIKE ? COLLATE NOCASE
-       OR employee.lastname LIKE ? COLLATE NOCASE
-       OR employee.middlename LIKE ? COLLATE NOCASE
-       OR departament.name LIKE ? COLLATE NOCASE
-       OR post.name LIKE ? COLLATE NOCASE
+    WHERE employee.firstname LIKE :search COLLATE NOCASE
+       OR employee.lastname LIKE :search COLLATE NOCASE
+       OR employee.middlename LIKE :search COLLATE NOCASE
+       OR departament.name LIKE :search COLLATE NOCASE
+       OR post.name LIKE :search COLLATE NOCASE
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
-
+  /**
+   * Принимает id отдела.
+   * Возвращает все профили относящиеся к выбранному отделу.
+   */
   filterByDepartamentId: `
     SELECT
       employee.id,
@@ -88,7 +102,10 @@ export const employeeQueries = {
     WHERE employee.departament_id = ?
     ORDER BY employee.lastname, employee.firstname, employee.middlename;
   `,
-
+  /**
+   * Принимает имя, фамилию, отчество, емайл, телефон, дату создания, описание, id отдела, id должности, id фотографии.
+   * Создает аккаунт.
+   */
   create: `
     INSERT INTO employee (
       firstname,
@@ -105,6 +122,10 @@ export const employeeQueries = {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
   `,
 
+  /**
+   * Принимает имя, фамилию, отчество, емайл, телефон, дату создания, описание, id отдела, id должности, id фотографии, id аккаунта.
+   * Обновляет существующий аккаунт.
+   */
   update: `
     UPDATE employee
     SET
@@ -121,11 +142,19 @@ export const employeeQueries = {
     WHERE id = ?;
   `,
 
+  /**
+   * Принимает id профиля.
+   * Удаляет профиль
+   */
   remove: `
     DELETE FROM employee
     WHERE id = ?;
   `,
 
+  /**
+   * Принимает новый емайл и id текущего пользователя.
+   * Если вернул не null/undefined значит такой емайл уже занят иначе можно использовать новый емайл.
+   */
   existsByEmailExceptId: `
     SELECT id
     FROM employee
