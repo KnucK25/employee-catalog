@@ -5,26 +5,6 @@ let departmentsList = [];
 let postsList = [];
 
 
-async function loadDepartments() {
-    try {
-        const res = await fetch(`${API_BASE}/api/departments`);
-        const departments = await res.json();
-        const menu = document.getElementById('departmentMenu');
-
-        if (!menu) {
-            return;
-        }
-
-        departments.forEach(dep => {
-            const li = document.createElement('li');
-            li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('${dep.name}')">${dep.name}</a>`;
-            menu.appendChild(li);
-        });
-    } catch (err) {
-        console.warn('Не удалось загрузить отделы');
-    }
-}
-
 async function loadPosts() {
     try {
         const res = await fetch(`${API_BASE}/api/posts`);
@@ -72,7 +52,10 @@ async function loadEmployees() {
 function populateDepartmentMenu() {
     const menu = document.getElementById('departmentMenu');
     if (!menu) return;
-    
+    menu.innerHTML = ''
+    const allLi = document.createElement('li')
+    allLi.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a>`;
+    menu.appendChild(allLi);
     departmentsList.forEach(dep => {
         const li = document.createElement('li');
         li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('${dep.name}')">${dep.name}</a>`;
