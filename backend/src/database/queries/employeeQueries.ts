@@ -106,13 +106,13 @@ export const employeeQueries = {
   `,
 
   /**
-   * Принимает имя, фамилию, отчество, емайл, телефон, дату создания, описание, id отдела, id должности, id фотографии.
+   * Принимает фамилию, имя, отчество, емайл, телефон, дату создания, описание, id отдела, id должности, id фотографии.
    * Создает профиль.
    */
   create: `
     INSERT INTO employee (
-      firstname,
       lastname,
+      firstname,
       middlename,
       email,
       phone,
