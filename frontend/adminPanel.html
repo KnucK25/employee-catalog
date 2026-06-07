@@ -98,9 +98,9 @@
                     <div class="col-md-2">
                         <div class="card border-0 shadow h-100">
                             <div class="card-body p-4">
-                                <h5 class="card-title-search mb-3 fw-bold">УПРАВЛЕНИЕ</h5>
-                                <button class="btn btn-add-employee w-100 py-2" onclick="openAddEntityModal()">
-                                    Действие
+                                <h5 class="card-title-search mb-3 fw-bold">ПРАВКА</h5>
+                                <button class="btn btn-add-employee w-100 py-2" onclick="openControlModal()">
+                                    Правка
                                 </button>
                             </div>
                         </div>
@@ -135,46 +135,53 @@
     </footer>
 
     <!-- модалка управления -->
-    <div class="modal fade" id="addEntityModal" tabindex="-1" aria-labelledby="addEntityModalLabel" aria-hidden="true">
+    <div class="modal fade" id="controlModal" tabindex="-1" aria-labelledby="controlModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addEntityModalLabel">Управление</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    <h5 class="modal-title" id="controlModalLabel">Управление</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
                 </div>
                 <div class="modal-body">
                     <!-- Кнопки выбора действия -->
-                    <div class="d-flex gap-3 mb-4">
-                        <button class="btn btn-outline-dark flex-fill" id="showAddEmployeeBtn" onclick="showAddEmployeeForm()">Сотрудник</button>
-                        <button class="btn btn-outline-dark flex-fill" id="showAddDepartmentBtn" onclick="showDepartmentForm()">Отдел</button>
-                        <button class="btn btn-outline-danger flex-fill" id="showDeleteDepartmentBtn" onclick="showDeleteDepartmentForm()">Удалить отдел</button>
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                        <button class="btn btn-action-type" onclick="showAddEmployeeForm()">Сотрудник +</button>
+                        <button class="btn btn-action-type" onclick="showDepartmentPanel()">Отделы</button>
+                        <button class="btn btn-action-type" onclick="showPostPanel()">Должности</button>
                     </div>
 
-                    <!-- Форма добавления сотрудника (пустая строка, без полей) -->
-                    <div id="addEmployeeForm" style="display: none;">
-                        <p class="text-muted">Будет создан сотрудник с пустыми данными. Заполните их позже через редактирование.</p>
-                        <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать сотрудника</button>
+                    <!-- Панель добавления сотрудника (просто пустая строка) -->
+                    <div id="addEmployeePanel" >
+                        <div class="alert alert-warning">Будет добавлен новый сотрудник с пустыми данными</div>
+                        <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать пустого сотрудника</button>
                     </div>
 
-                    <!-- Форма добавления отдела -->
-                    <div id="addDepartmentForm" style="display: none;">
+                    <!-- Панель управления отделами -->
+                    <div id="departmentPanel" >
                         <div class="mb-3">
-                            <label for="newDepartmentName" class="form-label">Название отдела</label>
-                            <input type="text" class="form-control" id="newDepartmentName" placeholder="Например: Бухгалтерия">
+                            <label class="form-label fw-bold">Новый отдел</label>
+                            <div class="input-group">
+                                <input type="text" id="newDepartmentName" class="form-control" placeholder="Название отдела">
+                                <button class="btn btn-gold" onclick="addDepartment()">Добавить</button>
+                            </div>
                         </div>
-                        <button class="btn btn-gold w-100" onclick="addDepartment()">Добавить отдел</button>
+                        <hr>
+                        <label class="form-label fw-bold">Существующие отделы</label>
+                        <ul id="departmentsList" class="list-group mt-2"></ul>
                     </div>
 
-                    <!-- Форма удаления отдела -->
-                    <div id="deleteDepartmentForm" style="display: none;">
+                    <!-- Панель управления должностями -->
+                    <div id="postPanel" >
                         <div class="mb-3">
-                            <label for="deleteDepartmentSelect" class="form-label">Выберите отдел для удаления</label>
-                            <select class="form-select" id="deleteDepartmentSelect">
-                                <option value="">Загрузка...</option>
-                            </select>
+                            <label class="form-label fw-bold">Новая должность</label>
+                            <div class="input-group">
+                                <input type="text" id="newPostName" class="form-control" placeholder="Название должности">
+                                <button class="btn btn-gold" onclick="addPost()">Добавить</button>
+                            </div>
                         </div>
-                        <button class="btn btn-danger w-100" onclick="deleteDepartment()">Удалить отдел</button>
-                        <small class="text-muted d-block mt-2">Внимание: сотрудники этого отдела останутся без отдела.</small>
+                        <hr>
+                        <label class="form-label fw-bold">Существующие должности</label>
+                        <ul id="postsList" class="list-group mt-2"></ul>
                     </div>
                 </div>
             </div>
