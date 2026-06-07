@@ -26,25 +26,29 @@ main {
     flex: 1;
 }
 
-/* НАВИГАЦИЯ */
-.navbar {
+/* НАВИГАЦИЯ*/
+.navbar.navbar {
     background-color: var(--black) !important;
-    padding: 1.2rem 0;
+    padding: 1.2rem 0 !important;
 }
 
-.navbar-brand {
+.navbar .navbar-brand {
     color: var(--accent-gold) !important;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1.3rem;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
 }
 
-.nav-link {
+.navbar .navbar-nav .nav-link {
     color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
 }
 
-.nav-link.active, .nav-link:hover {
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
     color: var(--accent-gold) !important;
 }
 /* --- ЗАГОЛОВОК И ОТСТУПЫ --- */
@@ -67,6 +71,7 @@ section.container.mt-5.mb-5 {
 .search-section-dark {
     background-color: var(--black);
     width: 75%;
+    /* max-height: 140px; */
     margin: 0 auto !important; 
     border-radius: 0;
     padding: 2.5rem 0;
@@ -93,6 +98,7 @@ section.container.mt-5.mb-5 {
     font-weight: 600;
     letter-spacing: 1.5px;
     margin-bottom: 1.2rem;
+    
     text-transform: uppercase;
 }
 
@@ -113,7 +119,7 @@ section.container.mt-5.mb-5 {
 .search-section-dark .form-control {
     border: none;
     padding: 0.75rem 0.5rem;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: var(--black);
     background-color: var(--white) !important;
     border-radius: 0;
@@ -133,7 +139,7 @@ section.container.mt-5.mb-5 {
     color: var(--white);
     border: none;
     padding: 0.75rem 2rem;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -149,7 +155,7 @@ section.container.mt-5.mb-5 {
     border: none;
     color: var(--black);
     padding: 0.75rem 1rem;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     width: 100%;
     text-align: left;
     border-radius: 0;
@@ -166,6 +172,28 @@ section.container.mt-5.mb-5 {
     background-color: var(--alt);
     color: var(--accent-gold);
 }
+
+/* кнопка */
+.search-section-dark .btn-add-employee {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border-radius: 0;
+    height: 47px;
+}
+
+.search-section-dark .btn-add-employee:hover {
+    background-color: #A98751;
+}
+
+.search-section-dark .btn-add-employee i {
+    font-size: 1.1rem;
+}
+
 
 /* --- БЕЖЕВАЯ СЕКЦИЯ (Нижний фон) --- */
 .employees-section-full-width {
@@ -268,4 +296,93 @@ footer {
 footer p {
     color: var(--accent-gold);
     font-size: 0.9rem;
+}
+
+/* модалка */
+
+/* Стили для модального окна */
+.modal-content {
+    border-radius: 0;
+    border: 2px solid var(--accent-gold);
+    background-color: var(--white);
+}
+
+.modal-header {
+    background-color: var(--black);
+    border-bottom: none;
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+}
+
+.modal-title {
+    color: var(--accent-gold);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.modal-header .btn-close {
+    filter: invert(1);
+    opacity: 0.8;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    background-color: var(--white);
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    background-color: var(--white);
+    border-top: 1px solid var(--alt);
+    border-radius: 0;
+}
+
+/* Кнопки внутри модалки */
+.modal-body .btn-outline-dark {
+    border-radius: 0;
+    border: 1px solid var(--black);
+    color: var(--black);
+    transition: all 0.2s;
+}
+
+.modal-body .btn-outline-dark:hover {
+    background-color: var(--black);
+    color: var(--white);
+}
+
+.modal-body .btn-outline-danger {
+    border-radius: 0;
+}
+
+.modal-body .btn-gold {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    border-radius: 0;
+    padding: 0.6rem 1rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.modal-body .btn-gold:hover {
+    background-color: #A98751;
+}
+
+.modal-body .btn-danger {
+    border-radius: 0;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    border-radius: 0;
+    border: 2px solid var(--accent-gold);
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--accent-gold);
+    box-shadow: none;
 }

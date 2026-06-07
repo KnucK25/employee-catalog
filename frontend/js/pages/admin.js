@@ -92,10 +92,13 @@ function populateDepartmentMenu() {
             </div>
             <div class="col-md-2 d-flex gap-2 justify-content-md-end">
                 <button class="btn btn-action-icon" title="Редактировать" onclick="editEmployee(${employee.id})">
-                    <img src="img/button_00.png" alt="Ред." style="width: 20px; height: 20px;">
+                    <img src="img/redact.png" alt="Ред." style="width: 20px; height: 20px;">
                 </button>
                 <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
-                    <img src="img/button_01.png" alt="Уд." style="width: 20px; height: 20px;">
+                    <img src="img/delete.png" alt="Уд." style="width: 20px; height: 20px;">
+                </button>
+                <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
+                    <img src="img/export.png" alt="Уд." style="width: 20px; height: 20px;">
                 </button>
             </div>
         `;
@@ -326,3 +329,158 @@ function filterByDepartment(dept) {
         console.log('DOM загружен, загружаем данные с сервера');
         loadEmployees();
     });
+
+    // Открытие модального окна
+function openAddEntityModal() {
+    document.getElementById('addEmployeeForm').style.display = 'none';
+    document.getElementById('addDepartmentForm').style.display = 'none';
+    document.getElementById('deleteDepartmentForm').style.display = 'none';
+    
+    const modal = new bootstrap.Modal(document.getElementById('addEntityModal'));
+    modal.show();
+}
+
+function showAddEmployeeForm() {
+    document.getElementById('addEmployeeForm').style.display = 'block';
+    document.getElementById('addDepartmentForm').style.display = 'none';
+    document.getElementById('deleteDepartmentForm').style.display = 'none';
+}
+
+function showDepartmentForm() {
+    document.getElementById('addEmployeeForm').style.display = 'none';
+    document.getElementById('addDepartmentForm').style.display = 'block';
+    document.getElementById('deleteDepartmentForm').style.display = 'none';
+}
+
+async function showDeleteDepartmentForm() {
+    document.getElementById('addEmployeeForm').style.display = 'none';
+    document.getElementById('addDepartmentForm').style.display = 'none';
+    document.getElementById('deleteDepartmentForm').style.display = 'block';
+    await loadDepartmentsForDelete();
+}
+
+async function loadDepartmentsForDelete() {
+    try {
+        const res = await fetch(`${API_BASE}/api/departments`);
+        const departments = await res.json();
+        
+        const select = document.getElementById('deleteDepartmentSelect');
+        select.innerHTML = '<option value="">Выберите отдел</option>';
+        
+        departments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept.id;
+            option.textContent = dept.name;
+            select.appendChild(option);
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки отделов:', err);
+    }
+}
+
+// Получение следующего ID (максимальный + 1)
+function getNextEmployeeId() {
+    if (!employees.length) return 1;
+    const maxId = Math.max(...employees.map(emp => emp.id));
+    return maxId + 1;
+}
+
+async function addEmptyEmployee() {
+    try {
+        const nextId = getNextEmployeeId();
+        
+        const emptyEmployee = {
+            id: nextId,
+            lastname: "Новый",
+            firstname: "Сотрудник",
+            middlename: "",
+            name: "Новый Сотрудник",
+            position: "Должность не указана",
+            department: "Отдел не указан",
+            email: "new@employee.ru",
+            phone: "+7 (000) 000-00-00",
+            hireDate: new Date().toISOString().split('T')[0],
+            date_admission: new Date().toISOString().split('T')[0],
+            bio: "",
+            description: "",
+            avatar: "img/team1.png",
+            departament_id: 1,
+            post_id: 1,
+            image_id: null
+        };
+        
+        const res = await fetch(`${API_BASE}/api/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lastname: emptyEmployee.lastname,
+                firstname: emptyEmployee.firstname,
+                middlename: emptyEmployee.middlename,
+                email: emptyEmployee.email,
+                phone: emptyEmployee.phone,
+                date_admission: emptyEmployee.date_admission,
+                description: emptyEmployee.description,
+                departament_id: emptyEmployee.departament_id,
+                post_id: emptyEmployee.post_id,
+                image_id: emptyEmployee.image_id
+            })
+        });
+        
+        if (res.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEntityModal'));
+            modal.hide();
+            await loadEmployees();
+            renderEmployees();
+        }
+    } catch (err) {
+        console.error('Ошибка при добавлении сотрудника:', err);
+    }
+}
+
+async function addDepartment() {
+    const nameInput = document.getElementById('newDepartmentName');
+    const name = nameInput.value.trim();
+    
+    if (!name) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/departments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name })
+        });
+        
+        if (res.ok) {
+            nameInput.value = '';
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEntityModal'));
+            modal.hide();
+            await loadEmployees();
+            populateDepartmentMenu();
+        }
+    } catch (err) {
+        console.error('Ошибка при добавлении отдела:', err);
+    }
+}
+
+async function deleteDepartment() {
+    const select = document.getElementById('deleteDepartmentSelect');
+    const departmentId = select.value;
+    
+    if (!departmentId) return;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/departments/${departmentId}`, {
+            method: 'DELETE'
+        });
+        
+        if (res.ok) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addEntityModal'));
+            modal.hide();
+            await loadEmployees();
+            populateDepartmentMenu();
+            renderEmployees();
+        }
+    } catch (err) {
+        console.error('Ошибка при удалении отдела:', err);
+    }
+}

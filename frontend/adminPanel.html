@@ -12,8 +12,10 @@
     <header>
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;"><br>
-                <a class="navbar-brand" href="index.html">Staff</a>
+                <div class="d-flex align-items-center">
+                    <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                    <a class="navbar-brand ms-2" href="index.html">Staff</a>
+                </div>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -23,7 +25,8 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
                         <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудника</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Профиль</a></li>                
+                        <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Админ панель</a></li>    
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Зарегистрироваться</a></li>                            
                     </ul>
                 </div>
             </div>
@@ -42,9 +45,9 @@
         <!-- ПАНЕЛЬ ИНСТРУМЕНТОВ -->
         <section class="search-section-dark container-fluid py-1 mb-1">
             <div class="container">
-                <div class="row g-4">
-                    <!-- Левая часть: Поиск сотрудника -->
-                    <div class="col-md-8">
+                <div class="row g-1">
+                    <!-- Поиск сотрудника -->
+                    <div class="col-md-6">
                         <div class="card border-0 shadow">
                             <div class="card-body p-4">
                                 <h5 class="card-title-search mb-3 fw-bold">ПОИСК СОТРУДНИКА</h5>
@@ -59,8 +62,8 @@
                         </div>
                     </div>
 
-                    <!-- Правая часть: Фильтры -->
-                    <div class="col-md-4">
+                    <!-- Фильтры -->
+                    <div class="col-md-2">
                         <div class="card border-0 shadow h-100">
                             <div class="card-body p-4">
                                 <h5 class="card-title-search mb-3 fw-bold">ОТДЕЛЫ</h5>
@@ -72,6 +75,33 @@
                                         <li><a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a></li>
                                     </ul>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Фильтры -->
+                    <div class="col-md-2">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4">
+                                <h5 class="card-title-search mb-3 fw-bold">ДОЛЖНОСТИ</h5>
+                                <div class="dropdown w-100">
+                                    <button class="btn btn-outline-light dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" id="departmentDropdown">
+                                        Все должности
+                                    </button>
+                                    <ul class="dropdown-menu w-100" id="departmentMenu">
+                                        <li><a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- добавить -->
+                    <div class="col-md-2">
+                        <div class="card border-0 shadow h-100">
+                            <div class="card-body p-4">
+                                <h5 class="card-title-search mb-3 fw-bold">УПРАВЛЕНИЕ</h5>
+                                <button class="btn btn-add-employee w-100 py-2" onclick="openAddEntityModal()">
+                                    Действие
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -104,10 +134,54 @@
         </div>
     </footer>
 
-    <!-- 2. Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- модалка управления -->
+    <div class="modal fade" id="addEntityModal" tabindex="-1" aria-labelledby="addEntityModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEntityModalLabel">Управление</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Кнопки выбора действия -->
+                    <div class="d-flex gap-3 mb-4">
+                        <button class="btn btn-outline-dark flex-fill" id="showAddEmployeeBtn" onclick="showAddEmployeeForm()">Сотрудник</button>
+                        <button class="btn btn-outline-dark flex-fill" id="showAddDepartmentBtn" onclick="showDepartmentForm()">Отдел</button>
+                        <button class="btn btn-outline-danger flex-fill" id="showDeleteDepartmentBtn" onclick="showDeleteDepartmentForm()">Удалить отдел</button>
+                    </div>
 
-    <!-- 3. Ваша логика админ-панели -->
+                    <!-- Форма добавления сотрудника (пустая строка, без полей) -->
+                    <div id="addEmployeeForm" style="display: none;">
+                        <p class="text-muted">Будет создан сотрудник с пустыми данными. Заполните их позже через редактирование.</p>
+                        <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать сотрудника</button>
+                    </div>
+
+                    <!-- Форма добавления отдела -->
+                    <div id="addDepartmentForm" style="display: none;">
+                        <div class="mb-3">
+                            <label for="newDepartmentName" class="form-label">Название отдела</label>
+                            <input type="text" class="form-control" id="newDepartmentName" placeholder="Например: Бухгалтерия">
+                        </div>
+                        <button class="btn btn-gold w-100" onclick="addDepartment()">Добавить отдел</button>
+                    </div>
+
+                    <!-- Форма удаления отдела -->
+                    <div id="deleteDepartmentForm" style="display: none;">
+                        <div class="mb-3">
+                            <label for="deleteDepartmentSelect" class="form-label">Выберите отдел для удаления</label>
+                            <select class="form-select" id="deleteDepartmentSelect">
+                                <option value="">Загрузка...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-danger w-100" onclick="deleteDepartment()">Удалить отдел</button>
+                        <small class="text-muted d-block mt-2">Внимание: сотрудники этого отдела останутся без отдела.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/pages/admin.js"></script>
 
 </body>
