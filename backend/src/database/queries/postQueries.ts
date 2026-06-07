@@ -25,8 +25,8 @@ export const postQueries = {
    * Создает новую должность.
    */
   create: `
-    INSERT INTO post (name)
-    VALUES (?);
+    INSERT INTO post (departament_id, name)
+    VALUES (?, ?);
   `,
 
   /**
