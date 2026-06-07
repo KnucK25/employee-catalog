@@ -26,25 +26,29 @@ main {
     flex: 1;
 }
 
-/* НАВИГАЦИЯ */
-.navbar {
+/* НАВИГАЦИЯ*/
+.navbar.navbar {
     background-color: var(--black) !important;
-    padding: 1.2rem 0;
+    padding: 1.2rem 0 !important;
 }
 
-.navbar-brand {
+.navbar .navbar-brand {
     color: var(--accent-gold) !important;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 1.3rem;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 1.3rem !important;
+    letter-spacing: normal !important;
 }
 
-.nav-link {
+.navbar .navbar-nav .nav-link {
     color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem;
+    margin-left: 1rem !important;
+    padding: 0.5rem 0 !important;
+    font-size: 1rem !important;
 }
 
-.nav-link.active, .nav-link:hover {
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
     color: var(--accent-gold) !important;
 }
 /* --- ЗАГОЛОВОК И ОТСТУПЫ --- */
@@ -53,7 +57,7 @@ section.container.mt-5.mb-5 {
 }
 
 .display-3 {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
     letter-spacing: -1px;
     color: var(--black);
 }
@@ -66,7 +70,8 @@ section.container.mt-5.mb-5 {
 /* БЛОК ПОИСКА */
 .search-section-dark {
     background-color: var(--black);
-    width: 75%;
+    width: 81%;
+    /* max-height: 140px; */
     margin: 0 auto !important; 
     border-radius: 0;
     padding: 2.5rem 0;
@@ -89,10 +94,11 @@ section.container.mt-5.mb-5 {
 
 .search-section-dark .card-title-search {
     color: var(--accent-gold);
-    font-size: 1rem;
+    font-size: 0.91rem;
     font-weight: 600;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.1px;
     margin-bottom: 1.2rem;
+    
     text-transform: uppercase;
 }
 
@@ -105,7 +111,7 @@ section.container.mt-5.mb-5 {
 .search-section-dark .input-group-text {
     background-color: var(--white);
     border: none;
-    color: var(--gray-text); 
+    color: gray; 
     padding: 0.75rem 1rem;
     border-radius: 0;
 }
@@ -113,7 +119,7 @@ section.container.mt-5.mb-5 {
 .search-section-dark .form-control {
     border: none;
     padding: 0.75rem 0.5rem;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     color: var(--black);
     background-color: var(--white) !important;
     border-radius: 0;
@@ -125,7 +131,7 @@ section.container.mt-5.mb-5 {
 }
 
 .search-section-dark .form-control::placeholder {
-    color: var(--gray-text);
+    color: gray;
 }
 
 .search-section-dark .btn-gold-search {
@@ -133,7 +139,7 @@ section.container.mt-5.mb-5 {
     color: var(--white);
     border: none;
     padding: 0.75rem 2rem;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -149,7 +155,7 @@ section.container.mt-5.mb-5 {
     border: none;
     color: var(--black);
     padding: 0.75rem 1rem;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     width: 100%;
     text-align: left;
     border-radius: 0;
@@ -166,6 +172,27 @@ section.container.mt-5.mb-5 {
     background-color: var(--alt);
     color: var(--accent-gold);
 }
+
+/* кнопка */
+.search-section-dark .btn-add-employee {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    border-radius: 0;
+    height: 44px;
+}
+
+.search-section-dark .btn-add-employee:hover {
+    background-color: #A98751;
+}
+
+.search-section-dark .btn-add-employee i {
+    font-size: 1.1rem;
+}
+
 
 /* --- БЕЖЕВАЯ СЕКЦИЯ (Нижний фон) --- */
 .employees-section-full-width {
@@ -268,4 +295,80 @@ footer {
 footer p {
     color: var(--accent-gold);
     font-size: 0.9rem;
+}
+
+/* модалка */
+
+/* Модальное окно */
+.modal-content {
+    border-radius: 0;
+    border: 2px solid var(--accent-gold);
+}
+
+.modal-header {
+    background-color: var(--black);
+    border-bottom: none;
+    border-radius: 0;
+}
+
+.modal-title {
+    color: var(--accent-gold);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.btn-close-white {
+    filter: invert(1);
+}
+
+.btn-action-type {
+    background-color: var(--black);
+    color: var(--white);
+    border: 1px solid var(--accent-gold);
+    border-radius: 0;
+    padding: 0.5rem 1.2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-action-type:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+    border-color: var(--accent-gold);
+}
+
+.btn-gold {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    border-radius: 0;
+    padding: 0.5rem 1.2rem;
+    font-weight: 500;
+}
+
+.btn-gold:hover {
+    background-color: #A98751;
+    color: var(--white);
+}
+
+.btn-delete {
+    background-color: #DC3545;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+}
+
+.btn-delete:hover {
+    background-color: #B02A37;
+}
+
+.list-group-item {
+    border-radius: 0;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }

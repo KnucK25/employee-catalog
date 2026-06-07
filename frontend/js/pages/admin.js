@@ -92,10 +92,13 @@ function populateDepartmentMenu() {
             </div>
             <div class="col-md-2 d-flex gap-2 justify-content-md-end">
                 <button class="btn btn-action-icon" title="Редактировать" onclick="editEmployee(${employee.id})">
-                    <img src="img/button_00.png" alt="Ред." style="width: 20px; height: 20px;">
+                    <img src="img/redact.png" alt="Ред." style="width: 20px; height: 20px;">
                 </button>
                 <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
-                    <img src="img/button_01.png" alt="Уд." style="width: 20px; height: 20px;">
+                    <img src="img/delete.png" alt="Уд." style="width: 20px; height: 20px;">
+                </button>
+                <button class="btn btn-action-icon" title="Экспорт" onclick="exportEmployee(${employee.id})">
+                    <img src="img/export.png" alt="Уд." style="width: 20px; height: 20px;">
                 </button>
             </div>
         `;
@@ -326,3 +329,140 @@ function filterByDepartment(dept) {
         console.log('DOM загружен, загружаем данные с сервера');
         loadEmployees();
     });
+
+    
+
+
+    // Открытие модального окна
+function openControlModal() {
+    document.getElementById('addEmployeePanel').style.display = 'none';
+    document.getElementById('departmentPanel').style.display = 'none';
+    document.getElementById('postPanel').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('controlModal')).show();
+}
+
+// Показать форму добавления сотрудника
+function showAddEmployeeForm() {
+    document.getElementById('addEmployeePanel').style.display = 'block';
+    document.getElementById('departmentPanel').style.display = 'none';
+    document.getElementById('postPanel').style.display = 'none';
+}
+
+// Показать панель отделов
+async function showDepartmentPanel() {
+    document.getElementById('addEmployeePanel').style.display = 'none';
+    document.getElementById('departmentPanel').style.display = 'block';
+    document.getElementById('postPanel').style.display = 'none';
+    await loadDepartmentsForModal();
+}
+
+// Показать панель должностей
+async function showPostPanel() {
+    document.getElementById('addEmployeePanel').style.display = 'none';
+    document.getElementById('departmentPanel').style.display = 'none';
+    document.getElementById('postPanel').style.display = 'block';
+    await loadPostsForModal();
+}
+
+// Загрузка отделов для модалки
+async function loadDepartmentsForModal() {
+    const res = await fetch(`${API_BASE}/api/departments`);
+    const depts = await res.json();
+    const container = document.getElementById('departmentsList');
+    container.innerHTML = '';
+    depts.forEach(dept => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+            ${dept.name}
+            <button class="btn btn-delete" onclick="deleteDepartment(${dept.id})">Удалить</button>
+        `;
+        container.appendChild(li);
+    });
+}
+
+// Загрузка должностей для модалки
+async function loadPostsForModal() {
+    const res = await fetch(`${API_BASE}/api/posts`);
+    const posts = await res.json();
+    const container = document.getElementById('postsList');
+    container.innerHTML = '';
+    posts.forEach(post => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerHTML = `
+            ${post.name}
+            <button class="btn btn-delete" onclick="deletePost(${post.id})">Удалить</button>
+        `;
+        container.appendChild(li);
+    });
+}
+
+// Добавление отдела
+async function addDepartment() {
+    const name = document.getElementById('newDepartmentName').value.trim();
+    if (!name) return false;
+    await fetch(`${API_BASE}/api/departments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    });
+    document.getElementById('newDepartmentName').value = '';
+    await loadDepartmentsForModal();
+    await loadEmployees();
+}
+
+// Удаление отдела
+async function deleteDepartment(id) {
+    await fetch(`${API_BASE}/api/departments/${id}`, { method: 'DELETE' });
+    await loadDepartmentsForModal();
+    await loadEmployees();
+}
+
+// Добавление должности
+async function addPost() {
+    const name = document.getElementById('newPostName').value.trim();
+    if (!name) return false;
+    await fetch(`${API_BASE}/api/posts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    });
+    document.getElementById('newPostName').value = '';
+    await loadPostsForModal();
+    await loadEmployees();
+}
+
+// Удаление должности
+async function deletePost(id) {
+    await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
+    await loadPostsForModal();
+    await loadEmployees();
+}
+
+// Добавление пустого сотрудника
+async function addEmptyEmployee() {
+    const emptyEmployee = {
+        lastname: 'Новый',
+        firstname: 'Сотрудник',
+        middlename: '',
+        email: 'Пусто',
+        phone: 'Пусто',
+        date_admission: new Date().toISOString().split('T')[0],
+        description: '',
+        departament_id: 1,
+        post_id: 1,
+        image_id: null
+    };
+
+    await fetch(`${API_BASE}/api/employees`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(emptyEmployee)
+    });
+
+    const modal = bootstrap.Modal.getInstance(document.getElementById('controlModal'));
+    if (modal) modal.hide();
+
+    await loadEmployees();
+}
