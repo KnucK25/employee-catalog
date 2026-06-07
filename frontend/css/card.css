@@ -28,7 +28,7 @@ main {
     flex: 1 0 auto;
 }
 
-/* НАВИГАЦИЯ  */
+/* НАВИГАЦИЯ*/
 .navbar.navbar {
     background-color: var(--black) !important;
     padding: 1.2rem 0 !important;
