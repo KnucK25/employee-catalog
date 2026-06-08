@@ -32,10 +32,8 @@ CREATE TABLE IF NOT EXISTS employee (
   phone TEXT NOT NULL,
   date_admission TEXT DEFAULT CURRENT_TIMESTAMP,
   description TEXT,
-  departament_id INTEGER NOT NULL,
   post_id INTEGER NOT NULL,
   image_id INTEGER,
-  FOREIGN KEY (departament_id) REFERENCES departament(id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE ON UPDATE CASCADE,
   FOREIGN KEY (image_id) REFERENCES image(id) ON DELETE SET NULL ON UPDATE CASCADE
 );
@@ -63,7 +61,6 @@ CREATE TABLE IF NOT EXISTS account (
 CREATE INDEX IF NOT EXISTS idx_departament_name ON departament(name);
 CREATE INDEX IF NOT EXISTS idx_post_name ON post(name);
 
-CREATE INDEX IF NOT EXISTS idx_employee_departament_id ON employee(departament_id);
 CREATE INDEX IF NOT EXISTS idx_employee_post_id ON employee(post_id);
 CREATE INDEX IF NOT EXISTS idx_employee_image_id ON employee(image_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_employee_email ON employee(email);
