@@ -1,6 +1,26 @@
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
 let employees = [];
+let departmentsList = [];
+let postsList = [];
+
+async function loadPosts() {
+    try {
+        const res = await fetch(`${API_BASE}/api/posts`)
+        postsList = await res.json()
+    } catch (err) {
+        console.warn('Не удалось загрузить должности')
+    }
+}
+
+async function loadDepartments() {
+    try {
+        const res = await fetch(`${API_BASE}/api/departments`)
+        departmentsList = await res.json()
+    } catch (err) {
+        console.warn('Не удалось загрузить отделы')
+    }
+}
 
 async function loadEmployees() {
     try {
@@ -37,7 +57,7 @@ function renderCatalog(employeesList) {
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="employee-card">
                     <div class="employee-photo">
-                        <img src="${emp.avatar || 'img/team1.png'}" alt="${emp.name}">
+                        <img src="${emp.avatar || 'img/bio.png'}" alt="${emp.name}">
                     </div>
                     <div class="employee-info">
                         <h5 class="employee-name">${emp.name}</h5>
@@ -65,9 +85,10 @@ function searchEmployees(query) {
     if (!query.trim()) {
         renderCatalog(employees);
     } else {
+        // Не уверен что через и правильно, если что нужно изменить
         renderCatalog(employees.filter(e =>
-            e.name.toLowerCase().includes(query.toLowerCase()) ||
-            e.position.toLowerCase().includes(query.toLowerCase()) ||
+            e.name.toLowerCase().includes(query.toLowerCase()) &&
+            e.position.toLowerCase().includes(query.toLowerCase()) &&
             e.department.toLowerCase().includes(query.toLowerCase())
         ));
     }
@@ -76,5 +97,5 @@ function searchEmployees(query) {
 document.addEventListener('DOMContentLoaded', () => {
     loadEmployees();
     document.getElementById('departmentFilter')?.addEventListener('change', e => filterByDepartment(e.target.value));
-    document.getElementById('searchInput')?.addEventListener('input', e => searchEmployees(e.target.value));
+    document.getElementById('searchBtn')?.addEventListener('click', () => searchEmployees(document.getElementById('searchInput').value));
 });

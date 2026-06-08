@@ -13,8 +13,10 @@
     <!-- НАВИГАЦИЯ -->
         <nav class="navbar navbar-expand-lg sticky-top">
             <div class="container">
-                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
-                <a class="navbar-brand" href="index.html">Staff</a>
+                <div class="d-flex align-items-center">
+                    <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                    <a class="navbar-brand ms-2" href="index.html">Staff</a>
+                </div>
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -25,7 +27,7 @@
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
                         <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
                         <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
-                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Профиль</a></li>               
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Зарегистрироваться</a></li>               
                     </ul>
                 </div>
             </div>
@@ -43,19 +45,30 @@
             <div class="container">
                 <div class="row g-4 align-items-end">
                     <!-- Поиск -->
-                    <div class="col-md-8">
+                    <div class="col-md-6">
                         <h5 class="card-title-search">ПОИСК СОТРУДНИКА</h5>
                         <div class="input-group">
                             <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
-                            <button class="btn btn-gold-search" type="button">НАЙТИ</button>
+                            <button class="btn btn-gold-search" type="button" id="searchBtn">НАЙТИ</button>
                         </div>
                     </div>
                     <!-- Фильтр -->
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5 class="card-title-search">ОТДЕЛЫ</h5>
                         <!-- Используем класс custom-select-flat как в админке -->
                         <select id="departmentFilter" class="custom-select-flat">
                             <option value="all">Все отделы</option>
+                            <option value="Управление">Управление</option>
+                            <option value="Маркетинг">Маркетинг</option>
+                            <option value="Административный отдел">Административный отдел</option>
+                        </select>
+                    </div>
+                    <!-- Фильтр -->
+                    <div class="col-md-3">
+                        <h5 class="card-title-search">ДОЛЖНОСТИ</h5>
+                        <!-- Используем класс custom-select-flat как в админке -->
+                        <select id="departmentFilter" class="custom-select-flat">
+                            <option value="all">Все должности</option>
                             <option value="Управление">Управление</option>
                             <option value="Маркетинг">Маркетинг</option>
                             <option value="Административный отдел">Административный отдел</option>
