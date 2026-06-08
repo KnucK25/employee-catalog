@@ -5,7 +5,7 @@ export const postQueries = {
    * Возвращает все должности(id, name)
    */
   getAll: `
-    SELECT id, name
+    SELECT id, name, departament_id
     FROM post
     ORDER BY name;
   `,
@@ -15,7 +15,7 @@ export const postQueries = {
    * Возвращает id должности, название.
    */
   getById: `
-    SELECT id, name
+    SELECT id, name, departament_id
     FROM post
     WHERE id = ?;
   `,
@@ -35,7 +35,7 @@ export const postQueries = {
    */
   update: `
     UPDATE post
-    SET name = ?
+    SET name = ?, departament_id = ?
     WHERE id = ?;
   `,
 
