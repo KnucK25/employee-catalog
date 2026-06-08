@@ -1,355 +1,294 @@
-:root {
-    --alt: #F1EEE6;       /* бежевый для акцентных секций */
-    --white: #FFFFFF;     /* белый для карточек */
-    --black: #000000;      /* черный */
-    --accent-gold: #C29F64;  /* золотой акцентный */
-}
-
-body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--bg-hero);
-    color: var(--text-main);
-    line-height: 1.6;
-}
-
-/* ============================================ */
-/* НАВИГАЦИЯ (усиленные селекторы для переопределения Bootstrap) */
-/* ============================================ */
-.navbar.navbar {
-    background-color: var(--black) !important;
-    padding: 1.2rem 0 !important;
-}
-
-.navbar .navbar-brand {
-    color: var(--accent-gold) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 1.3rem !important;
-    letter-spacing: normal !important;
-}
-
-.navbar .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem !important;
-    padding: 0.5rem 0 !important;
-    font-size: 1rem !important;
-}
-
-.navbar .navbar-nav .nav-link.active,
-.navbar .navbar-nav .nav-link:hover {
-    color: var(--accent-gold) !important;
-}
-
-/* HERO СЕКЦИЯ */
-header {
-    background-color:var(--white);
+/* HERO СЕКЦИЯ - минималистичная */
+.hero-section {
+    background-color: var(--black);
     background-image: url(../img/hero2.png);
-    background-size: cover;       
-    background-position: center;
-    background-repeat: no-repeat; 
-    padding-bottom: 4rem;
-    min-height: 75vh; 
+    background-size: cover;
+    background-position: center 70%;
+    background-repeat: no-repeat;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    position: relative;
+    
 }
 
-header h1 {
-    font-weight: 800;
-    font-size: 3rem;
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-section h1 {
+    font-weight: 700;
+    font-size: 3.5rem;
     text-transform: uppercase;
     color: var(--white);
-    margin-top: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: 3px;
 }
 
-header .lead {
+.hero-section .lead {
     color: var(--accent-gold);
-    font-size: 1.15rem;
-    margin-bottom: 2rem;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
 }
 
-header .mx-auto {
+.hero-section .mx-auto {
     color: var(--alt);
     font-size: 1rem;
-    max-width: 650px;
-    margin-bottom: 4rem;
-    opacity: 75%;
+    max-width: 550px;
+    margin-bottom: 2.5rem;
+    opacity: 0.8;
 }
 
-/* КНОПКИ */
-header .btn {
-    padding: 1rem 2rem;
+/* КНОПКИ HERO */
+.hero-section .btn {
+    padding: 0.8rem 2rem;
     font-weight: 600;
     border-radius: 0;
-    min-width: 220px;
-    transition: 0.3s;
+    min-width: 200px;
+    transition: all 0.3s ease;
     font-size: 1rem;
 }
 
-header .btn:first-child {
+.hero-section .btn:first-child {
     background-color: var(--accent-gold);
-    color: #111;
+    color: var(--black);
     border: 1px solid var(--accent-gold);
 }
 
-header .btn:first-child:hover {
+.hero-section .btn:first-child:hover {
     background-color: transparent;
-    color: #fff;
+    color: var(--white);
+    border-color: var(--white);
 }
 
-header .btn:last-child {
+.hero-section .btn:last-child {
     background-color: transparent;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255);
+    color: var(--white);
+    border: 1px solid var(--white);
 }
 
-header .btn:last-child:hover {
-    background-color: #fff;
-    color: #111;
-    border-color: #111;
+.hero-section .btn:last-child:hover {
+    background-color: var(--white);
+    color: var(--black);
+    border-color: var(--white);
 }
 
-/* Золотая линия под заголовками секций */
+/* Общие стили для секций */
 section h2 {
-    font-weight: 800;
-    color: var(--text-main);
-    margin-bottom: 3rem;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 2.5rem;
     position: relative;
     display: inline-block;
+    font-size: 2rem;
+    letter-spacing: 1px;
 }
 
 section h2::after {
     content: '';
     display: block;
-    width: 50px;
+    width: 60px;
     height: 2px;
     background-color: var(--accent-gold);
-    margin: 1.25rem auto 0;
+    margin: 0.8rem auto 0;
 }
 
-/* СЕКЦИЯ 1: О НАС*/
+/* Секция О нас */
+.about-section {
+    background-color: var(--alt);
+    padding: 4rem 0;
+}
+
+.about-section p {
+    color: var(--black);
+    line-height: 1.7;
+    font-size: 1rem;
+    max-width: 750px;
+    margin: 0 auto;
+}
 
 .about-section .fs-1 {
     color: var(--accent-gold);
     font-weight: 700;
-    font-size: 3rem !important;
 }
 
 .about-section .small {
     color: var(--black);
-    font-weight: 600;
     letter-spacing: 1px;
+    font-weight: 500;
 }
 
-/* СЕКЦИЯ 2: НАШИ ПРЕИМУЩЕСТВА*/
+/* Секция преимущества */
 .advantages-section {
-    background-color: var(--alt);
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: var(--white);
+    padding: 4rem 0;
 }
 
-.advantages-section .h-100 {
-    background-color: var(--white);
-    padding: 3.5rem 2rem;
+.advantages-section .col-md-4 > div {
     text-align: center;
-    border: 1px solid rgba(194, 160, 106, 0.4);
-    outline: 1px solid rgba(194, 160, 106, 0.4);
-    outline-offset: -6px;
+}
+
+.advantages-section .mb-3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.advantages-section img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    display: block;
 }
 
 .advantages-section h4 {
-    font-weight: 800;
-    font-size: 1.2rem;
     color: var(--black);
-    margin-bottom: 1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.25rem;
 }
 
 .advantages-section p {
-    color: var(--text-muted);
-    font-size: 0.95rem;
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    max-width: 250px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-/* СЕКЦИЯ 3: СТАТИСТИКА*/
+
+
+/* Секция статистики */
 .stats-section {
     background-color: var(--black);
+    padding: 4rem 0;
 }
 
 .stats-section .fs-1 {
     color: var(--accent-gold);
     font-weight: 700;
-    font-size: 3.5rem !important;
-    margin-bottom: 0.25rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
 }
 
 .stats-section .small {
-    color: rgba(255, 255, 255, 0.8);
-    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 1.5px;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
-/* СЕКЦИЯ 4:КОМАНДА*/
+/* Секция команды - квадратные карточки с круглыми фото */
 .team-section {
     background-color: var(--alt);
+    padding: 4rem 0;
+}
+
+.team-section .col-md-4 > div {
+    background-color: var(--white);
+    padding: 2rem 1rem;
+    height: 100%;
+}
+
+.team-section .mb-3 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1.5rem;
 }
 
 .team-section img {
-    border: 1px solid rgba(194, 160, 106, 0.8);
-    padding: 3px;
-    background-color: var(--bg-cards);
-    width: 150px !important;
-    height: 150px !important;
+    width: 120px;
+    height: 120px;
     object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--accent-gold);
+    transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
-.team-section .col-md-4 .text-center{
-    background-color: var(--white);
-    padding: 3rem 0.5rem;
-    text-align: center;
-    border: 1px solid rgba(194, 160, 106, 0.4);
-    outline: 1px solid rgba(194, 160, 106, 0.4);
-    outline-offset: -6px;
+.team-section img:hover {
+    transform: scale(1.05);
+    border-color: var(--black);
 }
 
 .team-section h4 {
-    font-weight: 800;
-    font-size: 1.2rem;
     color: var(--black);
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
 }
 
 .team-section .text-secondary {
-    color: var(--black) !important;
+    color: var(--accent-gold) !important;
     font-weight: 500;
-}
-/* ФУТЕР */
-footer {
-    background-color: var(--black);
-    height: 120px;
-
-}
-
-footer p {
-    color: var(--accent-gold);
     font-size: 0.9rem;
 }
 
-
-
-/* ===== Стили для модального окна авторизации ===== */
-
-/* Контейнер модального окна — убираем тени и скругления */
-.modal-content {
-    background-color: var(--white);
-    border: 2px solid var(--accent-gold);
-    border-radius: 0 !important;
-    box-shadow: none !important;
+/* Адаптив для главной страницы */
+@media (max-width: 768px) {
+    .hero-section {
+        min-height: 60vh;
+        padding: 2rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+        letter-spacing: 2px;
+    }
+    
+    .hero-section .lead {
+        font-size: 1rem;
+    }
+    
+    .hero-section .btn {
+        padding: 0.6rem 1.5rem;
+        min-width: 160px;
+        font-size: 0.9rem;
+    }
+    
+    section h2 {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-section .fs-1 {
+        font-size: 1.8rem;
+    }
+    
+    .advantages-section,
+    .about-section,
+    .stats-section,
+    .team-section {
+        padding: 2.5rem 0;
+    }
 }
 
-/* Шапка модального окна */
-.modal-header {
-    background-color: var(--black);
-    border: none;
-    border-radius: 0 !important;
-    padding: 1rem 1.5rem;
-}
-
-.modal-header .modal-title {
-    color: var(--white);
-    font-weight: 600;
-    letter-spacing: -0.3px;
-}
-
-/* Кнопка закрытия (крестик) — делаем золотой */
-.modal-header .btn-close {
-    filter: invert(1) brightness(100%);
-    opacity: 0.8;
-    transition: opacity 0.2s;
-}
-
-.modal-header .btn-close:hover {
-    opacity: 1;
-    filter: invert(1) brightness(100%);
-}
-
-/* Тело модального окна */
-.modal-body {
-    background-color: var(--alt);
-    padding: 1.5rem;
-}
-
-/* Стили для форм */
-.modal-body .form-label {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray-text);
-    font-weight: 500;
-    margin-bottom: 0.25rem;
-}
-
-.modal-body .form-control {
-    background-color: var(--white);
-    border: 1px solid var(--gray-light);
-    border-radius: 0 !important;
-    padding: 0.6rem 0.75rem;
-    font-size: 0.9rem;
-    transition: border-color 0.2s;
-}
-
-.modal-body .form-control:focus {
-    border-color: var(--accent-gold);
-    box-shadow: none;
-    outline: none;
-}
-
-/* Кнопки в модалке */
-.modal-body .btn-dark {
-    background-color: var(--black);
-    border: 2px solid var(--accent-gold);
-    border-radius: 0 !important;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-}
-
-.modal-body .btn-dark:hover {
-    background-color: var(--accent-gold);
-    border-color: var(--accent-gold);
-    color: var(--black);
-}
-
-/* Ссылки внутри модалки (переключение форм) */
-.modal-body a {
-    color: var(--black);
-    text-decoration: none;
-    border-bottom: 1px solid var(--accent-gold);
-    transition: color 0.2s;
-}
-
-.modal-body a:hover {
-    color: var(--accent-gold);
-    border-bottom-color: var(--black);
-}
-
-/* Разделитель hr */
-.modal-body hr {
-    border-top: 1px solid var(--gray-light);
-    opacity: 0.5;
-    margin: 1.5rem 0;
-}
-
-/* Сообщения об ошибках (если добавите) */
-.modal-body .alert {
-    border-radius: 0 !important;
-    border: none;
-    font-size: 0.85rem;
-    padding: 0.5rem 0.75rem;
-}
-
-.modal-body .alert-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-}
-
-.modal-body .alert-success {
-    background-color: #d4edda;
-    color: #155724;
+@media (max-width: 576px) {
+    .hero-section h1 {
+        font-size: 1.5rem;
+    }
+    
+    .hero-section .d-flex {
+        flex-direction: column;
+        gap: 1rem !important;
+    }
+    
+    .hero-section .btn {
+        width: 100%;
+        max-width: 250px;
+        margin: 0 auto;
+    }
+    
+    .about-section .d-flex {
+        gap: 1.5rem !important;
+    }
+    
+    .stats-section .row {
+        gap: 1.5rem 0;
+    }
 }
