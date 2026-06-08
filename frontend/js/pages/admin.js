@@ -363,7 +363,7 @@ function filterByPost(post) {
         return;
     }
 
-    const filtered = employees.filter(e => e.post === post);
+    const filtered = employees.filter(e => e.position === post);
     const container = document.getElementById('employeesContainer');
 
     if (!container) return;
@@ -371,6 +371,41 @@ function filterByPost(post) {
     const existingRows = container.querySelectorAll('.admin-employee-row');
     existingRows.forEach(row => row.remove());
     filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
+}
+
+async function exportAllEmployees() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        alert('Для экспорта необходимо войти в аккаунт');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/export/csv`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.removeItem('authToken');
+            return;
+        }
+
+        if (!res.ok) {
+            alert('Ошибка экспорта');
+            return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'employees.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert('Ошибка сети при экспорте');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

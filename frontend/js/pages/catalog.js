@@ -77,7 +77,21 @@ function filterByDepartment(dept) {
     if (dept === 'all') {
         renderCatalog(employees);
     } else {
-        renderCatalog(employees.filter(e => e.department === dept));
+        const filtered = employees.filter(function(e) {
+            return e.department === dept;
+        });
+        renderCatalog(filtered);
+    }
+}
+
+function filterByPosition(position) {
+    if (position === 'all') {
+        renderCatalog(employees);
+    } else {
+        const filtered = employees.filter(function(e) {
+            return e.position === position;
+        });
+        renderCatalog(filtered);
     }
 }
 
@@ -85,17 +99,20 @@ function searchEmployees(query) {
     if (!query.trim()) {
         renderCatalog(employees);
     } else {
-        // Не уверен что через и правильно, если что нужно изменить
-        renderCatalog(employees.filter(e =>
-            e.name.toLowerCase().includes(query.toLowerCase()) &&
-            e.position.toLowerCase().includes(query.toLowerCase()) &&
-            e.department.toLowerCase().includes(query.toLowerCase())
-        ));
+        const q = query.toLowerCase();
+        const filtered = employees.filter(function(e) {
+            const inName = e.name.toLowerCase().includes(q);
+            const inPosition = e.position.toLowerCase().includes(q);
+            const inDepartment = e.department.toLowerCase().includes(q);
+            return inName || inPosition || inDepartment;
+        });
+        renderCatalog(filtered);
     }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     loadEmployees();
     document.getElementById('departmentFilter')?.addEventListener('change', e => filterByDepartment(e.target.value));
+    document.getElementById('positionFilter')?.addEventListener('change', e => filterByPosition(e.target.value));
     document.getElementById('searchBtn')?.addEventListener('click', () => searchEmployees(document.getElementById('searchInput').value));
 });
