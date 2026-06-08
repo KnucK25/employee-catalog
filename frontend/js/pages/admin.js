@@ -3,16 +3,8 @@ const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 let employees = [];
 let departmentsList = [];
 let postsList = [];
-
-
-async function loadPosts() {
-    try {
-        const res = await fetch(`${API_BASE}/api/posts`);
-        postsList = await res.json();
-    } catch (err) {
-        console.warn('Не удалось загрузить должности');
-    }
-}
+let editingEmployeeId = null; // ID строки, которая сейчас редактируется
+let selectedDepartament = null
 
 async function loadEmployees() {
     try {
@@ -31,8 +23,9 @@ async function loadEmployees() {
         postsList = await postsRes.json();
         
         // Теперь всё загружено, можно отрисовывать
-        renderEmployees();
-        populateDepartmentMenu(); // Отдельная функция для меню отделов
+        await renderEmployees();
+        await populateDepartmentMenu(); // Отдельная функция для меню отделов
+        await populatePostMenu(); // Отдельная функция для меню должностей
         
     } catch (err) {
         console.error('Ошибка загрузки:', err);
@@ -63,85 +56,113 @@ function populateDepartmentMenu() {
     });
 }
 
-    // отладка
-    console.log('Скрипт загрузился');
+function populatePostMenu() {
+    const menu = document.getElementById('postMenu')
+    if (!menu) return;
+    menu.innerHTML = ''
+    const AllLi = document.createElement('li')
+    AllLi.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByPost('all')">Все должности</a>`;
+    if (selectedDepartament === null) {
+        postsList.forEach(post => {
+            const li = document.createElement('li')
+            li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByPost('${post.name}')">${post.name}</a>`
+            menu.appendChild(li)
+        })
+    }
+    else {
+        
+    }
+}
 
-    function createEmployeeRow(employee) {
-        const row = document.createElement('div');
-        row.className = 'row admin-employee-row align-items-center';
-        row.setAttribute('data-id', employee.id);
-        row.setAttribute('data-department', employee.department);
-        row.setAttribute('data-name', employee.name.toLowerCase());
-        row.setAttribute('data-position', employee.position.toLowerCase());
+// отладка
+console.log('Скрипт загрузился');
 
-        row.innerHTML = `
-            <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-                <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
-                <div>
-                    <div class="admin-employee-name">${employee.name}</div>
-                    <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
+function createEmployeeRow(employee) {
+    const row = document.createElement('div');
+    row.className = 'row admin-employee-row align-items-center';
+    row.setAttribute('data-id', employee.id);
+    row.setAttribute('data-department', employee.department);
+    row.setAttribute('data-name', employee.name.toLowerCase());
+    row.setAttribute('data-position', employee.position.toLowerCase());
+
+    row.innerHTML = `
+        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <div>
+                <div class="admin-employee-name">${employee.name}</div>
+                <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2 mb-md-0">
+            <div class="admin-employee-name" style="font-size: 0.9rem;">${employee.department}</div>
+            <div class="admin-employee-text">${employee.position}</div>
+        </div>
+        <div class="col-md-3 mb-3 mb-md-0">
+            <div class="admin-employee-text">${employee.phone}</div>
+            <div class="admin-employee-text">${employee.email}</div>
+        </div>
+        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-action-icon" title="Редактировать" onclick="editEmployee(${employee.id})">
+                <img src="img/redact.png" alt="Ред." style="width: 20px; height: 20px;">
+            </button>
+            <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
+                <img src="img/delete.png" alt="Уд." style="width: 20px; height: 20px;">
+            </button>
+            <button class="btn btn-action-icon" title="Экспорт" onclick="exportEmployee(${employee.id})">
+                <img src="img/export.png" alt="Уд." style="width: 20px; height: 20px;">
+            </button>
+        </div>
+    `;
+
+    console.log('Строка создана для:', employee.name);
+    return row;
+}
+
+async function deleteEmployee(employeeId) {
+    try {
+        await fetch(`${API_BASE}/api/employees/${employeeId}`, { method: 'DELETE' });
+    } catch (err) {
+        console.warn('Ошибка удаления на сервере:', err);
+    }
+
+    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+
+    if (row) {
+        row.remove();
+    }
+
+    const index = employees.findIndex(emp => emp.id === employeeId);
+
+    if (index !== -1) {
+        employees.splice(index, 1);
+    }
+
+    if (employees.length === 0) {
+        const container = document.getElementById('employeesContainer');
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted">Сотрудники не найдены</p>
                 </div>
-            </div>
-            <div class="col-md-3 mb-2 mb-md-0">
-                <div class="admin-employee-name" style="font-size: 0.9rem;">${employee.department}</div>
-                <div class="admin-employee-text">${employee.position}</div>
-            </div>
-            <div class="col-md-3 mb-3 mb-md-0">
-                <div class="admin-employee-text">${employee.phone}</div>
-                <div class="admin-employee-text">${employee.email}</div>
-            </div>
-            <div class="col-md-2 d-flex gap-2 justify-content-md-end">
-                <button class="btn btn-action-icon" title="Редактировать" onclick="editEmployee(${employee.id})">
-                    <img src="img/redact.png" alt="Ред." style="width: 20px; height: 20px;">
-                </button>
-                <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
-                    <img src="img/delete.png" alt="Уд." style="width: 20px; height: 20px;">
-                </button>
-                <button class="btn btn-action-icon" title="Экспорт" onclick="exportEmployee(${employee.id})">
-                    <img src="img/export.png" alt="Уд." style="width: 20px; height: 20px;">
-                </button>
             </div>
         `;
-
-        console.log('Строка создана для:', employee.name);
-        return row;
     }
 
-    async function deleteEmployee(employeeId) {
-        try {
-            await fetch(`${API_BASE}/api/employees/${employeeId}`, { method: 'DELETE' });
-        } catch (err) {
-            console.warn('Ошибка удаления на сервере:', err);
-        }
-
-        const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
-
-        if (row) {
-            row.remove();
-        }
-
-        const index = employees.findIndex(emp => emp.id === employeeId);
-
-        if (index !== -1) {
-            employees.splice(index, 1);
-        }
-
-        if (employees.length === 0) {
-            const container = document.getElementById('employeesContainer');
-            container.innerHTML = `
-                <div class="row">
-                    <div class="col-12 text-center py-4">
-                        <p class="text-muted">Сотрудники не найдены</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
-    }
+    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
+}
 
 // Функция редактирования
 function editEmployee(employeeId) {
+    // Если уже редактируется ДРУГАЯ строка — отменяем предыдущую
+    if (editingEmployeeId !== null && editingEmployeeId !== employeeId) {
+        cancelEdit(editingEmployeeId);
+    }
+    
+    // Если эта же строка уже редактируется — ничего не делаем
+    if (editingEmployeeId === employeeId) return;
+    
+    editingEmployeeId = employeeId;
+
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return;
 
@@ -160,19 +181,18 @@ function editEmployee(employeeId) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <input type="file" accept=".png,.jpeg,.jpg,.webp"/>
             <div class="w-100">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-lastname" value="${employee.lastname || ''}" placeholder="Фамилия">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-firstname" value="${employee.firstname || ''}" placeholder="Имя">
+                <input type="text" class="form-control form-control-sm border-light mb-1 edit-lastname" value="${employee.lastname || ''}" placeholder="Фамилия">
+                <input type="text" class="form-control form-control-sm border-light mb-1 edit-firstname" value="${employee.firstname || ''}" placeholder="Имя">
                 <input type="text" class="form-control form-control-sm border-light mb-1 edit-middlename" value="${employee.middlename || ''}" placeholder="Отчество">
             </div>
         </div>
         <div class="col-md-3 mb-2 mb-md-0">
-            <!-- ДОБАВЛЕНО style="width: 100%;" -->
             <select class="form-select form-select-sm border-light mb-1 edit-department-id" style="width: 100%;">
                 ${deptOptions}
             </select>
-            <!-- ДОБАВЛЕНО style="width: 100%;" -->
             <select class="form-select form-select-sm border-light edit-post-id" style="width: 100%;">
                 ${postOptions}
             </select>
@@ -182,8 +202,8 @@ function editEmployee(employeeId) {
             <input type="email" class="form-control form-control-sm border-light edit-email" value="${employee.email}" placeholder="Email">
         </div>
         <div class="col-md-2 d-flex gap-2 justify-content-md-end">
-            <button class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
-            <button class="btn btn-secondary btn-sm" onclick="cancelEdit(${employeeId})" title="Отмена">✕</button>
+            <button type="button" class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${employeeId})" title="Отмена">✕</button>
         </div>
     `;
 }
@@ -195,12 +215,10 @@ async function saveEmployee(employeeId) {
 
     const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
 
-    // 1. Читаем ФИО из отдельных полей
     const lastname = row.querySelector('.edit-lastname').value.trim();
     const firstname = row.querySelector('.edit-firstname').value.trim();
     const middlename = row.querySelector('.edit-middlename').value.trim();
 
-    // 2. Читаем ID напрямую из выпадающих списков (преобразуем в число)
     const departament_id = parseInt(row.querySelector('.edit-department-id').value);
     const post_id = parseInt(row.querySelector('.edit-post-id').value);
 
@@ -208,15 +226,15 @@ async function saveEmployee(employeeId) {
     const email = row.querySelector('.edit-email').value.trim();
 
     const json_body = JSON.stringify({
-        firstname: firstname,
-        lastname: lastname,
-        middlename: middlename,       // ✅ Отчество теперь сохраняется корректно
-        email: email,
-        phone: phone,
+        firstname,
+        lastname,
+        middlename,
+        email,
+        phone,
         date_admission: employee.hireDate,
         description: employee.bio ?? '',
-        departament_id: departament_id, // ✅ Отправляется новый ID отдела
-        post_id: post_id,               // ✅ Отправляется новый ID должности
+        departament_id,
+        post_id,
         image_id: employee.image_id ?? null
     });
 
@@ -238,48 +256,55 @@ async function saveEmployee(employeeId) {
         return;
     }
 
-    // Перезагружаем данные, чтобы таблица обновилась с новыми значениями
+    editingEmployeeId = null; // ✅ Сбрасываем флаг редактирования
     await loadEmployees();
     console.log(`Сотрудник ${employeeId} обновлён`);
 }
 
 // Отмена редактирования
 function cancelEdit(employeeId) {
+    editingEmployeeId = null; // ✅ Сбрасываем флаг
     renderEmployees();
 }
 
-    function renderEmployees() {
-        const container = document.getElementById('employeesContainer');
-        console.log('Контейнер найден:', container ? 'да' : 'нет');
-
-        if (!container) {
-            console.error('Контейнер employeesContainer НЕ найден!');
-            return;
-        }
-
-        const existingRows = container.querySelectorAll('.admin-employee-row');
-        console.log('Старых строк найдено:', existingRows.length);
-        existingRows.forEach(row => row.remove());
-
-        if (!employees || !employees.length) {
-            console.log('Нет данных для отображения');
-            container.innerHTML = `
-                <div class="row">
-                    <div class="col-12 text-center py-4">
-                        <p class="text-muted">Сотрудники не найдены или данные не загружены</p>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        employees.forEach(employee => {
-            const row = createEmployeeRow(employee);
-            container.appendChild(row);
-        });
-
-        console.log('Всего строк добавлено:', employees.length);
+function renderEmployees() {
+    const container = document.getElementById('employeesContainer');
+    if (!container) {
+        console.error('Контейнер employeesContainer НЕ найден!');
+        return;
     }
+
+    // ✅ Сохраняем позицию скролла
+    const scrollY = window.scrollY;
+
+    const existingRows = container.querySelectorAll('.admin-employee-row');
+    existingRows.forEach(row => row.remove());
+
+    if (!employees || !employees.length) {
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted">Сотрудники не найдены или данные не загружены</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    employees.forEach(employee => {
+        const row = createEmployeeRow(employee);
+        container.appendChild(row);
+    });
+
+    // ✅ Восстанавливаем позицию скролла после перерисовки DOM
+    // ✅ Восстанавливаем позицию скролла мгновенно
+    requestAnimationFrame(() => {
+        window.scrollTo({
+            top: scrollY,
+            behavior: 'instant'
+    });
+});
+}
 
 function searchEmployees() {
     const query = document.getElementById('searchInput')?.value.toLowerCase() ?? '';
@@ -311,6 +336,7 @@ function filterByDepartment(dept) {
     }
 
     if (dept === 'all') {
+        selectedDepartament = null
         renderEmployees();
         return;
     }
@@ -325,15 +351,35 @@ function filterByDepartment(dept) {
     filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
 }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('DOM загружен, загружаем данные с сервера');
-        loadEmployees();
-    });
+function filterByPost(post) {
+    const btn = document.getElementById('postDropdown');
 
-    
+    if (btn) {
+        btn.textContent = post === 'all' ? 'Все должности' : post;
+    }
+
+    if (post === 'all') {
+        renderEmployees();
+        return;
+    }
+
+    const filtered = employees.filter(e => e.post === post);
+    const container = document.getElementById('employeesContainer');
+
+    if (!container) return;
+
+    const existingRows = container.querySelectorAll('.admin-employee-row');
+    existingRows.forEach(row => row.remove());
+    filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, загружаем данные с сервера');
+    loadEmployees();
+});
 
 
-    // Открытие модального окна
+// Открытие модального окна
 function openControlModal() {
     document.getElementById('addEmployeePanel').style.display = 'none';
     document.getElementById('departmentPanel').style.display = 'none';
