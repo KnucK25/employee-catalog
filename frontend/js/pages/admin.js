@@ -181,7 +181,7 @@ function editEmployee(employeeId) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
             <input type="file" accept=".png,.jpeg,.jpg,.webp"/>
             <div class="w-100">
                 <input type="text" class="form-control form-control-sm border-light mb-1 edit-lastname" value="${employee.lastname || ''}" placeholder="Фамилия">
