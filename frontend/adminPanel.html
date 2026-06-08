@@ -96,9 +96,11 @@
         </section>
     </main>
 
-    <footer class="text-center py-4">
+    <!-- ФУТЕР -->
+    <footer class="text-center py-5">
         <div class="container">
-            <p class="mb-0">2026 STAFF. Все права защищены.</p>
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
         </div>
     </footer>
 
@@ -117,7 +119,6 @@
                         <button class="btn btn-action-type" onclick="showPostPanel()">Должности</button>
                     </div>
                     <div id="addEmployeePanel" style="display:none;">
-                        <div class="alert alert-info">Заполните данные нового сотрудника</div>
                         <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать сотрудника</button>
                     </div>
                     <div id="departmentPanel" style="display:none;">
@@ -134,6 +135,11 @@
                     </div>
                     <div id="postPanel" style="display:none;">
                         <div class="mb-3">
+                            <label class="form-label">Выберите отдел</label>
+                            <select id="postDepartmentSelect" class="form-select mb-3">
+                                <option value="">Выберите отдел</option>
+                            </select>
+                            
                             <label class="form-label">Новая должность</label>
                             <div class="input-group">
                                 <input type="text" id="newPostName" class="form-control" placeholder="Название должности">

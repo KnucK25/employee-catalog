@@ -74,9 +74,6 @@ function populatePostMenu() {
     }
 }
 
-// отладка
-console.log('Скрипт загрузился');
-
 function createEmployeeRow(employee) {
     const row = document.createElement('div');
     row.className = 'row admin-employee-row align-items-center';
@@ -87,7 +84,7 @@ function createEmployeeRow(employee) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -107,9 +104,6 @@ function createEmployeeRow(employee) {
             </button>
             <button class="btn btn-action-icon" title="Удалить" onclick="deleteEmployee(${employee.id})">
                 <img src="img/delete.png" alt="Уд." style="width: 20px; height: 20px;">
-            </button>
-            <button class="btn btn-action-icon" title="Экспорт" onclick="exportEmployee(${employee.id})">
-                <img src="img/export.png" alt="Уд." style="width: 20px; height: 20px;">
             </button>
         </div>
     `;
@@ -219,22 +213,55 @@ async function saveEmployee(employeeId) {
     const firstname = row.querySelector('.edit-firstname').value.trim();
     const middlename = row.querySelector('.edit-middlename').value.trim();
 
+    // Удаляем старые ошибки, если есть
+    const existingErrors = row.querySelectorAll('.field-error');
+    existingErrors.forEach(err => err.remove());
+
+    let hasError = false;
+
+    // Проверка: фамилия и имя обязательны
+    if (!lastname || !firstname) {
+        hasError = true;
+        
+        if (!lastname) {
+            const lastNameInput = row.querySelector('.edit-lastname');
+            const errorSpan = document.createElement('div');
+            errorSpan.className = 'field-error text-danger small mt-1';
+            errorSpan.textContent = 'Фамилия обязательна';
+            lastNameInput.parentNode.appendChild(errorSpan);
+        }
+        
+        if (!firstname) {
+            const firstNameInput = row.querySelector('.edit-firstname');
+            const errorSpan = document.createElement('div');
+            errorSpan.className = 'field-error text-danger small mt-1';
+            errorSpan.textContent = 'Имя обязательно';
+            firstNameInput.parentNode.appendChild(errorSpan);
+        }
+        
+        return;
+    }
+
     const departament_id = parseInt(row.querySelector('.edit-department-id').value);
     const post_id = parseInt(row.querySelector('.edit-post-id').value);
 
     const phone = row.querySelector('.edit-phone').value.trim();
     const email = row.querySelector('.edit-email').value.trim();
 
+    // Формируем полное имя для обратной совместимости
+    const fullName = `${lastname} ${firstname} ${middlename}`.trim();
+
     const json_body = JSON.stringify({
-        firstname,
-        lastname,
-        middlename,
-        email,
-        phone,
+        firstname: firstname,
+        lastname: lastname,
+        middlename: middlename,
+        name: fullName,
+        email: email,
+        phone: phone,
         date_admission: employee.hireDate,
         description: employee.bio ?? '',
-        departament_id,
-        post_id,
+        departament_id: departament_id,
+        post_id: post_id,
         image_id: employee.image_id ?? null
     });
 
@@ -247,18 +274,29 @@ async function saveEmployee(employeeId) {
 
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка'));
+            
+            // Показываем ошибку под соответствующим полем
+            const errorMessage = error.error || 'Неизвестная ошибка';
+            const firstField = row.querySelector('.edit-lastname');
+            const errorSpan = document.createElement('div');
+            errorSpan.className = 'field-error text-danger small mt-1';
+            errorSpan.textContent = 'Ошибка: ' + errorMessage;
+            firstField.parentNode.appendChild(errorSpan);
             return;
         }
+        
+        editingEmployeeId = null;
+        await loadEmployees();
     } catch (err) {
         console.warn('Ошибка сохранения на сервере:', err);
-        alert('Ошибка сети при сохранении');
-        return;
+        
+        // Показываем ошибку сети
+        const firstField = row.querySelector('.edit-lastname');
+        const errorSpan = document.createElement('div');
+        errorSpan.className = 'field-error text-danger small mt-1';
+        errorSpan.textContent = 'Ошибка сети при сохранении';
+        firstField.parentNode.appendChild(errorSpan);
     }
-
-    editingEmployeeId = null; // ✅ Сбрасываем флаг редактирования
-    await loadEmployees();
-    console.log(`Сотрудник ${employeeId} обновлён`);
 }
 
 // Отмена редактирования
@@ -442,7 +480,23 @@ async function showPostPanel() {
     document.getElementById('addEmployeePanel').style.display = 'none';
     document.getElementById('departmentPanel').style.display = 'none';
     document.getElementById('postPanel').style.display = 'block';
+    
+    // Загружаем отделы для выпадающего списка
+    await loadDepartmentsForPostModal();
     await loadPostsForModal();
+}
+
+// Новая функция: загрузка отделов для модального окна должностей
+async function loadDepartmentsForPostModal() {
+    const res = await fetch(`${API_BASE}/api/departments`);
+    const depts = await res.json();
+    const select = document.getElementById('postDepartmentSelect');
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Выберите отдел</option>';
+    depts.forEach(dept => {
+        select.innerHTML += `<option value="${dept.id}">${dept.name}</option>`;
+    });
 }
 
 // Загрузка отделов для модалки
@@ -500,16 +554,32 @@ async function deleteDepartment(id) {
     await loadEmployees();
 }
 
-// Добавление должности
+// Добавление должности (с привязкой к отделу)
 async function addPost() {
     const name = document.getElementById('newPostName').value.trim();
-    if (!name) return false;
+    const departmentId = document.getElementById('postDepartmentSelect').value;
+    
+    if (!name) {
+        alert('Введите название должности');
+        return false;
+    }
+    
+    if (!departmentId) {
+        alert('Выберите отдел для должности');
+        return false;
+    }
+    
     await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
+        body: JSON.stringify({ 
+            name: name,
+            department_id: parseInt(departmentId)
+        })
     });
+    
     document.getElementById('newPostName').value = '';
+    document.getElementById('postDepartmentSelect').value = '';
     await loadPostsForModal();
     await loadEmployees();
 }
