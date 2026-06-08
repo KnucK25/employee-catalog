@@ -155,6 +155,82 @@
         </div>
     </div>
 
+    <!-- Модальное окно редактирования сотрудника -->
+    <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-lababledby="editEmployeeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editEmployeeModalLabel">Редактирование сотрудника</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editEmployeeForm">
+                        <input type="hidden" id="editEmployeeId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Фото сотрудника</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <img id="currentPhotoImg" src="" alt="Текущее фото" style="width: 80px; height: 80px; object-fit: cover;  display: none; border: 2px solid var(--accent-gold);">
+                                <input type="file" id="editEmployeePhoto" class="form-control" accept="image/*" style="flex: 1;">
+                            </div>
+                            <div id="currentPhotoPreview" class="mt-2"></div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Фамилия</label>
+                                <input type="text" id="editLastname" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Имя</label>
+                                <input type="text" id="editFirstname" class="form-control" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Отчество</label>
+                                <input type="text" id="editMiddlename" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Отдел</label>
+                                <select id="editDepartmentId" class="form-select" required>
+                                    <option value="">Выберите отдел</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Должность</label>
+                                <select id="editPostId" class="form-select" required>
+                                    <option value="">Выберите должность</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Телефон</label>
+                                <input type="text" id="editPhone" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" id="editEmail" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Описание (биография)</label>
+                            <textarea id="editDescription" class="form-control" rows="4"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-save" onclick="saveEmployeeFromModal()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/pages/admin.js"></script>
 </body>

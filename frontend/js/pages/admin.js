@@ -84,7 +84,7 @@ function createEmployeeRow(employee) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover; border-radius: 50%;">
+            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -145,62 +145,186 @@ async function deleteEmployee(employeeId) {
     console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
 }
 
-// Функция редактирования
-function editEmployee(employeeId) {
-    // Если уже редактируется ДРУГАЯ строка — отменяем предыдущую
-    if (editingEmployeeId !== null && editingEmployeeId !== employeeId) {
-        cancelEdit(editingEmployeeId);
-    }
-    
-    // Если эта же строка уже редактируется — ничего не делаем
-    if (editingEmployeeId === employeeId) return;
-    
-    editingEmployeeId = employeeId;
+// Переменная для хранения текущего редактируемого сотрудника
+let currentEditingEmployee = null;
 
+// Функция открытия модального окна редактирования
+async function editEmployee(employeeId) {
     const employee = employees.find(emp => emp.id === employeeId);
     if (!employee) return;
-
-    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
-    if (!row) return;
-
-    const deptOptions = (departmentsList || []).map(d => {
-        const isSelected = String(d.id) === String(employee.departament_id) ? 'selected' : '';
-        return `<option value="${d.id}" ${isSelected}>${d.name}</option>`;
-    }).join('');
-
-    const postOptions = (postsList || []).map(p => {
-        const isSelected = String(p.id) === String(employee.post_id) ? 'selected' : '';
-        return `<option value="${p.id}" ${isSelected}>${p.name}</option>`;
-    }).join('');
-
-    row.innerHTML = `
-        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
-            <input type="file" accept=".png,.jpeg,.jpg,.webp"/>
-            <div class="w-100">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-lastname" value="${employee.lastname || ''}" placeholder="Фамилия">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-firstname" value="${employee.firstname || ''}" placeholder="Имя">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-middlename" value="${employee.middlename || ''}" placeholder="Отчество">
-            </div>
-        </div>
-        <div class="col-md-3 mb-2 mb-md-0">
-            <select class="form-select form-select-sm border-light mb-1 edit-department-id" style="width: 100%;">
-                ${deptOptions}
-            </select>
-            <select class="form-select form-select-sm border-light edit-post-id" style="width: 100%;">
-                ${postOptions}
-            </select>
-        </div>
-        <div class="col-md-3 mb-3 mb-md-0">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-phone" value="${employee.phone}" placeholder="Телефон">
-            <input type="email" class="form-control form-control-sm border-light edit-email" value="${employee.email}" placeholder="Email">
-        </div>
-        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
-            <button type="button" class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${employeeId})" title="Отмена">✕</button>
-        </div>
-    `;
+    
+    currentEditingEmployee = employee;
+    
+    // Заполняем форму
+    document.getElementById('editEmployeeId').value = employee.id;
+    document.getElementById('editLastname').value = employee.lastname || '';
+    document.getElementById('editFirstname').value = employee.firstname || '';
+    document.getElementById('editMiddlename').value = employee.middlename || '';
+    document.getElementById('editPhone').value = employee.phone || '';
+    document.getElementById('editEmail').value = employee.email || '';
+    document.getElementById('editDescription').value = employee.description || employee.bio || '';
+    
+    // Загружаем отделы в выпадающий список
+    const deptSelect = document.getElementById('editDepartmentId');
+    deptSelect.innerHTML = '<option value="">Выберите отдел</option>';
+    
+    for (const dept of departmentsList) {
+        const selected = (dept.id === employee.departament_id) ? 'selected' : '';
+        deptSelect.innerHTML += `<option value="${dept.id}" ${selected}>${dept.name}</option>`;
+    }
+    
+    // Загружаем должности в выпадающий список (только для выбранного отдела)
+    await loadPostsForEditModal(employee.departament_id);
+    
+    // Показываем текущее фото, если есть
+    const photoImg = document.getElementById('currentPhotoImg');
+    if (employee.avatar && employee.avatar !== 'img/bio.png') {
+        photoImg.src = employee.avatar;
+        photoImg.style.display = 'block';
+    } else {
+        photoImg.style.display = 'none';
+    }
+    
+    // Открываем модальное окно
+    const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+    modal.show();
 }
+
+// Загрузка должностей для модального окна (фильтрация по отделу)
+async function loadPostsForEditModal(departmentId) {
+    const postSelect = document.getElementById('editPostId');
+    postSelect.innerHTML = '<option value="">Выберите должность</option>';
+    
+    // Фильтруем должности по отделу
+    const filteredPosts = postsList.filter(p => p.departament_id === departmentId || p.department_id === departmentId);
+    
+    for (const post of filteredPosts) {
+        const selected = (currentEditingEmployee && post.id === currentEditingEmployee.post_id) ? 'selected' : '';
+        postSelect.innerHTML += `<option value="${post.id}" ${selected}>${post.name}</option>`;
+    }
+}
+
+// При изменении отдела перезагружаем должности
+document.addEventListener('DOMContentLoaded', function() {
+    const deptSelect = document.getElementById('editDepartmentId');
+    if (deptSelect) {
+        deptSelect.addEventListener('change', function() {
+            const deptId = parseInt(this.value);
+            if (deptId) {
+                loadPostsForEditModal(deptId);
+            } else {
+                document.getElementById('editPostId').innerHTML = '<option value="">Выберите должность</option>';
+            }
+        });
+    }
+});
+
+// Сохранение из модального окна
+async function saveEmployeeFromModal() {
+    const employeeId = document.getElementById('editEmployeeId').value;
+    const lastname = document.getElementById('editLastname').value.trim();
+    const firstname = document.getElementById('editFirstname').value.trim();
+    const middlename = document.getElementById('editMiddlename').value.trim();
+    const departmentId = parseInt(document.getElementById('editDepartmentId').value);
+    const postId = parseInt(document.getElementById('editPostId').value);
+    const phone = document.getElementById('editPhone').value.trim();
+    const email = document.getElementById('editEmail').value.trim();
+    const description = document.getElementById('editDescription').value.trim();
+    
+    // Валидация
+    if (!lastname || !firstname) {
+        alert('Фамилия и имя обязательны для заполнения');
+        return;
+    }
+    
+    if (!departmentId || !postId) {
+        alert('Выберите отдел и должность');
+        return;
+    }
+    
+    const fullName = `${lastname} ${firstname} ${middlename}`.trim();
+    
+    const json_body = JSON.stringify({
+        firstname: firstname,
+        lastname: lastname,
+        middlename: middlename,
+        name: fullName,
+        email: email,
+        phone: phone,
+        date_admission: currentEditingEmployee?.hireDate || new Date().toISOString().split('T')[0],
+        description: description,
+        departament_id: departmentId,
+        post_id: postId,
+        image_id: currentEditingEmployee?.image_id ?? null
+    });
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: json_body
+        });
+        
+        if (!res.ok) {
+            const error = await res.json();
+            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка'));
+            return;
+        }
+        
+        // Закрываем модальное окно
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+        if (modal) modal.hide();
+        
+        // Перезагружаем данные
+        await loadEmployees();
+        
+    } catch (err) {
+        console.warn('Ошибка сохранения на сервере:', err);
+        alert('Ошибка сети при сохранении');
+    }
+}
+
+// Функция загрузки фото (дополнительно)
+async function uploadEmployeePhoto(employeeId, file) {
+    const formData = new FormData();
+    formData.append('photo', file);
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}/photo`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (res.ok) {
+            await loadEmployees();
+            return true;
+        }
+    } catch (err) {
+        console.warn('Ошибка загрузки фото:', err);
+    }
+    return false;
+}
+
+// Добавляем обработчик загрузки фото в модальное окно
+document.addEventListener('DOMContentLoaded', function() {
+    const photoInput = document.getElementById('editEmployeePhoto');
+    if (photoInput) {
+        photoInput.addEventListener('change', async function(e) {
+            const employeeId = document.getElementById('editEmployeeId').value;
+            if (employeeId && e.target.files[0]) {
+                const success = await uploadEmployeePhoto(employeeId, e.target.files[0]);
+                if (success) {
+                    alert('Фото загружено');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+                    if (modal) modal.hide();
+                    await loadEmployees();
+                } else {
+                    alert('Ошибка загрузки фото');
+                }
+            }
+        });
+    }
+});
 
 // Сохранение изменений
 async function saveEmployee(employeeId) {
@@ -300,32 +424,20 @@ async function saveEmployee(employeeId) {
 }
 
 // Отмена редактирования
-function cancelEdit(employeeId) {
-    editingEmployeeId = null; // ✅ Сбрасываем флаг
-    renderEmployees();
-}
+// function cancelEdit(employeeId) {
+//     editingEmployeeId = null; 
+//     renderEmployees();
+// }
 
 function renderEmployees() {
     const container = document.getElementById('employeesContainer');
-    if (!container) {
-        console.error('Контейнер employeesContainer НЕ найден!');
-        return;
-    }
-
-    // ✅ Сохраняем позицию скролла
-    const scrollY = window.scrollY;
+    if (!container) return;
 
     const existingRows = container.querySelectorAll('.admin-employee-row');
     existingRows.forEach(row => row.remove());
 
     if (!employees || !employees.length) {
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted">Сотрудники не найдены или данные не загружены</p>
-                </div>
-            </div>
-        `;
+        container.innerHTML = `<div class="row"><div class="col-12 text-center py-4"><p class="text-muted">Сотрудники не найдены</p></div></div>`;
         return;
     }
 
@@ -333,15 +445,6 @@ function renderEmployees() {
         const row = createEmployeeRow(employee);
         container.appendChild(row);
     });
-
-    // ✅ Восстанавливаем позицию скролла после перерисовки DOM
-    // ✅ Восстанавливаем позицию скролла мгновенно
-    requestAnimationFrame(() => {
-        window.scrollTo({
-            top: scrollY,
-            behavior: 'instant'
-    });
-});
 }
 
 function searchEmployees() {
