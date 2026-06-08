@@ -1,16 +1,17 @@
 <!doctype html>
 <html lang="ru">
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Панель администратора</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/adminPanel.css">
-  </head>
-  <body>
-    <!-- НАВИГАЦИЯ -->
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body>
+
     <header>
-        <nav class="navbar navbar-expand-lg sticky-top">
+        <nav class="navbar navbar-expand-lg">
             <div class="container">
                 <div class="d-flex align-items-center">
                     <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
@@ -19,14 +20,14 @@
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button> <!-- бургер для телефонов -->
+                </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
-                        <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудника</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Админ панель</a></li>    
-                        <li class="nav-item"><a class="nav-link" href="index.html">Зарегистрироваться</a></li>                            
+                        <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Зарегистрироваться</a></li>               
                     </ul>
                 </div>
             </div>
@@ -35,77 +36,44 @@
 
     <main>
         <!-- ЗАГОЛОВОК -->
-        <section class="container mt-5 mb-1">
+        <section class="container mt-5 mb-3">
             <div class="text-center">
-                <h1 class="display-3 fw-bold mb-1">АДМИН ПАНЕЛЬ</h1>
-                <p class="text-secondary mb-1">крутые челиксы</p>
+                <h1 class="display-4 fw-bold mb-2">АДМИН ПАНЕЛЬ</h1>
+                <p class="text-secondary">Управление каталогом сотрудников</p>
             </div>
         </section>
 
-        <!-- ПАНЕЛЬ ИНСТРУМЕНТОВ -->
-        <section class="search-section-dark container-fluid py-1 mb-1">
+        <!-- СЕКЦИЯ ПОИСКА И ФИЛЬТРОВ (единый вид с catalog.html) -->
+        <section class="search-section">
             <div class="container">
-                <div class="row g-1">
-                    <!-- Поиск сотрудника -->
-                    <div class="col-md-6">
-                        <div class="card border-0 shadow">
-                            <div class="card-body p-4">
-                                <h5 class="card-title-search mb-3 fw-bold">ПОИСК СОТРУДНИКА</h5>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
-                                        <i class="bi bi-search text-secondary"></i>
-                                    </span>
-                                    <input type="text" id="searchInput" class="form-control border-start-0 border-end-0" placeholder="Введите имя, фамилию или должность...">
-                                    <button class="btn btn-gold-search" type="button" onclick="searchEmployees()">Найти</button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label mb-1">ПОИСК</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
                     </div>
-
-                    <!-- Фильтры -->
-                    <div class="col-md-2">
-                        <div class="card border-0 shadow h-100">
-                            <div class="card-body p-4">
-                                <h5 class="card-title-search mb-3 fw-bold">ОТДЕЛЫ</h5>
-                                <div class="dropdown w-100">
-                                    <button class="btn btn-outline-light dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" id="departmentDropdown">
-                                        Все отделы
-                                    </button>
-                                    <ul class="dropdown-menu w-100" id="departmentMenu">
-                                        <li><a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">ОТДЕЛ</label>
+                        <select id="departmentFilter" class="form-select">
+                            <option value="all">Все отделы</option>
+                            <option value="Управление">Управление</option>
+                            <option value="Маркетинг">Маркетинг</option>
+                            <option value="Административный отдел">Административный отдел</option>
+                        </select>
                     </div>
-                    <!-- Фильтры -->
-                    <div class="col-md-2">
-                        <div class="card border-0 shadow h-100">
-                            <div class="card-body p-4">
-                                <h5 class="card-title-search mb-3 fw-bold">ДОЛЖНОСТИ</h5>
-                                <div class="dropdown w-100">
-                                    <button class="btn btn-outline-light dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown" id="postDropdown">
-                                        Все должности
-                                    </button>
-                                    <ul class="dropdown-menu w-100" id="postMenu">
-                                        <li><a class="dropdown-item" href="#" onclick="filterByPost('all')">Все должности</a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-3">
+                        <label class="form-label mb-1">ДОЛЖНОСТЬ</label>
+                        <select id="positionFilter" class="form-select">
+                            <option value="all">Все должности</option>
+                            <option value="Руководитель">Руководитель</option>
+                            <option value="Менеджер">Менеджер</option>
+                            <option value="Специалист">Специалист</option>
+                        </select>
                     </div>
-                    <!-- добавить -->
                     <div class="col-md-2">
-                        <div class="card border-0 shadow h-100">
-                            <div class="card-body p-4">
-                                <h5 class="card-title-search mb-3 fw-bold">ПРАВКА</h5>
-                                <button class="btn btn-add-employee w-100 py-2" onclick="openControlModal()">
-                                    Правка
-                                </button>
-                                <button class="btn btn-add-employee w-100 py-2 mt-2" onclick="exportAllEmployees()">
-                                    Экспорт CSV
-                                </button>
-                            </div>
+                        <label class="form-label mb-1">ДЕЙСТВИЯ</label>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-gold flex-grow-1" onclick="openControlModal()">Добавить</button>
+                            <button class="btn btn-outline-dark flex-grow-1" id="exportBtn">Экспорт</button>
                         </div>
                     </div>
                 </div>
@@ -113,77 +81,67 @@
         </section>
 
         <!-- СЕКЦИЯ С ТАБЛИЦЕЙ -->
-        <section class="employees-section-full-width">
+        <section class="employees-section">
             <div class="container">
-                <div class="admin-table-wrapper" id="employeesContainer">
-                    <!-- Заголовки столбцов -->
-                    <div class="row admin-header-row d-none d-md-flex align-items-center">
-                        <div class="col-md-4"><h6>Сотрудник</h6></div>
-                        <div class="col-md-3"><h6>Отдел / Должность</h6></div>
-                        <div class="col-md-3"><h6>Контакты</h6></div>
-                        <div class="col-md-2 text-md-end"><h6>Действия</h6></div>
+                <div class="admin-table-wrapper">
+                    <div class="row admin-header-row d-none d-md-flex">
+                        <div class="col-md-4"><h6 class="mb-0">Сотрудник</h6></div>
+                        <div class="col-md-3"><h6 class="mb-0">Отдел / Должность</h6></div>
+                        <div class="col-md-3"><h6 class="mb-0">Контакты</h6></div>
+                        <div class="col-md-2 text-md-end"><h6 class="mb-0">Действия</h6></div>
                     </div>
-                    <!-- Строки сотрудников будут генерироваться здесь -->
+                    <div id="employeesContainer"></div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- ФУТЕР -->
-    <footer class="text-center py-5">
+    <footer class="text-center py-4">
         <div class="container">
-            <p class="mb-0">© 2026 STAFF.<br>
-            <span class="small opacity-50">Все права защищены.</span></p>
+            <p class="mb-0">2026 STAFF. Все права защищены.</p>
         </div>
     </footer>
 
-    <!-- модалка управления -->
-    <div class="modal fade" id="controlModal" tabindex="-1" aria-labelledby="controlModalLabel" aria-hidden="true">
+    <!-- Модальное окно управления -->
+    <div class="modal fade" id="controlModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="controlModalLabel">Управление</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                    <h5 class="modal-title">Управление сотрудниками</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Кнопки выбора действия -->
                     <div class="d-flex gap-3 mb-4 flex-wrap">
-                        <button class="btn btn-action-type" onclick="showAddEmployeeForm()">Сотрудник +</button>
+                        <button class="btn btn-action-type" onclick="showAddEmployeeForm()">Новый сотрудник</button>
                         <button class="btn btn-action-type" onclick="showDepartmentPanel()">Отделы</button>
                         <button class="btn btn-action-type" onclick="showPostPanel()">Должности</button>
                     </div>
-
-                    <!-- Панель добавления сотрудника (просто пустая строка) -->
-                    <div id="addEmployeePanel" >
-                        <div class="alert alert-warning">Будет добавлен новый сотрудник с пустыми данными</div>
-                        <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать пустого сотрудника</button>
+                    <div id="addEmployeePanel" style="display:none;">
+                        <div class="alert alert-info">Заполните данные нового сотрудника</div>
+                        <button class="btn btn-gold w-100" onclick="addEmptyEmployee()">Создать сотрудника</button>
                     </div>
-
-                    <!-- Панель управления отделами -->
-                    <div id="departmentPanel" >
+                    <div id="departmentPanel" style="display:none;">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Новый отдел</label>
+                            <label class="form-label">Новый отдел</label>
                             <div class="input-group">
                                 <input type="text" id="newDepartmentName" class="form-control" placeholder="Название отдела">
                                 <button class="btn btn-gold" onclick="addDepartment()">Добавить</button>
                             </div>
                         </div>
                         <hr>
-                        <label class="form-label fw-bold">Существующие отделы</label>
+                        <label class="form-label">Существующие отделы</label>
                         <ul id="departmentsList" class="list-group mt-2"></ul>
                     </div>
-
-                    <!-- Панель управления должностями -->
-                    <div id="postPanel" >
+                    <div id="postPanel" style="display:none;">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Новая должность</label>
+                            <label class="form-label">Новая должность</label>
                             <div class="input-group">
                                 <input type="text" id="newPostName" class="form-control" placeholder="Название должности">
                                 <button class="btn btn-gold" onclick="addPost()">Добавить</button>
                             </div>
                         </div>
                         <hr>
-                        <label class="form-label fw-bold">Существующие должности</label>
+                        <label class="form-label">Существующие должности</label>
                         <ul id="postsList" class="list-group mt-2"></ul>
                     </div>
                 </div>
@@ -193,6 +151,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/pages/admin.js"></script>
-
 </body>
 </html>

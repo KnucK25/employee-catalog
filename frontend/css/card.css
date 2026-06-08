@@ -1,153 +1,183 @@
-/* -- Цветовая палитра -- */
-:root {
-    --alt: #F1EEE6;           /* бежевый для акцентных секций */
-    --white: #FFFFFF;         /* белый для карточек */
-    --black: #000000;         /* черный */
-    --accent-gold: #C29F64;   /* золотой акцентный */
+/* Основной контейнер */
+.container.my-5 {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
 }
 
-/* ============================================ */
-/* ГЛОБАЛЬНЫЕ СТИЛИ И ФИКС ФУТЕРА */
-/* ============================================ */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-body {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--white); 
-    color: var(--black);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-main {
-    flex: 1 0 auto;
-}
-
-/* НАВИГАЦИЯ*/
-.navbar.navbar {
-    background-color: var(--black) !important;
-    padding: 1.2rem 0 !important;
-}
-
-.navbar .navbar-brand {
-    color: var(--accent-gold) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 1.3rem !important;
-    letter-spacing: normal !important;
-}
-
-.navbar .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem !important;
-    padding: 0.5rem 0 !important;
-    font-size: 1rem !important;
-}
-
-.navbar .navbar-nav .nav-link.active,
-.navbar .navbar-nav .nav-link:hover {
-    color: var(--accent-gold) !important;
-}
-
-/*  КАРТОЧКА СОТРУДНИКА*/
+/* Карточка сотрудника */
 .employee-card {
-    background-color: var(--white);
-    border: 2px solid var(--accent-gold);
-    border-radius: 0 !important;
-}
-
-.dark-header {
-    background-color: var(--black);
     border: none;
-    border-radius: 0 !important;
+    border-radius: 0;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    background-color: var(--white);
 }
 
-.dark-header h5 {
+/* Заголовок карточки */
+.card-header.dark-header {
+    background-color: var(--black);
+    border-bottom: 2px solid var(--accent-gold);
+    padding: 1rem 1.5rem;
+}
+
+.card-header h5 {
     color: var(--white);
     font-weight: 600;
+    letter-spacing: 1px;
     margin: 0;
+    font-size: 1.1rem;
 }
 
+/* Фото сотрудника */
 .employee-photo {
-    width: 100%;
+    border: 2px solid var(--alt);
     object-fit: cover;
-    border: 1px solid var(--gray-light);
     aspect-ratio: 1 / 1;
+    width: 100%;
+    background-color: var(--alt);
 }
 
+/* Имя и должность */
 .employee-name {
     color: var(--black);
+    font-size: 1.8rem;
     font-weight: 700;
+    margin-bottom: 0.5rem;
 }
 
+.employee-name + p {
+    color: var(--accent-gold) !important;
+    font-weight: 500;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Блок с информацией */
 .info-box {
     background-color: var(--alt);
-    border-left: 4px solid var(--accent-gold);
-    border-radius: 0 !important;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
 }
 
 .info-label {
     font-size: 0.7rem;
+    letter-spacing: 1.5px;
+    color: #888;
+    margin-bottom: 0.25rem;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray-text);
-    margin-bottom: 2px;
+    font-weight: 500;
 }
 
 .info-value {
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--black);
+    font-size: 0.95rem;
     word-break: break-word;
 }
 
 .bio-text {
-    line-height: 1.5;
-    font-size: 0.85rem;
+    line-height: 1.6;
+    font-weight: normal;
+    font-size: 0.9rem;
 }
 
+/* Иконки */
 .info-icon {
-    width: 20px;
-    height: 20px;
+    opacity: 0.6;
+    width: 18px;
+    height: 18px;
+    transition: opacity 0.3s ease;
 }
 
+.info-box:hover .info-icon {
+    opacity: 1;
+}
+
+/* Кнопка назад */
 .btn-custom-outline {
-    border: 2px solid var(--accent-gold);
+    background-color: transparent;
+    border: 1px solid var(--black);
     color: var(--black);
-    font-size: 0.85rem;
-    padding: 0.4rem 1.2rem;
-    border-radius: 0 !important;
-    font-weight: 500;
-    cursor: pointer;
-    background: transparent;
+    padding: 0.5rem 1.8rem;
+    border-radius: 0;
+    transition: all 0.3s ease;
 }
 
 .btn-custom-outline:hover {
-    background-color: var(--accent-gold);
-    color: var(--white);
-    border-color: var(--accent-gold);
-}
-
-.btn-custom-outline a {
-    color: inherit;
-    text-decoration: none;
-}
-
-/* ФУТЕР  */
-footer {
     background-color: var(--black);
-    flex-shrink: 0;
-    width: 100%;
-    height: 120px;
+    border-color: var(--black);
 }
 
-footer p {
-    color: var(--accent-gold);
-    font-size: 0.9rem;
-    margin: 0;
+.btn-custom-outline:hover .nav-link {
+    color: var(--white) !important;
+}
+
+.btn-custom-outline .nav-link {
+    color: var(--black);
+    text-decoration: none;
+    display: inline-block;
+    padding: 0;
+    font-weight: 500;
+}
+
+/* Футер карточки */
+.card-footer {
+    background-color: transparent;
+    border-top: none;
+    padding: 1rem 1.5rem 1.5rem 1.5rem;
+}
+
+/* Адаптив для карточки */
+@media (max-width: 768px) {
+    .employee-name {
+        font-size: 1.4rem;
+        margin-top: 1rem;
+    }
+    
+    .info-box {
+        padding: 1rem !important;
+    }
+    
+    .card-body {
+        padding: 1.25rem !important;
+    }
+    
+    .card-header.dark-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+    }
+    
+    .btn-custom-outline {
+        padding: 0.4rem 1.5rem;
+    }
+    
+    .container.my-5 {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .employee-name {
+        font-size: 1.25rem;
+    }
+    
+    .info-value {
+        font-size: 0.85rem;
+    }
+    
+    .info-label {
+        font-size: 0.65rem;
+    }
+    
+    .info-box {
+        padding: 0.85rem !important;
+    }
+    
+    .row.g-4 {
+        --bs-gutter-y: 1rem;
+    }
 }

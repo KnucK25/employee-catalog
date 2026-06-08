@@ -1,335 +1,78 @@
-/* -- Цветовая палитра (СТРОГО 4 ЦВЕТА) -- */
-:root {
-    --alt: #F1EEE6;           /* бежевый для акцентных секций */
-    --white: #FFFFFF;         /* белый для карточек */
-    --black: #000000;         /* черный */
-    --accent-gold: #C29F64;   /* золотой акцентный */
-}
-
-/* --- Общие стили --- */
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-}
-
-body {
-    font-family: 'Inter', 'Arial', sans-serif;
-    background-color: var(--white); 
+/* Заголовок страницы */
+.container h1 {
     color: var(--black);
-    flex: 1;
+    font-weight: 700;
+    letter-spacing: 2px;
 }
 
-main {
-    flex: 1;
+/* Секция поиска и фильтров - ЕДИНЫЙ СТИЛЬ с catalog.html */
+.search-section {
+    background-color: var(--alt);
+    padding: 2rem 0;
+    margin: 1.5rem 0;
 }
 
-/* НАВИГАЦИЯ*/
-.navbar.navbar {
-    background-color: var(--black) !important;
-    padding: 1.2rem 0 !important;
-}
-
-.navbar .navbar-brand {
-    color: var(--accent-gold) !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    font-size: 1.3rem !important;
-    letter-spacing: normal !important;
-}
-
-.navbar .navbar-nav .nav-link {
-    color: rgba(255, 255, 255, 0.9) !important;
-    margin-left: 1rem !important;
-    padding: 0.5rem 0 !important;
-    font-size: 1rem !important;
-}
-
-.navbar .navbar-nav .nav-link.active,
-.navbar .navbar-nav .nav-link:hover {
-    color: var(--accent-gold) !important;
-}
-/* --- ЗАГОЛОВОК И ОТСТУПЫ --- */
-section.container.mt-5.mb-5 {
-    margin-bottom: 0.5rem !important; 
-}
-
-.display-3 {
-    font-size: 2.4rem;
-    letter-spacing: -1px;
+.search-section label {
     color: var(--black);
-}
-
-.text-secondary {
-    color: var(--black) !important;
-    opacity: 0.6;
-}
-
-/* БЛОК ПОИСКА */
-.search-section-dark {
-    background-color: var(--black);
-    width: 81%;
-    /* max-height: 140px; */
-    margin: 0 auto !important; 
-    border-radius: 0;
-    padding: 2.5rem 0;
-    
-    /* Сдвигаем блок вниз ровно на половину его высоты */
-    position: relative;
-    z-index: 10;
-    transform: translateY(50%);
-}
-
-.search-section-dark .container {
-    max-width: 100%;
-    padding: 0 2rem;
-}
-
-.search-section-dark .card {
-    background-color: transparent !important;
-    border-radius: 0;
-}
-
-.search-section-dark .card-title-search {
-    color: var(--accent-gold);
-    font-size: 0.91rem;
     font-weight: 600;
-    letter-spacing: 1.1px;
-    margin-bottom: 1.2rem;
-    
-    text-transform: uppercase;
-}
-
-/* Инпуты и выпадающие списки */
-.search-section-dark .input-group {
-    background-color: var(--white);
-    border-radius: 0;
-}
-
-.search-section-dark .input-group-text {
-    background-color: var(--white);
-    border: none;
-    color: gray; 
-    padding: 0.75rem 1rem;
-    border-radius: 0;
-}
-
-.search-section-dark .form-control {
-    border: none;
-    padding: 0.75rem 0.5rem;
     font-size: 0.8rem;
-    color: var(--black);
-    background-color: var(--white) !important;
-    border-radius: 0;
+    letter-spacing: 1px;
 }
 
-.search-section-dark .form-control:focus {
+/* Форма контроля */
+.form-control, .form-select {
+    border-radius: 0;
+    border: 1px solid #ddd;
+    padding: 0.7rem 1rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--accent-gold);
     box-shadow: none;
     outline: none;
 }
 
-.search-section-dark .form-control::placeholder {
-    color: gray;
-}
-
-.search-section-dark .btn-gold-search {
-    background-color: var(--accent-gold);
-    color: var(--white);
-    border: none;
-    padding: 0.75rem 2rem;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border-radius: 0;
-}
-
-.search-section-dark .btn-gold-search:hover {
-    background-color: #A98751; 
-}
-
-.search-section-dark .dropdown-toggle {
-    background-color: var(--white);
-    border: none;
-    color: var(--black);
-    padding: 0.75rem 1rem;
-    font-size: 0.8rem;
-    width: 100%;
-    text-align: left;
-    border-radius: 0;
-}
-
-.search-section-dark .dropdown-menu {
-    border: 1px solid var(--accent-gold);
-    border-radius: 0;
-    margin-top: 0.5rem;
-    background-color: var(--white);
-}
-
-.search-section-dark .dropdown-item:hover {
-    background-color: var(--alt);
-    color: var(--accent-gold);
-}
-
-/* кнопка */
-.search-section-dark .btn-add-employee {
-    background-color: var(--accent-gold);
-    color: var(--white);
-    border: none;
-    font-size: 0.8rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    border-radius: 0;
-    height: 44px;
-}
-
-.search-section-dark .btn-add-employee:hover {
-    background-color: #A98751;
-}
-
-.search-section-dark .btn-add-employee i {
-    font-size: 1.1rem;
-}
-
-
-/* --- БЕЖЕВАЯ СЕКЦИЯ (Нижний фон) --- */
-.employees-section-full-width {
-    background-color: var(--alt);
-    width: 100%;
-    padding-top: 10rem; /* Место под блок поиска */
-    padding-bottom: 4rem;
-    position: relative;
-    z-index: 1;
-    border-top: 2px solid var(--accent-gold);
-}
-
-/* --- ТАБЛИЦА АДМИНА --- */
-.admin-table-wrapper {
-    background-color: var(--white);
-    border: 2px solid var(--accent-gold);
-    border-radius: 0;
-    margin-bottom: 2rem;
-}
-
-/* Шапка таблицы */
-.admin-header-row {
+/* Кнопки */
+.btn-gold {
     background-color: var(--black);
     color: var(--white);
-    margin: 0;
-    padding: 1rem 1.5rem;
-    border-bottom: 2px solid var(--accent-gold);
-}
-
-.admin-header-row h6 {
-    font-size: 0.85rem;
-    letter-spacing: 1px;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin: 0;
-}
-
-/* Строка сотрудника */
-.admin-employee-row {
-    background-color: var(--white);
-    margin: 0;
-    padding: 1rem 1.5rem;
-    border-bottom: 2px solid var(--alt);
-}
-
-.admin-employee-row:last-child {
-    border-bottom: none;
-}
-
-.admin-employee-row:hover {
-    background-color: var(--alt); 
-}
-
-/* Фото сотрудника  */
-.admin-employee-photo {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border: 2px solid var(--accent-gold);
-    border-radius: 0 !important; /* Убираем круги */
-    background-color: var(--white);
-}
-
-/* Тексты в таблице */
-.admin-employee-name {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--black);
-    margin-bottom: 0.2rem;
-}
-
-.admin-employee-text {
-    font-size: 0.85rem;
-    color: var(--black);
-    opacity: 0.6;
-}
-
-/* Кнопки действий (Редактировать / Удалить) */
-.btn-action-icon {
-    background-color: transparent;
-    border: 2px solid transparent;
-    padding: 0.4rem;
     border-radius: 0;
-}
-
-.btn-action-icon:focus,
-.btn-action-icon:active,
-.btn-action-icon:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-    border-color: transparent !important; /* Жестко оставляем рамку прозрачной при клике */
-}
-
-/* ФУТЕР */
-footer {
-    background-color: var(--black);
-    height: 120px;
-}
-
-footer p {
-    color: var(--accent-gold);
+    padding: 0.7rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid var(--black);
     font-size: 0.9rem;
 }
 
-/* модалка */
-
-/* Модальное окно */
-.modal-content {
-    border-radius: 0;
-    border: 2px solid var(--accent-gold);
+.btn-gold:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+    border-color: var(--accent-gold);
 }
 
-.modal-header {
+.btn-outline-dark {
+    border-radius: 0;
+    padding: 0.7rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid var(--black);
+    color: var(--black);
+    background-color: transparent;
+}
+
+.btn-outline-dark:hover {
     background-color: var(--black);
-    border-bottom: none;
-    border-radius: 0;
-}
-
-.modal-title {
-    color: var(--accent-gold);
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-.btn-close-white {
-    filter: invert(1);
+    color: var(--white);
 }
 
 .btn-action-type {
-    background-color: var(--black);
-    color: var(--white);
-    border: 1px solid var(--accent-gold);
+    background-color: var(--alt);
+    color: var(--black);
+    border: 1px solid #ddd;
     border-radius: 0;
     padding: 0.5rem 1.2rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
 .btn-action-type:hover {
@@ -338,37 +81,137 @@ footer p {
     border-color: var(--accent-gold);
 }
 
-.btn-gold {
-    background-color: var(--accent-gold);
-    color: var(--white);
-    border: none;
-    border-radius: 0;
-    padding: 0.5rem 1.2rem;
-    font-weight: 500;
+/* Таблица сотрудников */
+.employees-section {
+    background-color: var(--white);
+    padding: 2rem 0;
 }
 
-.btn-gold:hover {
-    background-color: #A98751;
+.admin-table-wrapper {
+    background-color: var(--white);
+    border: 1px solid #eee;
+}
+
+.admin-header-row {
+    background-color: var(--black);
+    padding: 1rem;
+    margin: 0;
+}
+
+.admin-header-row h6 {
     color: var(--white);
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+/* Строки таблицы */
+.employee-row {
+    padding: 1rem;
+    margin: 0;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.3s ease;
+}
+
+.employee-row:hover {
+    background-color: var(--alt);
+}
+
+.employee-row .employee-name {
+    font-weight: 600;
+    color: var(--black);
+}
+
+.employee-row .employee-position,
+.employee-row .employee-phone {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Кнопки действий */
+.btn-sm-action {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.8rem;
+    border-radius: 0;
+    margin-left: 0.5rem;
+}
+
+.btn-edit {
+    background-color: var(--black);
+    color: var(--white);
+    border: none;
+}
+
+.btn-edit:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
 }
 
 .btn-delete {
-    background-color: #DC3545;
-    color: white;
-    border: none;
-    border-radius: 0;
-    padding: 0.2rem 0.6rem;
-    font-size: 0.75rem;
+    background-color: transparent;
+    color: #dc3545;
+    border: 1px solid #dc3545;
 }
 
 .btn-delete:hover {
-    background-color: #B02A37;
+    background-color: #dc3545;
+    color: var(--white);
 }
 
-.list-group-item {
+/* Модальное окно */
+.modal-content {
     border-radius: 0;
-    border: 1px solid #ddd;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border: none;
+}
+
+.modal-header {
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 1.5rem;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 768px) {
+    .search-section {
+        padding: 1.5rem 0;
+    }
+    
+    .btn-gold,
+    .btn-outline-dark {
+        width: 100%;
+    }
+    
+    .d-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .employee-row {
+        padding: 1rem;
+    }
+    
+    .employee-row .text-md-end {
+        text-align: left !important;
+        margin-top: 0.8rem;
+    }
+    
+    .btn-sm-action {
+        margin-left: 0;
+        margin-right: 0.5rem;
+    }
 }
