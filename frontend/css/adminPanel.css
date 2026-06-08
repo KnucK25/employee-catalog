@@ -223,7 +223,6 @@
     width: 50px;
     height: 50px;
     object-fit: cover;
-    border-radius: 50%;
 }
 
 /* Для формы редактирования */
@@ -231,7 +230,6 @@
     width: 50px;
     height: 50px;
     object-fit: cover;
-    border-radius: 50%;
 }
 
 /* Для карточек в каталоге */
@@ -239,4 +237,79 @@
     width: 100%;
     height: 200px;
     object-fit: cover;
+}
+
+/* Стили для фото в модальном окне */
+#currentPhotoImg {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 2px solid var(--accent-gold);
+    background-color: var(--alt);
+}
+
+/* Для превью фото при загрузке */
+#currentPhotoPreview {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 10px;
+}
+
+/* Стили для input file */
+#editEmployeePhoto {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 0;
+}
+
+/* Дополнительно для всех изображений в модалке */
+.modal-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Кнопка Отмена - скруглённая, другого размера */
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 0px;
+    padding: 6px 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+/* Кнопка Сохранить - острая, как у вас принято */
+.btn-save {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-save:hover {
+    background-color: #A98751;
+    color: var(--white);
+}
+
+/* Фото и input в одной строке */
+.d-flex.align-items-center.gap-3 {
+    gap: 1rem;
+}
+
+#currentPhotoImg {
+    flex-shrink: 0;
+}
+
+#editEmployeePhoto {
+    flex-shrink: 1;
 }
