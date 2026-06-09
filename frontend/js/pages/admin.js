@@ -1,7 +1,7 @@
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
 let employees = [];
-let departmentsList = [];
+let departamentsList = [];
 let postsList = [];
 let editingEmployeeId = null; // ID строки, которая сейчас редактируется
 let selectedDepartament = null
@@ -9,9 +9,9 @@ let selectedDepartament = null
 async function loadEmployees() {
     try {
         // Загружаем всё параллельно и ждём завершения
-        const [employeesRes, departmentsRes, postsRes] = await Promise.all([
+        const [employeesRes, departamentsRes, postsRes] = await Promise.all([
             fetch(`${API_BASE}/api/employees`),
-            fetch(`${API_BASE}/api/departments`),
+            fetch(`${API_BASE}/api/departaments`),
             fetch(`${API_BASE}/api/posts`)
         ]);
         
@@ -19,7 +19,7 @@ async function loadEmployees() {
         
         // Парсим все ответы
         employees = await employeesRes.json();
-        departmentsList = await departmentsRes.json();
+        departamentsList = await departamentsRes.json();
         postsList = await postsRes.json();
         
         // Теперь всё загружено, можно отрисовывать
@@ -49,7 +49,7 @@ function populateDepartmentMenu() {
     const allLi = document.createElement('li')
     allLi.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a>`;
     menu.appendChild(allLi);
-    departmentsList.forEach(dep => {
+    departamentsList.forEach(dep => {
         const li = document.createElement('li');
         li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('${dep.name}')">${dep.name}</a>`;
         menu.appendChild(li);
@@ -78,9 +78,9 @@ function createEmployeeRow(employee) {
     const row = document.createElement('div');
     row.className = 'row admin-employee-row align-items-center';
     row.setAttribute('data-id', employee.id);
-    row.setAttribute('data-department', employee.department);
+    row.setAttribute('data-department', employee.departament);
     row.setAttribute('data-name', employee.name.toLowerCase());
-    row.setAttribute('data-position', employee.position.toLowerCase());
+    row.setAttribute('data-position', employee.post.toLowerCase());
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
@@ -91,8 +91,8 @@ function createEmployeeRow(employee) {
             </div>
         </div>
         <div class="col-md-3 mb-2 mb-md-0">
-            <div class="admin-employee-name" style="font-size: 0.9rem;">${employee.department}</div>
-            <div class="admin-employee-text">${employee.position}</div>
+            <div class="admin-employee-name" style="font-size: 0.9rem;">${employee.departament}</div>
+            <div class="admin-employee-text">${employee.post}</div>
         </div>
         <div class="col-md-3 mb-3 mb-md-0">
             <div class="admin-employee-text">${employee.phone}</div>
@@ -168,7 +168,7 @@ async function editEmployee(employeeId) {
     const deptSelect = document.getElementById('editDepartmentId');
     deptSelect.innerHTML = '<option value="">Выберите отдел</option>';
     
-    for (const dept of departmentsList) {
+    for (const dept of departamentsList) {
         const selected = (dept.id === employee.departament_id) ? 'selected' : '';
         deptSelect.innerHTML += `<option value="${dept.id}" ${selected}>${dept.name}</option>`;
     }
@@ -191,12 +191,12 @@ async function editEmployee(employeeId) {
 }
 
 // Загрузка должностей для модального окна (фильтрация по отделу)
-async function loadPostsForEditModal(departmentId) {
+async function loadPostsForEditModal(departamentId) {
     const postSelect = document.getElementById('editPostId');
     postSelect.innerHTML = '<option value="">Выберите должность</option>';
     
     // Фильтруем должности по отделу
-    const filteredPosts = postsList.filter(p => p.departament_id === departmentId || p.department_id === departmentId);
+    const filteredPosts = postsList.filter(p => p.departament_id === departamentId || p.departament_id === departamentId);
     
     for (const post of filteredPosts) {
         const selected = (currentEditingEmployee && post.id === currentEditingEmployee.post_id) ? 'selected' : '';
@@ -225,7 +225,7 @@ async function saveEmployeeFromModal() {
     const lastname = document.getElementById('editLastname').value.trim();
     const firstname = document.getElementById('editFirstname').value.trim();
     const middlename = document.getElementById('editMiddlename').value.trim();
-    const departmentId = parseInt(document.getElementById('editDepartmentId').value);
+    const departamentId = parseInt(document.getElementById('editDepartmentId').value);
     const postId = parseInt(document.getElementById('editPostId').value);
     const phone = document.getElementById('editPhone').value.trim();
     const email = document.getElementById('editEmail').value.trim();
@@ -237,7 +237,7 @@ async function saveEmployeeFromModal() {
         return;
     }
     
-    if (!departmentId || !postId) {
+    if (!departamentId || !postId) {
         alert('Выберите отдел и должность');
         return;
     }
@@ -253,7 +253,7 @@ async function saveEmployeeFromModal() {
         phone: phone,
         date_admission: currentEditingEmployee?.hireDate || new Date().toISOString().split('T')[0],
         description: description,
-        departament_id: departmentId,
+        departament_id: departamentId,
         post_id: postId,
         image_id: currentEditingEmployee?.image_id ?? null
     });
@@ -457,8 +457,8 @@ function searchEmployees() {
 
     const filtered = employees.filter(e =>
         e.name.toLowerCase().includes(query) ||
-        e.position.toLowerCase().includes(query) ||
-        e.department.toLowerCase().includes(query)
+        e.post.toLowerCase().includes(query) ||
+        e.departament.toLowerCase().includes(query)
     );
 
     const container = document.getElementById('employeesContainer');
@@ -482,7 +482,7 @@ function filterByDepartment(dept) {
         return;
     }
 
-    const filtered = employees.filter(e => e.department === dept);
+    const filtered = employees.filter(e => e.departament === dept);
     const container = document.getElementById('employeesContainer');
 
     if (!container) return;
@@ -504,7 +504,7 @@ function filterByPost(post) {
         return;
     }
 
-    const filtered = employees.filter(e => e.position === post);
+    const filtered = employees.filter(e => e.post === post);
     const container = document.getElementById('employeesContainer');
 
     if (!container) return;
@@ -591,7 +591,7 @@ async function showPostPanel() {
 
 // Новая функция: загрузка отделов для модального окна должностей
 async function loadDepartmentsForPostModal() {
-    const res = await fetch(`${API_BASE}/api/departments`);
+    const res = await fetch(`${API_BASE}/api/departaments`);
     const depts = await res.json();
     const select = document.getElementById('postDepartmentSelect');
     if (!select) return;
@@ -604,7 +604,7 @@ async function loadDepartmentsForPostModal() {
 
 // Загрузка отделов для модалки
 async function loadDepartmentsForModal() {
-    const res = await fetch(`${API_BASE}/api/departments`);
+    const res = await fetch(`${API_BASE}/api/departaments`);
     const depts = await res.json();
     const container = document.getElementById('departmentsList');
     container.innerHTML = '';
@@ -640,7 +640,7 @@ async function loadPostsForModal() {
 async function addDepartment() {
     const name = document.getElementById('newDepartmentName').value.trim();
     if (!name) return false;
-    await fetch(`${API_BASE}/api/departments`, {
+    await fetch(`${API_BASE}/api/departaments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -652,7 +652,7 @@ async function addDepartment() {
 
 // Удаление отдела
 async function deleteDepartment(id) {
-    await fetch(`${API_BASE}/api/departments/${id}`, { method: 'DELETE' });
+    await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
     await loadDepartmentsForModal();
     await loadEmployees();
 }
@@ -660,14 +660,14 @@ async function deleteDepartment(id) {
 // Добавление должности (с привязкой к отделу)
 async function addPost() {
     const name = document.getElementById('newPostName').value.trim();
-    const departmentId = document.getElementById('postDepartmentSelect').value;
+    const departamentId = document.getElementById('postDepartmentSelect').value;
     
     if (!name) {
         alert('Введите название должности');
         return false;
     }
     
-    if (!departmentId) {
+    if (!departamentId) {
         alert('Выберите отдел для должности');
         return false;
     }
@@ -677,7 +677,7 @@ async function addPost() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             name: name,
-            department_id: parseInt(departmentId)
+            departament_id: parseInt(departamentId)
         })
     });
     

@@ -76,8 +76,8 @@ function mapEmployee(row: any) {
         firstname: row.firstname,
         lastname: row.lastname,
         middlename: row.middlename,
-        position: row.post_name,
-        department: row.departament_name,
+        post: row.post_name,
+        departament: row.departament_name,
         departament_id: row.departament_id,
         post_id: row.post_id,
         email: row.email,
@@ -354,8 +354,8 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
                 e.lastname,
                 e.firstname,
                 e.middlename,
-                e.position,
-                e.department,
+                e.post,
+                e.departament,
                 e.email,
                 e.phone,
                 e.hireDate,
@@ -476,7 +476,7 @@ app.delete('/api/employees/:id', async (req: Request, res: Response) => {
 
 //Маршруты отделов
 
-app.get('/api/departments', async (req: Request, res: Response) => {
+app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
         const rows = await db.all(departamentQueries.getAll);
         res.json(rows);
