@@ -50,7 +50,30 @@ function populateDepartamentFilter() {
         const Opt = document.createElement('option');
         Opt.value = dep.id
         Opt.textContent = dep.name
-        Opt.selected = saveValue===dep.id
+        if (saveValue !=='all') Opt.selected = Number(saveValue)===dep.id
+        filter.appendChild(Opt);
+    });
+}
+
+function populatePostFilter(dep_id) {
+    const filter = document.getElementById('postFilter')
+    if (!filter) return;
+    const saveValue = filter.value
+    filter.innerHTML = ''
+    const allOpt = document.createElement('option')
+    allOpt.value = 'all'
+    allOpt.textContent = 'Все должности'
+    allOpt.selected = saveValue === 'all'
+    filter.appendChild(allOpt);
+    let Posts = postsList
+    if (dep_id!='all') {
+        Posts = postsList.filter(function(e){return e.departament_id === Number(dep_id)})
+    }
+    Posts.forEach(post => {
+        const Opt = document.createElement('option');
+        Opt.value = post.id
+        Opt.textContent = post.name
+        if (saveValue!=='all') Opt.selected = Number(saveValue)===post.id
         filter.appendChild(Opt);
     });
 }
@@ -71,6 +94,7 @@ async function loadEmployees() {
         postsList = await postsRes.json();
 
         populateDepartamentFilter()
+        populatePostFilter('all')
         renderCatalog(employees);
     } catch (err) {
         const container = document.getElementById('catalogContainer');
@@ -114,17 +138,16 @@ function renderCatalog(employeesList) {
 }
 
 function filter_and_search() {
+    populatePostFilter(document.getElementById('departamentFilter').value)
     const filteredByDepartament = employees.filter(function (emp) {
         if (document.getElementById('departamentFilter').value === 'all') return true
-        return emp.departament_id == document.getElementById('departamentFilter').value
+        return emp.departament_id === Number(document.getElementById('departamentFilter').value)
     })
-    console.log(filteredByDepartament);
     
     const filteredByPost = filteredByDepartament.filter(function (emp) {
         if (document.getElementById('postFilter').value === 'all') return true
-        return emp.post_id == document.getElementById('postFilter').value
+        return emp.post_id === Number(document.getElementById('postFilter').value)
     })
-    console.log(filteredByPost);
     
     const searched = filteredByPost.filter(function (emp) {
         q = document.getElementById('searchInput').value.toLowerCase()
@@ -133,8 +156,6 @@ function filter_and_search() {
         const inDepartament = emp.departament.toLowerCase().includes(q)
         return inName || inPost || inDepartament
     })
-
-    console.log(searched);
     
     renderCatalog(searched)
     
