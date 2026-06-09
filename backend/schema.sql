@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS account (
   login TEXT NOT NULL,
   hash TEXT NOT NULL,
   salt BLOB NOT NULL,
-  employee_id INTEGER NOT NULL,
+  employee_id INTEGER,
   FOREIGN KEY (employee_id) REFERENCES employee(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 

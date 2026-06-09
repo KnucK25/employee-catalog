@@ -5,10 +5,13 @@ import { Database } from 'sqlite';
 import * as path from 'path'; // Импортируем модуль для работы с путями
 import * as fs from 'fs'; // <-- Добавляем fs для чтения файлов
 
+import * as crypto from 'crypto';
+
 import { employeeQueries } from './database/queries/employeeQueries';
 import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
 import { imageQueries } from './database/queries/imageQueries';
+import { accountQueries } from './database/queries/accountQueries';
 
 const app = express();
 app.use(express.json());
@@ -33,6 +36,37 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 //Глобальная переменная для экземпляра БД
 let db: Database;
 
+// Токены хранятся в памяти: token → { employeeId, expiresAt }
+const sessions = new Map<string, { employeeId: number; expiresAt: number }>();
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 часов
+
+function hashPassword(password: string, salt: string): string {
+    return crypto.createHmac('sha256', salt).update(password).digest('hex');
+}
+
+function generateToken(): string {
+    return crypto.randomBytes(32).toString('hex');
+}
+
+function requireAuth(req: Request, res: Response, next: NextFunction) {
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        sessions.delete(token);
+        res.status(401).json({ error: 'Сессия истекла, войдите снова' });
+        return;
+    }
+
+    next();
+}
+
 
 //Переводим строку из базы к формату фронта
 function mapEmployee(row: any) {
@@ -42,8 +76,8 @@ function mapEmployee(row: any) {
         firstname: row.firstname,
         lastname: row.lastname,
         middlename: row.middlename,
-        position: row.post_name,
-        department: row.departament_name,
+        post: row.post_name,
+        departament: row.departament_name,
         departament_id: row.departament_id,
         post_id: row.post_id,
         email: row.email,
@@ -228,6 +262,66 @@ async function seedDB() {
     console.log('Seed-данные вставлены');
 }
 
+//Авторизация
+
+app.post('/api/auth/login', async (req: Request, res: Response) => {
+    try {
+        const { login, password } = req.body;
+
+        if (!login || !password) {
+            res.status(400).json({ error: 'Укажите логин и пароль' });
+            return;
+        }
+
+        const account = await db.get(accountQueries.getByLogin, [login]);
+
+        if (!account) {
+            res.status(401).json({ error: 'Неверный логин или пароль' });
+            return;
+        }
+
+        const expectedHash = hashPassword(password, account.salt);
+
+        if (expectedHash !== account.hash) {
+            res.status(401).json({ error: 'Неверный логин или пароль' });
+            return;
+        }
+
+        const token = generateToken();
+        sessions.set(token, { employeeId: account.employee_id, expiresAt: Date.now() + SESSION_TTL_MS });
+
+        res.json({ token });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка авторизации' });
+    }
+});
+
+app.post('/api/auth/register', async (req: Request, res: Response) => {
+    try {
+        const { login, password } = req.body;
+
+        if (!login || !password) {
+            res.status(400).json({ error: 'Укажите логин и пароль' });
+            return;
+        }
+
+        const existing = await db.get(accountQueries.getByLogin, [login]);
+
+        if (existing) {
+            res.status(409).json({ error: 'Логин уже занят' });
+            return;
+        }
+
+        const salt = crypto.randomBytes(16).toString('hex');
+        const hash = hashPassword(password, salt);
+        await db.run(accountQueries.create, [login, hash, salt, null]);
+
+        res.status(201).json({ message: 'Аккаунт создан' });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка регистрации' });
+    }
+});
+
 //Маршруты сотрудников
 
 app.get('/api/employees', async (req: Request, res: Response) => {
@@ -236,6 +330,46 @@ app.get('/api/employees', async (req: Request, res: Response) => {
         res.json(rows.map(mapEmployee));
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудников', err });
+    }
+});
+
+app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Response) => {
+    try {
+        const rows = await db.all(employeeQueries.getAll);
+        const employees = rows.map(mapEmployee);
+
+        const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
+
+        const escape = (val: any) => {
+            const str = val == null ? '' : String(val);
+            return str.includes(',') || str.includes('"') || str.includes('\n')
+                ? `"${str.replace(/"/g, '""')}"`
+                : str;
+        };
+
+        const lines = [
+            headers.join(','),
+            ...employees.map(e => [
+                e.id,
+                e.lastname,
+                e.firstname,
+                e.middlename,
+                e.post,
+                e.departament,
+                e.email,
+                e.phone,
+                e.hireDate,
+                e.bio
+            ].map(escape).join(','))
+        ];
+
+        const csv = '﻿' + lines.join('\r\n');
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
+        res.send(csv);
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка экспорта' });
     }
 });
 
@@ -342,7 +476,7 @@ app.delete('/api/employees/:id', async (req: Request, res: Response) => {
 
 //Маршруты отделов
 
-app.get('/api/departments', async (req: Request, res: Response) => {
+app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
         const rows = await db.all(departamentQueries.getAll);
         res.json(rows);

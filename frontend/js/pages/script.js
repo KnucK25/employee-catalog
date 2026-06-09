@@ -27,51 +27,67 @@
 
     // Обработка авторизации (временная заглушка)
     if (loginForm) {
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            const login = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            
-            // Простая имитация авторизации (потом замените на реальную)
-            if (email && password) {
-                alert(`Вход выполнен как ${email}`);
-                // Закрыть модальное окно
+
+            if (!login || !password) { alert('Заполните все поля'); return; }
+
+            try {
+                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Ошибка входа');
+                    return;
+                }
+
+                localStorage.setItem('authToken', data.token);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
                 if (modal) modal.hide();
-                // Очистить форму
                 loginForm.reset();
-            } else {
-                alert('Заполните все поля');
+                alert('Вход выполнен');
+            } catch (err) {
+                alert('Ошибка сети при входе');
             }
         });
     }
 
-    // Обработка регистрации (временная заглушка)
     if (registerForm) {
-        registerForm.addEventListener('submit', (e) => {
+        registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
+            const login = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const confirm = document.getElementById('regConfirmPassword').value;
-            
-            if (!name || !email || !password || !confirm) {
-                alert('Заполните все поля');
-                return;
+
+            if (!login || !password || !confirm) { alert('Заполните все поля'); return; }
+            if (password !== confirm) { alert('Пароли не совпадают'); return; }
+
+            try {
+                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
+
+                const data = await res.json();
+                if (!res.ok) { alert(data.error || 'Ошибка регистрации'); return; }
+
+                alert('Аккаунт создан. Теперь войдите.');
+                registerForm.reset();
+                registerForm.style.display = 'none';
+                loginForm.style.display = 'block';
+                modalTitle.textContent = 'Вход в аккаунт';
+            } catch (err) {
+                alert('Ошибка сети при регистрации');
             }
-            if (password !== confirm) {
-                alert('Пароли не совпадают');
-                return;
-            }
-            
-            alert(`Регистрация выполнена как ${name}`);
-            // Закрыть модальное окно и вернуться к форме входа
-            const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
-            if (modal) modal.hide();
-            registerForm.reset();
-            loginForm.reset();
-            registerForm.style.display = 'none';
-            loginForm.style.display = 'block';
-            modalTitle.textContent = 'Вход в аккаунт';
         });
     }

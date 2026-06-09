@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Каталог сотрудников</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/catalog.css">
+    <link rel="stylesheet" href="css/common.css"> 
 </head>
 <body>
 
-    <!-- НАВИГАЦИЯ -->
-        <nav class="navbar navbar-expand-lg sticky-top">
+    <header>
+        <nav class="navbar navbar-expand-lg">
             <div class="container">
                 <div class="d-flex align-items-center">
                     <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
@@ -20,69 +21,63 @@
 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button> <!-- бургер для телефонов -->
+                </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
-                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудника</a></li>
+                        <li class="nav-item"><a class="nav-link active" href="catalog.html">Каталог сотрудников</a></li>
                         <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
                         <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Зарегистрироваться</a></li>               
                     </ul>
                 </div>
             </div>
         </nav>
+    </header>
 
     <main>
         <!-- ЗАГОЛОВОК -->
-        <section class="container mt-5 mb-1 text-center">
-            <h1 class="display-3 fw-bold mb-1">РЕЕСТР СОТРУДНИКОВ</h1>
-            <p class="text-secondary mb-1">крутые челиксы</p>
+        <section class="container mt-5 mb-3">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-2">КАТАЛОГ СОТРУДНИКОВ</h1>
+                <p class="text-secondary">Актуальная информация о персонале компании</p>
+            </div>
         </section>
 
-        <!-- ЧЕРНАЯ ПАНЕЛЬ ПОИСКА (Наложение 50/50) -->
-        <section class="search-section-dark container-fluid">
+        <!-- СЕКЦИЯ ПОИСКА И ФИЛЬТРОВ -->
+        <section class="search-section">
             <div class="container">
-                <div class="row g-4 align-items-end">
-                    <!-- Поиск -->
-                    <div class="col-md-6">
-                        <h5 class="card-title-search">ПОИСК СОТРУДНИКА</h5>
-                        <div class="input-group">
-                            <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
-                            <button class="btn btn-gold-search" type="button" id="searchBtn">НАЙТИ</button>
-                        </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label mb-1">ПОИСК</label>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
                     </div>
-                    <!-- Фильтр -->
                     <div class="col-md-3">
-                        <h5 class="card-title-search">ОТДЕЛЫ</h5>
-                        <!-- Используем класс custom-select-flat как в админке -->
-                        <select id="departmentFilter" class="custom-select-flat">
+                        <label class="form-label mb-1">ОТДЕЛ</label>
+                        <select id="departamentFilter" class="form-select">
                             <option value="all">Все отделы</option>
                             <option value="Управление">Управление</option>
                             <option value="Маркетинг">Маркетинг</option>
                             <option value="Административный отдел">Административный отдел</option>
                         </select>
                     </div>
-                    <!-- Фильтр -->
-                    <div class="col-md-3">
-                        <h5 class="card-title-search">ДОЛЖНОСТИ</h5>
-                        <!-- Используем класс custom-select-flat как в админке -->
-                        <select id="departmentFilter" class="custom-select-flat">
+                    <div class="col-md-4">
+                        <label class="form-label mb-1">ДОЛЖНОСТЬ</label>
+                        <select id="postFilter" class="form-select">
                             <option value="all">Все должности</option>
-                            <option value="Управление">Управление</option>
-                            <option value="Маркетинг">Маркетинг</option>
-                            <option value="Административный отдел">Административный отдел</option>
+                            <option value="Руководитель">Руководитель</option>
+                            <option value="Менеджер">Менеджер</option>
+                            <option value="Специалист">Специалист</option>
                         </select>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- БЕЖЕВАЯ СЕКЦИЯ С КАРТОЧКАМИ -->
-        <section class="employees-section-full-width">
+        <!-- СЕКЦИЯ С КАРТОЧКАМИ -->
+        <section class="employees-section">
             <div class="container">
-                <!-- Контейнер для JS -->
-                <div class="row justify-content-center" id="catalogContainer">
+                <div class="row g-4" id="catalogContainer">
                     <div class="col-12 text-center text-muted py-5">
                         Загрузка сотрудников...
                     </div>
@@ -99,9 +94,7 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <script  src="js/pages/catalog.js"></script>
-
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/pages/catalog.js"></script>
 </body>
 </html>
