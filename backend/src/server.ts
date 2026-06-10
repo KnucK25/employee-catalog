@@ -445,7 +445,6 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
             phone,
             date_admission,
             description ?? '',
-            departament_id,
             post_id,
             image_id ?? null,
             req.params.id
@@ -485,6 +484,45 @@ app.get('/api/departaments', async (req: Request, res: Response) => {
     }
 });
 
+app.post('/api/departaments', async (req: Request, res: Response) => {
+    try {
+        const { name } = req.body;
+        if (name.trim() === '') return res.status(400).json({ error: 'Не введено название отдела' })
+
+        const exist = await db.get(departamentQueries.existByNameExceptId, [name])
+        if (exist) return res.status(409).json({ error: 'Такой отдел уже существует' })
+
+        const result = await db.run(departamentQueries.create, [name])
+        const newRow = await db.get(departamentQueries.getById, [result.lastID])
+        return res.status(201).json({ id: newRow.id, name: newRow.name })
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/departaments/:id', async (req: Request, res: Response) => {
+    try {
+        const exist = await db.get(departamentQueries.getById, [req.params.id])
+        if (!exist) return res.status(512).json({ error: "Не найден отдел с таким id" })
+
+        const posts = await db.all<Promise<Array<{ id: number, name: string, departament_id: number }>>>(postQueries.getByDepId, [req.params.id])
+        let employees: Array<{ id: number, lastname: string, firstname: string, middlename: string, email: string, phone: string, date_admission: string, description: string, post_id: number, image_id: number }> = []
+        for (const post of posts) {
+            const id = post.id
+            employees.push(...(await db.all<Promise<Array<{ id: number, lastname: string, firstname: string, middlename: string, email: string, phone: string, date_admission: string, description: string, post_id: number, image_id: number }>>>(employeeQueries.getByPostId, id)))
+        }
+
+        const result = await db.run(departamentQueries.remove, [req.params.id])
+        const existAfterDelete = await db.get(departamentQueries.getById, [result.lastID])
+
+        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+
+        return res.status(200).json({ message: `Отдел с id ${req.params.id} был удален`, deleted_posts: posts, deleted_employee: employees })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
+
 //Маршруты должностей
 
 app.get('/api/posts', async (req: Request, res: Response) => {
@@ -495,6 +533,41 @@ app.get('/api/posts', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Ошибка получения должностей' });
     }
 });
+
+app.post('/api/posts', async (req: Request, res: Response) => {
+    try {
+        const { departament_id, name } = req.body
+        if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
+
+        const exist = await db.get(postQueries.existByNameExceptId, [name])
+        if (exist) return res.status(409).json({ error: "Такая должность уже существует" })
+
+        const result = await db.run(postQueries.create, [departament_id, name])
+        const newRow = await db.get(postQueries.getById, [result.lastID])
+        return res.status(201).json({ id: newRow.id, name: newRow.name, departament_id: newRow.departament_id })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/posts/:id', async (req: Request, res: Response) => {
+    try {
+        const exist = await db.get(postQueries.getById, [req.params.id])
+
+        if (!exist) return res.status(512).json({ error: "Не найдена должность с таким id" })
+
+        const employee = await db.all(employeeQueries.getByPostId, [req.params.id])
+
+        const result = await db.run(postQueries.remove, [req.params.id])
+        const existAfterDelete = await db.get(postQueries.getById, [req.params.id])
+
+        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+
+        return res.status(200).json({ message: `Должность с id ${req.params.id} был удален`, deleted_employee: employee })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
 
 //Отдаём изображение по его id из таблицы image
 

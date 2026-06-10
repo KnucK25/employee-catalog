@@ -84,7 +84,7 @@ function createEmployeeRow(employee) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -248,12 +248,10 @@ async function saveEmployeeFromModal() {
         firstname: firstname,
         lastname: lastname,
         middlename: middlename,
-        name: fullName,
         email: email,
         phone: phone,
         date_admission: currentEditingEmployee?.hireDate || new Date().toISOString().split('T')[0],
         description: description,
-        departament_id: departamentId,
         post_id: postId,
         image_id: currentEditingEmployee?.image_id ?? null
     });
@@ -267,7 +265,7 @@ async function saveEmployeeFromModal() {
         
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка'));
+            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка') + json_body);
             return;
         }
         
@@ -639,22 +637,85 @@ async function loadPostsForModal() {
 // Добавление отдела
 async function addDepartment() {
     const name = document.getElementById('newDepartmentName').value.trim();
-    if (!name) return false;
-    await fetch(`${API_BASE}/api/departaments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    });
-    document.getElementById('newDepartmentName').value = '';
-    await loadDepartmentsForModal();
-    await loadEmployees();
+    if (!name) return;
+    try {
+        
+        const res = await fetch(`${API_BASE}/api/departaments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+
+        /**
+         * @type {({error:string } | {id:number, name:string })}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert('Ошибка ' + res.status + ` ${data.error}`)
+            return
+        }
+
+        document.getElementById('newDepartmentName').value = '';
+        await loadDepartmentsForModal();
+        await loadEmployees();
+    
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Удаление отдела
 async function deleteDepartment(id) {
-    await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
-    await loadDepartmentsForModal();
-    await loadEmployees();
+    try {
+        const res = await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
+
+        /**
+        * @typedef {Object} PostItem
+        * @property {number} id
+        * @property {string} name
+        * @property {number} departament_id
+        * 
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {PostItem[]} PostsArray       // Массив объектов PostItem
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
+        }
+
+        alert(JSON.stringify(data, null, 2))
+
+        await loadDepartmentsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Добавление должности (с привязкой к отделу)
@@ -671,37 +732,88 @@ async function addPost() {
         alert('Выберите отдел для должности');
         return false;
     }
-    
-    await fetch(`${API_BASE}/api/posts`, {
+    try {
+        const res = await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             name: name,
             departament_id: parseInt(departamentId)
         })
-    });
-    
-    document.getElementById('newPostName').value = '';
-    document.getElementById('postDepartmentSelect').value = '';
-    await loadPostsForModal();
-    await loadEmployees();
+        });
+        /**
+         * @type {({error:string}|{id:number, name:string, departament_id:number})}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert('Ошибка ' + res.status + ` ${data.error}`)
+            return
+        }
+
+        document.getElementById('newPostName').value = '';
+        document.getElementById('postDepartmentSelect').value = '';
+        await loadPostsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Удаление должности
 async function deletePost(id) {
-    await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
-    await loadPostsForModal();
-    await loadEmployees();
+    try {
+        const res = await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
+        /**
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
+        }
+        alert(JSON.stringify(data, null, 2))
+        await loadPostsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
     const emptyEmployee = {
-        lastname: 'Новый',
-        firstname: 'Сотрудник',
+        lastname: '',
+        firstname: '',
         middlename: '',
-        email: 'Пусто',
-        phone: 'Пусто',
+        email: '',
+        phone: '',
         date_admission: new Date().toISOString().split('T')[0],
         description: '',
         departament_id: 1,

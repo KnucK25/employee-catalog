@@ -46,5 +46,14 @@ export const departamentQueries = {
   remove: `
     DELETE FROM departament
     WHERE id = ?;
+  `,
+
+  /**
+   * Принимает название отдела.
+   * Возвращает id существующего департамента или undefined/null
+   */
+  existByNameExceptId: `
+  SELECT id FROM departament
+  WHERE name = ?
   `
 } as const;
