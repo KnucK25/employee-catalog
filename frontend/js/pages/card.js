@@ -24,7 +24,7 @@ function renderCard(employee) {
 
     const photoImg = document.querySelector('.employee-photo');
     if (photoImg) {
-        photoImg.src = employee.avatar || 'img/team1.png';
+        photoImg.src = employee.avatar || 'img/bio.png';
     }
 
     const nameEl = document.querySelector('.employee-name');
