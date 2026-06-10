@@ -6,74 +6,83 @@ let postsList = [];
 let editingEmployeeId = null; // ID строки, которая сейчас редактируется
 let selectedDepartament = null
 
-async function loadEmployees() {
-    try {
-        // Загружаем всё параллельно и ждём завершения
-        const [employeesRes, departamentsRes, postsRes] = await Promise.all([
-            fetch(`${API_BASE}/api/employees`),
-            fetch(`${API_BASE}/api/departaments`),
-            fetch(`${API_BASE}/api/posts`)
-        ]);
-        
-        if (!employeesRes.ok) throw new Error('Ошибка сервера');
-        
-        // Парсим все ответы
-        employees = await employeesRes.json();
-        departamentsList = await departamentsRes.json();
-        postsList = await postsRes.json();
-        
-        // Теперь всё загружено, можно отрисовывать
-        await renderEmployees();
-        await populateDepartmentMenu(); // Отдельная функция для меню отделов
-        await populatePostMenu(); // Отдельная функция для меню должностей
-        
-    } catch (err) {
-        console.error('Ошибка загрузки:', err);
-        const container = document.getElementById('employeesContainer');
-        if (container) {
-            container.innerHTML = `
-                <div class="row">
-                    <div class="col-12 text-center py-4">
-                        <p class="text-danger">Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>
-                    </div>
-                </div>`;
-        }
-    }
-}
-
-// Отдельная функция для заполнения меню фильтров
-function populateDepartmentMenu() {
-    const menu = document.getElementById('departmentMenu');
-    if (!menu) return;
-    menu.innerHTML = ''
-    const allLi = document.createElement('li')
-    allLi.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('all')">Все отделы</a>`;
-    menu.appendChild(allLi);
+//Заполняет фильтр отделов
+function populateDepartamentMenu() {
+    const filter = document.getElementById('departamentFilter')
+    if (!filter) return;
+    const saveValue = filter.value
+    filter.innerHTML = ''
+    const allOpt = document.createElement('option')
+    allOpt.value = 'all'
+    allOpt.textContent = 'Все отделы'
+    allOpt.selected = saveValue === 'all'
+    filter.appendChild(allOpt);
     departamentsList.forEach(dep => {
-        const li = document.createElement('li');
-        li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByDepartment('${dep.name}')">${dep.name}</a>`;
-        menu.appendChild(li);
+        const Opt = document.createElement('option');
+        Opt.value = dep.id
+        Opt.textContent = dep.name
+        if (saveValue !=='all') Opt.selected = Number(saveValue)===dep.id
+        filter.appendChild(Opt);
     });
 }
 
-function populatePostMenu() {
-    const menu = document.getElementById('postMenu')
-    if (!menu) return;
-    menu.innerHTML = ''
-    const AllLi = document.createElement('li')
-    AllLi.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByPost('all')">Все должности</a>`;
-    if (selectedDepartament === null) {
-        postsList.forEach(post => {
-            const li = document.createElement('li')
-            li.innerHTML = `<a class="dropdown-item" href="#" onclick="filterByPost('${post.name}')">${post.name}</a>`
-            menu.appendChild(li)
-        })
+//Заполняет фильтр должностей в зависимости от выбранного отдела
+function populatePostMenu(dep_id) {
+    const filter = document.getElementById('postFilter')
+    if (!filter) return;
+    const saveValue = filter.value
+    filter.innerHTML = ''
+    const allOpt = document.createElement('option')
+    allOpt.value = 'all'
+    allOpt.textContent = 'Все должности'
+    allOpt.selected = saveValue === 'all'
+    filter.appendChild(allOpt);
+    let Posts = postsList
+    if (dep_id!='all') {
+        Posts = postsList.filter(function(e){return e.departament_id === Number(dep_id)})
     }
-    else {
-        
-    }
+    Posts.forEach(post => {
+        const Opt = document.createElement('option');
+        Opt.value = post.id
+        Opt.textContent = post.name
+        if (saveValue!=='all') Opt.selected = Number(saveValue)===post.id
+        filter.appendChild(Opt);
+    });
 }
 
+//Фильтрует и ищет пользователей по выбранным параметрам
+function filter_and_search() {
+    populatePostMenu(document.getElementById('departamentFilter').value)
+    const filteredByDepartament = employees.filter(function (emp) {
+        if (document.getElementById('departamentFilter').value === 'all') return true
+        return emp.departament_id === Number(document.getElementById('departamentFilter').value)
+    })
+    
+    const filteredByPost = filteredByDepartament.filter(function (emp) {
+        if (document.getElementById('postFilter').value === 'all') return true
+        return emp.post_id === Number(document.getElementById('postFilter').value)
+    })
+
+    function clearPhone(phone) {
+        return '+'+(phone??'').replace(/\D/g,'')
+    }
+    
+    const q = document.getElementById('searchInput').value.toLowerCase()
+    const searched = filteredByPost.filter(function (emp) {
+        const inID = String(emp.id) === q
+        const inName = emp.name.toLowerCase().includes(q)
+        const inPost = emp.post.toLowerCase().includes(q)
+        const inDepartament = emp.departament.toLowerCase().includes(q)
+        const inEmail = emp.email.toLowerCase().includes(q)
+        const inPhone = clearPhone(emp.phone).includes(q)
+        return inID || inName || inPost || inDepartament || inEmail || inPhone
+    })
+    
+    renderEmployees(searched)
+    
+}
+
+//Создает div пользователя
 function createEmployeeRow(employee) {
     const row = document.createElement('div');
     row.className = 'row admin-employee-row align-items-center';
@@ -84,7 +93,7 @@ function createEmployeeRow(employee) {
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/team1.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -111,6 +120,91 @@ function createEmployeeRow(employee) {
     console.log('Строка создана для:', employee.name);
     return row;
 }
+
+//Запускает функцию создания строк пользователей и отрисовывает их
+/**
+ * @typedef {Object} Employee
+ * @property {number} id
+ * @property {string} name
+ * @property {string} firstname
+ * @property {string} lastname
+ * @property {string} middlename
+ * @property {string} post
+ * @property {string} departament
+ * @property {number} departament_id
+ * @property {number} post_id
+ * @property {string} email
+ * @property {string} phone
+ * @property {string} hireDate
+ * @property {string} bio
+ * @property {string|null} avatar
+ * @property {number} image_id
+ * @typedef {Employee[]} Employees
+ * 
+ * @param {Employees} employeesList 
+ */
+function renderEmployees(employeesList) {
+    const container = document.getElementById('employeesContainer');
+    if (!container) return;
+
+    container.innerHTML=''
+
+    if (!employeesList || !employeesList.length) {
+        container.innerHTML = `<div class="row"><div class="col-12 text-center py-4"><p class="text-muted">Сотрудники не найдены</p></div></div>`;
+        return;
+    }
+
+    employeesList.forEach(employee => {
+        const row = createEmployeeRow(employee);
+        container.appendChild(row);
+    });
+}
+
+//Получает с сервера и записывает профили должности и отделы, отрисовывает отделы, должности и пользователей
+async function loadEmployees() {
+    try {
+        // Загружаем всё параллельно и ждём завершения
+        const [employeesRes, departamentsRes, postsRes] = await Promise.all([
+            fetch(`${API_BASE}/api/employees`),
+            fetch(`${API_BASE}/api/departaments`),
+            fetch(`${API_BASE}/api/posts`)
+        ]);
+        
+        if (!employeesRes.ok) throw new Error('Ошибка сервера');
+        
+        // Парсим все ответы
+        employees = await employeesRes.json();
+        departamentsList = await departamentsRes.json();
+        postsList = await postsRes.json();
+        
+        // Теперь всё загружено, можно отрисовывать
+        await populateDepartamentMenu(); // Отдельная функция для меню отделов
+        await populatePostMenu('all'); // Отдельная функция для меню должностей
+        await renderEmployees(employees);
+        
+    } catch (err) {
+        console.error('Ошибка загрузки:', err);
+        const container = document.getElementById('employeesContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="row">
+                    <div class="col-12 text-center py-4">
+                        <p class="text-danger">Не удалось загрузить данные. Проверьте, запущен ли сервер.</p>
+                    </div>
+                </div>`;
+        }
+    }
+}
+
+
+//Первая отрисовка страницы и слушатели фильтров + поиска
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM загружен, загружаем данные с сервера');
+    loadEmployees();
+    document.getElementById('departamentFilter').addEventListener('change', filter_and_search);
+    document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
+    document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
+});
 
 async function deleteEmployee(employeeId) {
     try {
@@ -144,9 +238,6 @@ async function deleteEmployee(employeeId) {
 
     console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
 }
-
-// Переменная для хранения текущего редактируемого сотрудника
-let currentEditingEmployee = null;
 
 // Функция открытия модального окна редактирования
 async function editEmployee(employeeId) {
@@ -248,12 +339,10 @@ async function saveEmployeeFromModal() {
         firstname: firstname,
         lastname: lastname,
         middlename: middlename,
-        name: fullName,
         email: email,
         phone: phone,
         date_admission: currentEditingEmployee?.hireDate || new Date().toISOString().split('T')[0],
         description: description,
-        departament_id: departamentId,
         post_id: postId,
         image_id: currentEditingEmployee?.image_id ?? null
     });
@@ -267,7 +356,7 @@ async function saveEmployeeFromModal() {
         
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка'));
+            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка') + json_body);
             return;
         }
         
@@ -423,97 +512,6 @@ async function saveEmployee(employeeId) {
     }
 }
 
-// Отмена редактирования
-// function cancelEdit(employeeId) {
-//     editingEmployeeId = null; 
-//     renderEmployees();
-// }
-
-function renderEmployees() {
-    const container = document.getElementById('employeesContainer');
-    if (!container) return;
-
-    const existingRows = container.querySelectorAll('.admin-employee-row');
-    existingRows.forEach(row => row.remove());
-
-    if (!employees || !employees.length) {
-        container.innerHTML = `<div class="row"><div class="col-12 text-center py-4"><p class="text-muted">Сотрудники не найдены</p></div></div>`;
-        return;
-    }
-
-    employees.forEach(employee => {
-        const row = createEmployeeRow(employee);
-        container.appendChild(row);
-    });
-}
-
-function searchEmployees() {
-    const query = document.getElementById('searchInput')?.value.toLowerCase() ?? '';
-
-    if (!query) {
-        renderEmployees();
-        return;
-    }
-
-    const filtered = employees.filter(e =>
-        e.name.toLowerCase().includes(query) ||
-        e.post.toLowerCase().includes(query) ||
-        e.departament.toLowerCase().includes(query)
-    );
-
-    const container = document.getElementById('employeesContainer');
-    if (!container) return;
-
-    const existingRows = container.querySelectorAll('.admin-employee-row');
-    existingRows.forEach(row => row.remove());
-    filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
-}
-
-function filterByDepartment(dept) {
-    const btn = document.getElementById('departmentDropdown');
-
-    if (btn) {
-        btn.textContent = dept === 'all' ? 'Все отделы' : dept;
-    }
-
-    if (dept === 'all') {
-        selectedDepartament = null
-        renderEmployees();
-        return;
-    }
-
-    const filtered = employees.filter(e => e.departament === dept);
-    const container = document.getElementById('employeesContainer');
-
-    if (!container) return;
-
-    const existingRows = container.querySelectorAll('.admin-employee-row');
-    existingRows.forEach(row => row.remove());
-    filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
-}
-
-function filterByPost(post) {
-    const btn = document.getElementById('postDropdown');
-
-    if (btn) {
-        btn.textContent = post === 'all' ? 'Все должности' : post;
-    }
-
-    if (post === 'all') {
-        renderEmployees();
-        return;
-    }
-
-    const filtered = employees.filter(e => e.post === post);
-    const container = document.getElementById('employeesContainer');
-
-    if (!container) return;
-
-    const existingRows = container.querySelectorAll('.admin-employee-row');
-    existingRows.forEach(row => row.remove());
-    filtered.forEach(emp => container.appendChild(createEmployeeRow(emp)));
-}
-
 async function exportAllEmployees() {
     const token = localStorage.getItem('authToken');
     if (!token) {
@@ -548,12 +546,6 @@ async function exportAllEmployees() {
         alert('Ошибка сети при экспорте');
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM загружен, загружаем данные с сервера');
-    loadEmployees();
-});
-
 
 // Открытие модального окна
 function openControlModal() {
@@ -639,22 +631,85 @@ async function loadPostsForModal() {
 // Добавление отдела
 async function addDepartment() {
     const name = document.getElementById('newDepartmentName').value.trim();
-    if (!name) return false;
-    await fetch(`${API_BASE}/api/departaments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name })
-    });
-    document.getElementById('newDepartmentName').value = '';
-    await loadDepartmentsForModal();
-    await loadEmployees();
+    if (!name) return;
+    try {
+        
+        const res = await fetch(`${API_BASE}/api/departaments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+
+        /**
+         * @type {({error:string } | {id:number, name:string })}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert('Ошибка ' + res.status + ` ${data.error}`)
+            return
+        }
+
+        document.getElementById('newDepartmentName').value = '';
+        await loadDepartmentsForModal();
+        await loadEmployees();
+    
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Удаление отдела
 async function deleteDepartment(id) {
-    await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
-    await loadDepartmentsForModal();
-    await loadEmployees();
+    try {
+        const res = await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
+
+        /**
+        * @typedef {Object} PostItem
+        * @property {number} id
+        * @property {string} name
+        * @property {number} departament_id
+        * 
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {PostItem[]} PostsArray       // Массив объектов PostItem
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
+        }
+
+        alert(JSON.stringify(data, null, 2))
+
+        await loadDepartmentsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Добавление должности (с привязкой к отделу)
@@ -671,37 +726,88 @@ async function addPost() {
         alert('Выберите отдел для должности');
         return false;
     }
-    
-    await fetch(`${API_BASE}/api/posts`, {
+    try {
+        const res = await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             name: name,
             departament_id: parseInt(departamentId)
         })
-    });
-    
-    document.getElementById('newPostName').value = '';
-    document.getElementById('postDepartmentSelect').value = '';
-    await loadPostsForModal();
-    await loadEmployees();
+        });
+        /**
+         * @type {({error:string}|{id:number, name:string, departament_id:number})}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert('Ошибка ' + res.status + ` ${data.error}`)
+            return
+        }
+
+        document.getElementById('newPostName').value = '';
+        document.getElementById('postDepartmentSelect').value = '';
+        await loadPostsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Удаление должности
 async function deletePost(id) {
-    await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
-    await loadPostsForModal();
-    await loadEmployees();
+    try {
+        const res = await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
+        /**
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
+        }
+        alert(JSON.stringify(data, null, 2))
+        await loadPostsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
 
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
     const emptyEmployee = {
-        lastname: 'Новый',
-        firstname: 'Сотрудник',
+        lastname: '',
+        firstname: '',
         middlename: '',
-        email: 'Пусто',
-        phone: 'Пусто',
+        email: '',
+        phone: '',
         date_admission: new Date().toISOString().split('T')[0],
         description: '',
         departament_id: 1,

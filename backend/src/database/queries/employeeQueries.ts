@@ -160,5 +160,25 @@ export const employeeQueries = {
     SELECT id
     FROM employee
     WHERE email = ? AND id <> ?;
+  `,
+
+  /**
+   * Принимает id должности.
+   * Возвращает id, фамилию, имя, отчество, емайл, телефон, дату создания, описание, id должности, id фотографии
+   */
+  getByPostId: `
+  SELECT
+    id,
+    lastname,
+    firstname,
+    middlename,
+    email,
+    phone,
+    date_admission,
+    description,
+    post_id,
+    image_id
+  FROM employee
+  WHERE post_id = ?
   `
 } as const;
