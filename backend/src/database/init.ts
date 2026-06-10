@@ -12,7 +12,7 @@ export async function initDB(): Promise<Database> {
     await db.run('PRAGMA foreign_keys = ON;');
 
     // 3. Читаем SQL-файл со схемой
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaPath = path.join(__dirname, '../../schema.sql');
     const schema = fs.readFileSync(schemaPath, 'utf-8');
 
     // 4. Выполняем скрипт создания таблиц и индексов
