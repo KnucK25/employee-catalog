@@ -3,7 +3,7 @@ const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 let employees = [];
 let departamentsList = [];
 let postsList = [];
-let editingEmployeeId = null; // ID строки, которая сейчас редактируется
+//let editingEmployeeId = null; // ID строки, которая сейчас редактируется
 let selectedDepartament = null
 
 //Заполняет фильтр отделов
@@ -235,8 +235,9 @@ async function deleteEmployee(employeeId) {
             </div>
         `;
     }
-
     console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
+    //Обновляем поиск чтобы при удалении последнего пользователя вывелось что по поиску сотрудников не найдено
+    filter_and_search()
 }
 
 // Функция открытия модального окна редактирования
@@ -365,8 +366,10 @@ async function saveEmployeeFromModal() {
         if (modal) modal.hide();
         
         // Перезагружаем данные
-        await loadEmployees();
-        
+        await loadEmployees()
+        // Обновляем поиск если он есть
+        filter_and_search()
+
     } catch (err) {
         console.warn('Ошибка сохранения на сервере:', err);
         alert('Ошибка сети при сохранении');
