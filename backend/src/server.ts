@@ -459,7 +459,7 @@ app.post('/api/employees', async (req: Request, res: Response) => {
             res.status(500).json({ error: "Запрос на создание был отправлен, но создания не произошло" })
             return
         }
-        res.status(201).json(mapEmployee(newRow));
+        res.status(201).json({ ...mapEmployee(newRow), message: "Сотрудник успешно создан" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка создания' });
     }
