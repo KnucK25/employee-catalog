@@ -20,7 +20,8 @@ app.use(express.json());
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    // ✅ Добавили кастомные заголовки
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Employee-Data, Size-File');
 
     if (req.method === 'OPTIONS') {
         res.sendStatus(204);
@@ -67,9 +68,48 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     next();
 }
 
+interface getEmployee {
+    id: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    post_name: string,
+    departament_name: string,
+    departament_id: number,
+    post_id: number,
+    email: string,
+    phone: string,
+    date_admission: string,
+    description: string,
+    image_id: number | null
+}
+
+interface setEmployee {
+    id?: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    phone: string,
+    email: string,
+    description?: string,
+    date_admission?: string,
+    post_id: number,
+    image_id: number | null
+}
+
+interface departaments {
+    id?: number,
+    name: string
+}
+
+interface post {
+    id?: number,
+    name: string,
+    departament_id: number
+}
 
 //Переводим строку из базы к формату фронта
-function mapEmployee(row: any) {
+function mapEmployee(row: getEmployee) {
     return {
         id: row.id,
         name: `${row.lastname} ${row.firstname} ${row.middlename}`,
@@ -326,7 +366,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
 app.get('/api/employees', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
         res.json(rows.map(mapEmployee));
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудников', err });
@@ -335,7 +375,7 @@ app.get('/api/employees', async (req: Request, res: Response) => {
 
 app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
         const employees = rows.map(mapEmployee);
 
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
@@ -400,7 +440,7 @@ app.get('/api/employees/:id', async (req: Request, res: Response) => {
 
 app.post('/api/employees', async (req: Request, res: Response) => {
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body;
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee;
 
         const result = await db.run(employeeQueries.create, [
             firstname,
@@ -414,7 +454,11 @@ app.post('/api/employees', async (req: Request, res: Response) => {
             image_id ?? null
         ]);
 
-        const newRow = await db.get(employeeQueries.getById, [result.lastID]);
+        const newRow: getEmployee | undefined = await db.get(employeeQueries.getById, [result.lastID]);
+        if (!newRow) {
+            res.status(500).json({ error: "Запрос на создание был отправлен, но создания не произошло" })
+            return
+        }
         res.status(201).json(mapEmployee(newRow));
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка создания' });
@@ -422,20 +466,8 @@ app.post('/api/employees', async (req: Request, res: Response) => {
 });
 
 app.put('/api/employees/:id', async (req: Request, res: Response) => {
-    interface body {
-        firstname: string,
-        lastname: String,
-        middlename: String,
-        email: String,
-        phone: String,
-        date_admission: String,
-        description: String,
-        departament_id: number,
-        post_id: number,
-        image_id: number;
-    }
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body as body
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee
 
         await db.run(employeeQueries.update, [
             firstname,
@@ -450,14 +482,14 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
             req.params.id
         ]);
 
-        const updated = await db.get(employeeQueries.getById, [req.params.id]);
+        const updated: getEmployee | undefined = await db.get(employeeQueries.getById, [req.params.id]);
 
         if (!updated) {
-            res.status(404).json({ error: 'Сотрудник не найден' });
+            res.status(500).json({ error: 'Сотрудник был обновлен, но не был найден' });
             return;
         }
-
-        res.json(mapEmployee(updated));
+        const employee = mapEmployee(updated)
+        res.json({ ...mapEmployee(updated), message: "Сотрудник успешно сохранен" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка обновления' });
     }
@@ -467,17 +499,141 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
 app.delete('/api/employees/:id', async (req: Request, res: Response) => {
     try {
         await db.run(employeeQueries.remove, [req.params.id]);
-        res.json({ success: true });
+        res.status(200).json({ success: true, message: "Сотрудник удален" });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка удаления' });
     }
 });
 
+// Обновление сотрудника + загрузка нового фото одним запросом
+app.put('/api/employees-and-photo/:id',
+    express.raw({ type: 'image/*', limit: '5mb' }),
+    async (req: Request, res: Response) => {
+        try {
+            const employeeId = Number(req.params.id);
+            if (isNaN(employeeId)) {
+                res.status(400).json({ error: 'Некорректный ID сотрудника' });
+                return;
+            }
+
+            const existing: getEmployee | undefined = await db.get(employeeQueries.getById, [employeeId]);
+            if (!existing) {
+                res.status(404).json({ error: 'Сотрудник не найден' });
+                return;
+            }
+
+            const employeeHeader = req.headers['x-employee-data'];
+            if (!employeeHeader) {
+                res.status(400).json({ error: 'Отсутствуют данные сотрудника (X-Employee-Data)' });
+                return;
+            }
+
+            let employeeData: setEmployee;
+            try {
+                const decoded = decodeURIComponent(employeeHeader as string);
+                employeeData = JSON.parse(decoded);
+            } catch (e) {
+                res.status(400).json({ error: 'Некорректный JSON в X-Employee-Data' });
+                return;
+            }
+
+            // Валидация бинарных данных
+            const imageBuffer: Buffer = req.body;
+            if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
+                res.status(400).json({ error: 'Отсутствует файл изображения' });
+                return;
+            }
+
+            const declaredSizeHeader = req.headers['size-file'];
+            if (!declaredSizeHeader) {
+                res.status(400).json({ error: 'Отсутствует заголовок Size-File' });
+                return;
+            }
+
+            const declaredSize = parseInt(declaredSizeHeader as string, 10);
+            if (isNaN(declaredSize)) {
+                res.status(400).json({ error: 'Некорректный размер файла в заголовке Size-File' });
+                return;
+            }
+
+            const actualSize = imageBuffer.length;
+            if (declaredSize !== actualSize) {
+                res.status(400).json({
+                    error: `Несоответствие размера файла: заявлено ${declaredSize} байт, получено ${actualSize} байт.`
+                });
+                return;
+            }
+
+            const mimeType = (req.headers['content-type'] ?? '').toLowerCase();
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!allowedTypes.includes(mimeType)) {
+                res.status(400).json({ error: 'Недопустимый формат изображения' });
+                return;
+            }
+
+            if (actualSize > 5 * 1024 * 1024) {
+                res.status(400).json({ error: 'Файл слишком большой (макс. 5 МБ)' });
+                return;
+            }
+
+            const dbMimeType = mimeType.replace('image/', '');
+
+            // ✅ ИСПРАВЛЕНИЕ: правильно определяем finalImageId
+            let finalImageId: number | null;
+
+            if (!employeeData.image_id) {
+                // Создаём новую запись
+                const imgResult = await db.run(imageQueries.create, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize
+                ]);
+                finalImageId = imgResult.lastID ?? null;
+            } else {
+                // Обновляем существующую запись
+                await db.run(imageQueries.update, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize,
+                    employeeData.image_id
+                ]);
+                // ✅ При UPDATE lastID не обновляется! Используем известный ID
+                finalImageId = employeeData.image_id;
+            }
+
+            // Обновляем сотрудника
+            await db.run(employeeQueries.update, [
+                employeeData.firstname,
+                employeeData.lastname,
+                employeeData.middlename ?? '',
+                employeeData.email,
+                employeeData.phone,
+                employeeData.date_admission ?? existing.date_admission,
+                employeeData.description ?? '',
+                employeeData.post_id,
+                finalImageId,  // ✅ Теперь всегда корректный ID
+                employeeId
+            ]);
+
+            const updated = await db.get(employeeQueries.getById, [employeeId]);
+            if (!updated) {
+                res.status(500).json({ error: 'Сотрудник обновлён, но не найден после сохранения' });
+                return;
+            }
+
+            res.json({ ...mapEmployee(updated), message: 'Сотрудник и фото успешно обновлены' });
+
+        } catch (err: any) {
+            console.error('Ошибка в /api/employees-and-photo/:id', err);
+            res.status(500).json({ error: err.message ?? 'Ошибка сервера' });
+        }
+    });
+
 //Маршруты отделов
 
 app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(departamentQueries.getAll);
+        const rows: Array<departaments> = await db.all(departamentQueries.getAll);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения отделов' });
@@ -486,10 +642,10 @@ app.get('/api/departaments', async (req: Request, res: Response) => {
 
 app.post('/api/departaments', async (req: Request, res: Response) => {
     try {
-        const { name } = req.body;
+        const { name } = req.body as { name: string };
         if (name.trim() === '') return res.status(400).json({ error: 'Не введено название отдела' })
 
-        const exist = await db.get(departamentQueries.existByNameExceptId, [name])
+        const exist: departaments | undefined = await db.get(departamentQueries.existByNameExceptId, [name])
         if (exist) return res.status(409).json({ error: 'Такой отдел уже существует' })
 
         const result = await db.run(departamentQueries.create, [name])
@@ -505,11 +661,11 @@ app.delete('/api/departaments/:id', async (req: Request, res: Response) => {
         const exist = await db.get(departamentQueries.getById, [req.params.id])
         if (!exist) return res.status(512).json({ error: "Не найден отдел с таким id" })
 
-        const posts = await db.all<Promise<Array<{ id: number, name: string, departament_id: number }>>>(postQueries.getByDepId, [req.params.id])
-        let employees: Array<{ id: number, lastname: string, firstname: string, middlename: string, email: string, phone: string, date_admission: string, description: string, post_id: number, image_id: number }> = []
+        const posts: Array<post> = await db.all(postQueries.getByDepId, [req.params.id])
+        let employees: Array<getEmployee> = []
         for (const post of posts) {
             const id = post.id
-            employees.push(...(await db.all<Promise<Array<{ id: number, lastname: string, firstname: string, middlename: string, email: string, phone: string, date_admission: string, description: string, post_id: number, image_id: number }>>>(employeeQueries.getByPostId, id)))
+            employees.push(...(await db.all<Array<getEmployee>>(employeeQueries.getByPostId, id)))
         }
 
         const result = await db.run(departamentQueries.remove, [req.params.id])
@@ -527,7 +683,7 @@ app.delete('/api/departaments/:id', async (req: Request, res: Response) => {
 
 app.get('/api/posts', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(postQueries.getAll);
+        const rows: Array<post> = await db.all(postQueries.getAll);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения должностей' });
@@ -536,14 +692,15 @@ app.get('/api/posts', async (req: Request, res: Response) => {
 
 app.post('/api/posts', async (req: Request, res: Response) => {
     try {
-        const { departament_id, name } = req.body
+        const { departament_id, name } = req.body as post
         if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
 
-        const exist = await db.get(postQueries.existByNameExceptId, [name])
+        const exist: number | undefined = await db.get(postQueries.existByNameExceptId, [name])
         if (exist) return res.status(409).json({ error: "Такая должность уже существует" })
 
         const result = await db.run(postQueries.create, [departament_id, name])
-        const newRow = await db.get(postQueries.getById, [result.lastID])
+        const newRow: post | undefined = await db.get(postQueries.getById, [result.lastID])
+        if (!newRow) return res.status(500).json({ message: "Новая должность была создана, но не была найдена" })
         return res.status(201).json({ id: newRow.id, name: newRow.name, departament_id: newRow.departament_id })
     } catch (error: any) {
         return res.status(500).json({ error: error.message ?? 'Ошибка сервера' })
@@ -552,14 +709,14 @@ app.post('/api/posts', async (req: Request, res: Response) => {
 
 app.delete('/api/posts/:id', async (req: Request, res: Response) => {
     try {
-        const exist = await db.get(postQueries.getById, [req.params.id])
+        const exist: number | undefined = await db.get(postQueries.getById, [req.params.id])
 
         if (!exist) return res.status(512).json({ error: "Не найдена должность с таким id" })
 
-        const employee = await db.all(employeeQueries.getByPostId, [req.params.id])
+        const employee: Array<getEmployee> = await db.all(employeeQueries.getByPostId, [req.params.id])
 
-        const result = await db.run(postQueries.remove, [req.params.id])
-        const existAfterDelete = await db.get(postQueries.getById, [req.params.id])
+        await db.run(postQueries.remove, [req.params.id])
+        const existAfterDelete: number | undefined = await db.get(postQueries.getById, [req.params.id])
 
         if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
 
