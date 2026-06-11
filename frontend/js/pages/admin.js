@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
 });
+//---------------------------------------------------------------------------------------------------------
 
 async function deleteEmployee(employeeId) {
     try {
@@ -276,6 +277,8 @@ async function editEmployee(employeeId) {
     } else {
         photoImg.style.display = 'none';
     }
+
+    document.getElementById("editEmployeePhoto").value=''
     
     // Открываем модальное окно
     const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
@@ -347,75 +350,91 @@ async function saveEmployeeFromModal() {
         post_id: postId,
         image_id: currentEditingEmployee?.image_id ?? null
     });
-    
-    try {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: json_body
-        });
-        
-        if (!res.ok) {
-            const error = await res.json();
-            alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка') + json_body);
-            return;
-        }
-        
-        // Закрываем модальное окно
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-        if (modal) modal.hide();
-        
-        // Перезагружаем данные
-        await loadEmployees()
-        // Обновляем поиск если он есть
-        filter_and_search()
-        
-    } catch (err) {
-        console.warn('Ошибка сохранения на сервере:', err);
-        alert('Ошибка сети при сохранении');
-    }
-}
 
-// Функция загрузки фото (дополнительно)
-async function uploadEmployeePhoto(employeeId, file) {
-    const formData = new FormData();
-    formData.append('photo', file);
-    
-    try {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}/photo`, {
-            method: 'POST',
-            body: formData
-        });
+    const photoInput = document.getElementById('editEmployeePhoto');
+    const file = photoInput.files[0]
+    if (!file) {
+        try {
+            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: json_body
+            });
         
-        if (res.ok) {
-            await loadEmployees();
-            return true;
+            if (!res.ok) {
+                const error = await res.json();
+                alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка') + json_body);
+                return;
+            }
+        
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            if (modal) modal.hide();
+            
+            // Перезагружаем данные
+            await loadEmployees()
+            // Обновляем поиск если он есть
+            filter_and_search()
+            
+        } catch (err) {
+            console.warn('Ошибка сохранения на сервере:', err);
+            alert('Ошибка сети при сохранении');
         }
-    } catch (err) {
-        console.warn('Ошибка загрузки фото:', err);
+        return
     }
-    return false;
+    if (file) {
+        try {
+            
+        } catch (error) {
+            
+        }
+        
+    }
+
+    alert("Возникла ошибка")
+    
 }
 
 // Добавляем обработчик загрузки фото в модальное окно
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const photoInput = document.getElementById('editEmployeePhoto');
-    if (photoInput) {
-        photoInput.addEventListener('change', async function(e) {
-            const employeeId = document.getElementById('editEmployeeId').value;
-            if (employeeId && e.target.files[0]) {
-                const success = await uploadEmployeePhoto(employeeId, e.target.files[0]);
-                if (success) {
-                    alert('Фото загружено');
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-                    if (modal) modal.hide();
-                    await loadEmployees();
-                } else {
-                    alert('Ошибка загрузки фото');
-                }
-            }
-        });
+    const currentPhoto = document.getElementById('currentPhotoImg');
+
+    if (!photoInput || !currentPhoto) return;
+
+    // 🔹 Вспомогательная функция: возвращает актуальное фото текущего сотрудника
+    function getCurrentAvatarUrl() {
+        const id = Number(document.getElementById('editEmployeeId').value);
+        const emp = employees.find(e => e.id === id);
+        // Если avatar есть и не пустая строка — используем его, иначе заглушку
+        return emp?.avatar || "img/bio.png";
     }
+
+    // 🔹 Обработчик выбора файла
+    photoInput.addEventListener('change', () => {
+        const file = photoInput.files[0];
+
+        // Если пользователь отменил выбор
+        if (!file) {
+            currentPhoto.src = getCurrentAvatarUrl();
+            return;
+        }
+
+        // Проверка расширения
+        if (!/\.(png|jpe?g|webp)$/i.test(file.name)) {
+            alert("Допустимы только .png, .jpg, .jpeg, .webp");
+            photoInput.value = '';
+            currentPhoto.src = getCurrentAvatarUrl();
+            return;
+        }
+
+        // Показываем превью нового файла
+        const objectUrl = URL.createObjectURL(file);
+        currentPhoto.src = objectUrl;
+
+        // Освобождаем память после отрисовки
+        currentPhoto.onload = () => URL.revokeObjectURL(objectUrl);
+    });
 });
 
 // Сохранение изменений
@@ -630,6 +649,7 @@ async function loadPostsForModal() {
         container.appendChild(li);
     });
 }
+//-------------------------------------------------------------------------
 
 // Добавление отдела
 async function addDepartment() {
