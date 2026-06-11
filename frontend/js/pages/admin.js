@@ -352,6 +352,9 @@ async function saveEmployeeFromModal() {
     });
 
     const photoInput = document.getElementById('editEmployeePhoto');
+    /**
+     * @type {File}
+     */
     const file = photoInput.files[0]
     if (!file) {
         try {
@@ -360,11 +363,12 @@ async function saveEmployeeFromModal() {
                 headers: { 'Content-Type': 'application/json' },
                 body: json_body
             });
+
+            const data = await res.json()
         
             if (!res.ok) {
-                const error = await res.json();
-                alert('Ошибка сохранения: ' + (error.error || 'Неизвестная ошибка') + json_body);
-                return;
+                alert("Ошибка " + res.status + ` ${data.error}`)
+                return
             }
         
             // Закрываем модальное окно
@@ -384,15 +388,44 @@ async function saveEmployeeFromModal() {
     }
     if (file) {
         try {
+            const blob = new Blob([file], {type:file.type})
+            const res = await fetch(`/api/employees-and-photo/${employeeId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': file.type,
+                    'Size-File': String(blob.size),
+                    'X-Employee-Data': encodeURIComponent(json_body)
+                },
+                body:blob
+            })
+            const data = await res.json()
+            if (!res.ok) {
+                alert("Ошибка " + res.status + ` ${data.error}`)
+                return
+            }
+
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            if (modal) modal.hide();
             
-        } catch (error) {
+            // Перезагружаем данные
+            await loadEmployees()
+            const updatedEmployee = employees.find(e => e.id == employeeId);
+            if (updatedEmployee) {
+                updatedEmployee.avatar = `/api/images/${data.image_id}?t=${Date.now()}`;
+            }
+            // Обновляем поиск если он есть
+            filter_and_search()
             
+        } catch (err) {
+            console.warn('Ошибка сохранения на сервере:', err);
+            alert('Ошибка сети при сохранении');
         }
-        
+        return
     }
 
     alert("Возникла ошибка")
-    
+    return
 }
 
 // Добавляем обработчик загрузки фото в модальное окно
@@ -436,103 +469,6 @@ document.addEventListener('DOMContentLoaded', function () {
         currentPhoto.onload = () => URL.revokeObjectURL(objectUrl);
     });
 });
-
-// Сохранение изменений
-async function saveEmployee(employeeId) {
-    const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) return;
-
-    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
-
-    const lastname = row.querySelector('.edit-lastname').value.trim();
-    const firstname = row.querySelector('.edit-firstname').value.trim();
-    const middlename = row.querySelector('.edit-middlename').value.trim();
-
-    // Удаляем старые ошибки, если есть
-    const existingErrors = row.querySelectorAll('.field-error');
-    existingErrors.forEach(err => err.remove());
-
-    let hasError = false;
-
-    // Проверка: фамилия и имя обязательны
-    if (!lastname || !firstname) {
-        hasError = true;
-        
-        if (!lastname) {
-            const lastNameInput = row.querySelector('.edit-lastname');
-            const errorSpan = document.createElement('div');
-            errorSpan.className = 'field-error text-danger small mt-1';
-            errorSpan.textContent = 'Фамилия обязательна';
-            lastNameInput.parentNode.appendChild(errorSpan);
-        }
-        
-        if (!firstname) {
-            const firstNameInput = row.querySelector('.edit-firstname');
-            const errorSpan = document.createElement('div');
-            errorSpan.className = 'field-error text-danger small mt-1';
-            errorSpan.textContent = 'Имя обязательно';
-            firstNameInput.parentNode.appendChild(errorSpan);
-        }
-        
-        return;
-    }
-
-    const departament_id = parseInt(row.querySelector('.edit-department-id').value);
-    const post_id = parseInt(row.querySelector('.edit-post-id').value);
-
-    const phone = row.querySelector('.edit-phone').value.trim();
-    const email = row.querySelector('.edit-email').value.trim();
-
-    // Формируем полное имя для обратной совместимости
-    const fullName = `${lastname} ${firstname} ${middlename}`.trim();
-
-    const json_body = JSON.stringify({
-        firstname: firstname,
-        lastname: lastname,
-        middlename: middlename,
-        name: fullName,
-        email: email,
-        phone: phone,
-        date_admission: employee.hireDate,
-        description: employee.bio ?? '',
-        departament_id: departament_id,
-        post_id: post_id,
-        image_id: employee.image_id ?? null
-    });
-
-    try {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: json_body
-        });
-
-        if (!res.ok) {
-            const error = await res.json();
-            
-            // Показываем ошибку под соответствующим полем
-            const errorMessage = error.error || 'Неизвестная ошибка';
-            const firstField = row.querySelector('.edit-lastname');
-            const errorSpan = document.createElement('div');
-            errorSpan.className = 'field-error text-danger small mt-1';
-            errorSpan.textContent = 'Ошибка: ' + errorMessage;
-            firstField.parentNode.appendChild(errorSpan);
-            return;
-        }
-        
-        editingEmployeeId = null;
-        await loadEmployees();
-    } catch (err) {
-        console.warn('Ошибка сохранения на сервере:', err);
-        
-        // Показываем ошибку сети
-        const firstField = row.querySelector('.edit-lastname');
-        const errorSpan = document.createElement('div');
-        errorSpan.className = 'field-error text-danger small mt-1';
-        errorSpan.textContent = 'Ошибка сети при сохранении';
-        firstField.parentNode.appendChild(errorSpan);
-    }
-}
 
 async function exportAllEmployees() {
     const token = localStorage.getItem('authToken');
