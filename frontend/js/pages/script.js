@@ -50,6 +50,7 @@
                 }
 
                 localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
                 if (modal) modal.hide();
                 loginForm.reset();
