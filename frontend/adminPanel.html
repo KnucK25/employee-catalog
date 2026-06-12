@@ -53,20 +53,14 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label mb-1">ОТДЕЛ</label>
-                        <select id="departmentFilter" class="form-select">
+                        <select id="departamentFilter" class="form-select">
                             <option value="all">Все отделы</option>
-                            <option value="Управление">Управление</option>
-                            <option value="Маркетинг">Маркетинг</option>
-                            <option value="Административный отдел">Административный отдел</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label mb-1">ДОЛЖНОСТЬ</label>
-                        <select id="positionFilter" class="form-select">
+                        <select id="postFilter" class="form-select">
                             <option value="all">Все должности</option>
-                            <option value="Руководитель">Руководитель</option>
-                            <option value="Менеджер">Менеджер</option>
-                            <option value="Специалист">Специалист</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -171,7 +165,7 @@
                             <label class="form-label fw-bold">Фото сотрудника</label>
                             <div class="d-flex align-items-center gap-3">
                                 <img id="currentPhotoImg" src="" alt="Текущее фото" style="width: 80px; height: 80px; object-fit: cover;  display: none; border: 2px solid var(--accent-gold);">
-                                <input type="file" id="editEmployeePhoto" class="form-control" accept="image/*" style="flex: 1;">
+                                <input type="file" id="editEmployeePhoto" class="form-control" accept=".png,.jpeg,.jpg,.webp" style="flex: 1;">
                             </div>
                             <div id="currentPhotoPreview" class="mt-2"></div>
                         </div>
