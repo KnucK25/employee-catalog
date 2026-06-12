@@ -1,5 +1,13 @@
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
+// const currentToken = localStorage.getItem('authToken');
+// const currentLevel = Number(localStorage.getItem('level') || 0);
+
+// if (!currentToken || currentLevel < 2) {
+//     alert('Недостаточно прав для доступа к админ-панели');  пока что не трогайте это сделан специально если вдруг сломается система прав и 1 уровень сможет зайти в админ панель!!!
+//     window.location.href = 'index.html';
+// }
+
 let employees = [];
 let departamentsList = [];
 let postsList = [];
