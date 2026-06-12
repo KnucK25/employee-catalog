@@ -91,22 +91,22 @@ function createEmployeeRow(employee) {
     row.setAttribute('data-position', employee.post.toLowerCase());
 
     row.innerHTML = `
-        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
-            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 50px; object-fit: cover;">
+        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0" data-label="Сотрудник">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 60px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
             </div>
         </div>
-        <div class="col-md-3 mb-2 mb-md-0">
+        <div class="col-md-3 mb-2 mb-md-0" data-label="Отдел / Должность">
             <div class="admin-employee-name" style="font-size: 0.9rem;">${employee.departament}</div>
             <div class="admin-employee-text">${employee.post}</div>
         </div>
-        <div class="col-md-3 mb-3 mb-md-0">
+        <div class="col-md-3 mb-3 mb-md-0" data-label="Контакты">
             <div class="admin-employee-text">${employee.phone}</div>
             <div class="admin-employee-text">${employee.email}</div>
         </div>
-        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+        <div class="col-md-2 d-flex gap-2 justify-content-md-end" data-label="Действия">
             <button class="btn btn-action-icon" title="Редактировать" onclick="editEmployee(${employee.id})">
                 <img src="img/redact.png" alt="Ред." style="width: 20px; height: 20px;">
             </button>

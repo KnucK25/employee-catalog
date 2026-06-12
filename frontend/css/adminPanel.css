@@ -105,25 +105,33 @@
     letter-spacing: 0.5px;
 }
 
-/* Строки таблицы */
-.employee-row {
+/* Строки таблицы - ДЕСКТОП: подсветка при наведении */
+.employee-row,
+.admin-employee-row {
     padding: 1rem;
     margin: 0;
     border-bottom: 1px solid #eee;
     transition: background-color 0.3s ease;
 }
 
-.employee-row:hover {
-    background-color: var(--alt);
+/* Подсветка строки при наведении (только для десктопа) */
+@media (min-width: 768px) {
+    .employee-row:hover,
+    .admin-employee-row:hover {
+        background-color: var(--alt);
+        cursor: pointer;
+    }
 }
 
-.employee-row .employee-name {
+.employee-row .employee-name,
+.admin-employee-name {
     font-weight: 600;
     color: var(--black);
 }
 
 .employee-row .employee-position,
-.employee-row .employee-phone {
+.employee-row .employee-phone,
+.admin-employee-text {
     color: #666;
     font-size: 0.9rem;
 }
@@ -185,70 +193,37 @@
     padding: 1rem 1.5rem;
 }
 
-/* Адаптив для мобильных */
-@media (max-width: 768px) {
-    .search-section {
-        padding: 1.5rem 0;
-    }
-    
-    .btn-gold,
-    .btn-outline-dark {
-        width: 100%;
-    }
-    
-    .d-flex.gap-2 {
-        flex-direction: column;
-        gap: 0.5rem !important;
-    }
-    
-    .employee-row {
-        padding: 1rem;
-    }
-    
-    .employee-row .text-md-end {
-        text-align: left !important;
-        margin-top: 0.8rem;
-    }
-    
-    .btn-sm-action {
-        margin-left: 0;
-        margin-right: 0.5rem;
-    }
-}
-
-
 /* фотка сотрудника */
-/* Ограничение размера фото в админ-панели */
 .admin-employee-photo {
     width: 50px;
-    height: 50px;
+    height: 60px;
     object-fit: cover;
+    border-radius: 0;
 }
 
-/* Для формы редактирования */
 .admin-employee-row .edit-photo-preview {
     width: 50px;
-    height: 50px;
+    height: 60px;
     object-fit: cover;
+    border-radius: 0;
 }
 
-/* Для карточек в каталоге */
 .employee-photo img {
     width: 100%;
-    height: 200px;
+    height: 180px;
     object-fit: cover;
+    border-radius: 0;
 }
 
-/* Стили для фото в модальном окне */
 #currentPhotoImg {
-    width: 100px;
+    width: 80px;
     height: 100px;
     object-fit: cover;
     border: 2px solid var(--accent-gold);
     background-color: var(--alt);
+    border-radius: 0;
 }
 
-/* Для превью фото при загрузке */
 #currentPhotoPreview {
     display: flex;
     justify-content: flex-start;
@@ -256,28 +231,25 @@
     margin-top: 10px;
 }
 
-/* Стили для input file */
 #editEmployeePhoto {
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 0;
 }
 
-/* Дополнительно для всех изображений в модалке */
 .modal-content img {
     max-width: 100%;
     height: auto;
 }
 
-/* Кнопка Отмена - скруглённая, другого размера */
 .btn-cancel {
     background-color: #6c757d;
     color: white;
     border: none;
-    border-radius: 0px;
+    border-radius: 20px;
     padding: 6px 20px;
     font-size: 14px;
-    transition: all 0.2s;
+    border-radius: 0;
 }
 
 .btn-cancel:hover {
@@ -285,7 +257,6 @@
     color: white;
 }
 
-/* Кнопка Сохранить - острая, как у вас принято */
 .btn-save {
     background-color: var(--accent-gold);
     color: var(--white);
@@ -293,7 +264,6 @@
     border-radius: 0;
     padding: 6px 20px;
     font-size: 14px;
-    transition: all 0.2s;
 }
 
 .btn-save:hover {
@@ -301,7 +271,6 @@
     color: var(--white);
 }
 
-/* Фото и input в одной строке */
 .d-flex.align-items-center.gap-3 {
     gap: 1rem;
 }
@@ -312,4 +281,132 @@
 
 #editEmployeePhoto {
     flex-shrink: 1;
+}
+
+/*АДАПТИВ ПОД ТЕЛЕФОН (до 768px) */
+@media (max-width: 768px) {
+    /* Секция поиска */
+    .search-section {
+        padding: 1.5rem 0;
+        margin: 1rem 0;
+    }
+    
+    /* Кнопки на всю ширину */
+    .btn-gold,
+    .btn-outline-dark,
+    .btn-action-type {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Группа кнопок действий */
+    .d-flex.gap-2 {
+        flex-direction: row;
+        justify-content: flex-start;
+        gap: 0.5rem !important;
+        margin-top: 0.8rem;
+    }
+    
+    /* Строка таблицы в карточку */
+    .employee-row,
+    .admin-employee-row {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #eee;
+        background-color: var(--white);
+    }
+    
+    .admin-header-row {
+        display: none !important;
+    }
+    
+    .employee-row [class*="col-md"],
+    .admin-employee-row [class*="col-md"] {
+        margin-bottom: 0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    .employee-row [class*="col-md"]:before {
+        content: attr(data-label);
+        display: inline-block;
+        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        color: var(--accent-gold);
+        margin-right: 0.5rem;
+        width: 80px;
+    }
+    
+    .admin-employee-photo {
+        width: 40px;
+        height: 48px;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .d-flex.align-items-center.gap-3 {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+    
+    #currentPhotoImg {
+        width: 60px;
+        height: 75px;
+        margin-bottom: 0.5rem;
+    }
+    
+    #editEmployeePhoto {
+        width: 100%;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+    }
+    
+    .btn-action-type {
+        width: auto;
+        flex: 1;
+        text-align: center;
+    }
+    
+    .d-flex.gap-3.mb-4 {
+        flex-wrap: wrap;
+    }
+    
+    .container h1 {
+        font-size: 1.8rem;
+    }
+    
+    .employee-photo img {
+        height: 150px;
+    }
+}
+
+/* ДЛЯ ПЛАНШЕТОВ (768px - 992px)  */
+@media (min-width: 768px) and (max-width: 992px) {
+    .admin-header-row h6 {
+        font-size: 0.8rem;
+    }
+    
+    .employee-row .employee-name,
+    .admin-employee-name {
+        font-size: 0.9rem;
+    }
+    
+    .btn-sm-action {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+    }
 }
