@@ -1,9 +1,27 @@
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
+// const currentToken = localStorage.getItem('authToken');
+// const currentLevel = Number(localStorage.getItem('level') || 0);
+
+// if (!currentToken || currentLevel < 2) {
+//     alert('Недостаточно прав для доступа к админ-панели');  пока что не трогайте это сделан специально если вдруг сломается система прав и 1 уровень сможет зайти в админ панель!!!
+//     window.location.href = 'index.html';
+// }
+
 let employees = [];
 let departamentsList = [];
 let postsList = [];
 let selectedDepartament = null
+
+function getAuthHeaders(contentType = 'application/json') {
+    const token = localStorage.getItem('authToken');
+
+    return {
+        'Content-Type': contentType,
+        'Authorization': `Bearer ${token}`
+    };
+}
+
 
 //Заполняет фильтр отделов
 function populateDepartamentMenu() {
@@ -208,7 +226,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function deleteEmployee(employeeId) {
     try {
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+    });
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
     }
@@ -360,7 +381,7 @@ async function saveEmployeeFromModal() {
         try {
             const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getAuthHeaders(),
                 body: json_body
             });
 
@@ -391,11 +412,11 @@ async function saveEmployeeFromModal() {
             const blob = new Blob([file], {type:file.type})
             const res = await fetch(`/api/employees-and-photo/${employeeId}`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': file.type,
+               headers: {
+                    ...getAuthHeaders(file.type),
                     'Size-File': String(blob.size),
                     'X-Employee-Data': encodeURIComponent(json_body)
-                },
+},
                 body:blob
             })
             const data = await res.json()
@@ -595,7 +616,7 @@ async function addDepartment() {
         
         const res = await fetch(`${API_BASE}/api/departaments`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: getAuthHeaders(),
             body: JSON.stringify({ name })
         });
 
@@ -623,7 +644,10 @@ async function addDepartment() {
 // Удаление отдела
 async function deleteDepartment(id) {
     try {
-        const res = await fetch(`${API_BASE}/api/departaments/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+});
 
         /**
         * @typedef {Object} PostItem
@@ -688,7 +712,7 @@ async function addPost() {
     try {
         const res = await fetch(`${API_BASE}/api/posts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ 
             name: name,
             departament_id: parseInt(departamentId)
@@ -720,7 +744,10 @@ async function addPost() {
 // Удаление должности
 async function deletePost(id) {
     try {
-        const res = await fetch(`${API_BASE}/api/posts/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/posts/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders()
+});
         /**
         * @typedef {Object} EmployeeItem
         * @property {number} id
@@ -776,7 +803,7 @@ async function addEmptyEmployee() {
 
     await fetch(`${API_BASE}/api/employees`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(emptyEmployee)
     });
 
@@ -784,4 +811,67 @@ async function addEmptyEmployee() {
     if (modal) modal.hide();
 
     await loadEmployees();
+}
+
+function openAccountModal() {
+    const select = document.getElementById('accountEmployeeId');
+
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Выберите сотрудника</option>';
+
+    employees.forEach(employee => {
+        select.innerHTML += `
+            <option value="${employee.id}">
+                ${employee.name} — ${employee.post}
+            </option>
+        `;
+    });
+
+    document.getElementById('accountLogin').value = '';
+    document.getElementById('accountPassword').value = '';
+    document.getElementById('accountLevel').value = '1';
+
+    new bootstrap.Modal(document.getElementById('accountModal')).show();
+}
+
+async function createAccountFromAdmin() {
+    const employeeId = Number(document.getElementById('accountEmployeeId').value);
+    const login = document.getElementById('accountLogin').value.trim();
+    const password = document.getElementById('accountPassword').value.trim();
+    const level = Number(document.getElementById('accountLevel').value);
+
+    if (!employeeId || !login || !password || !level) {
+        alert('Заполните все поля');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/register`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                login,
+                password,
+                employee_id: employeeId,
+                level
+            })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            alert('Ошибка ' + res.status + ` ${data.error}`);
+            return;
+        }
+
+        alert('Аккаунт создан');
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('accountModal'));
+        if (modal) modal.hide();
+
+    } catch (error) {
+        alert('Ошибка сети при создании аккаунта');
+        console.error(error);
+    }
 }
