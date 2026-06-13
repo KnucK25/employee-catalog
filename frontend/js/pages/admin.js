@@ -563,6 +563,13 @@ function openControlModal() {
     new bootstrap.Modal(document.getElementById('controlModal')).show();
 }
 
+// Показать форму регистрации
+function showRegisterModal() {
+    const modal = new bootstrap.Modal(document.getElementById('authModal'));
+    modal.show();
+}
+
+
 // Показать форму добавления сотрудника
 function showAddEmployeeForm() {
     document.getElementById('addEmployeePanel').style.display = 'block';
@@ -697,8 +704,8 @@ async function deletePost(id) {
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
     const emptyEmployee = {
-        lastname: 'Новый',
-        firstname: 'Сотрудник',
+        lastname: 'НОВЫЙ',
+        firstname: '00_СОТРУДНИК',
         middlename: '',
         email: 'Пусто',
         phone: 'Пусто',

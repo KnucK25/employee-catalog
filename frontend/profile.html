@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет</title>
+
+    <!-- Подключение Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/card.css">
+    <link rel="stylesheet" href="css/common.css">
+
+    <style>
+        :root {
+            --white: #ffffff;
+            --black: #000000;
+            --accent-gold: #daa520; /* Пример золотого цвета */
+            --alt: #f8f9fa; /* Светло-серый для блоков */
+        }
+
+        /* Стили для скрытия элементов */
+        .d-none { display: none; }
+    </style>
+
+</head>
+<body>
+
+    <header>
+        <!-- НАВИГАЦИЯ -->
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container">
+                <div class="d-flex align-items-center">
+                    <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                    <a class="navbar-brand ms-2" href="index.html">Staff</a>
+                </div>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link active" href="userProfile.html">Личный кабинет</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>        
+    </header>
+
+    <main>
+        <div class="container my-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="employee-card">
+                        <div class="card-header dark-header">
+                            <h5>Личный кабинет</h5>
+                        </div>
+
+                        <div class="card-body text-center p-4">
+                            <!-- Фото пользователя -->
+                            <img src="img/user-placeholder.png" alt="Фото профиля" class="employee-photo rounded-circle mx-auto d-block mb-3" style="width: 150px; height: 150px;">
+
+                            <!-- Секция для просмотра данных -->
+                            <div id="view-profile">
+                                <h3 class="employee-name mt-3">Иван Иванов</h3>
+                                <p class="text-uppercase">Разработчик</p>
+
+                                <div class="info-box mt-4 text-start">
+                                    <div class="mb-3">
+                                        <div class="info-label">Email</div>
+                                        <div class="info-value" id="user-email">ivan.ivanov@example.com</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="info-label">Телефон</div>
+                                        <div class="info-value" id="user-phone">+7 (123) 456-78-90</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="info-label">Отдел</div>
+                                        <div class="info-value" id="user-department">IT</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="info-label">Дата регистрации</div>
+                                        <div class="info-value" id="user-registration-date">01.01.2025</div>
+                                    </div>
+                                </div>
+
+                                <div class="bio-text text-start mt-4">
+                                    <h6 class="text-uppercase mb-2">О себе</h6>
+                                    <p id="user-bio">Краткое описание пользователя, его интересов и профессиональной деятельности. Стараюсь писать лаконично и по делу.</p>
+                                </div>
+                            </div>
+
+                            <!-- Секция для редактирования (скрыта по умолчанию) -->
+                            <div id="edit-profile" class="d-none">
+                                <h3 class="employee-name mt-3editable">
+                                    <input type="text" class="form-control form-control-lg text-center" id="edit-name" value="Иван Иванов">
+                                </h3>
+                                <p class="text-uppercase">
+                                    <input type="text" class="form-control text-center" id="edit-role" value="Разработчик">
+                                </p>
+
+                                <div class="info-box mt-4 text-start">
+                                    <div class="mb-3">
+                                        <label for="edit-email" class="form-label info-label">Email</label>
+                                        <input type="email" class="form-control" id="edit-email" value="ivan.ivanov@example.com">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit-phone" class="form-label info-label">Телефон</label>
+                                        <input type="tel" class="form-control" id="edit-phone" value="+7 (123) 456-78-90">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit-department" class="form-label info-label">Отдел</label>
+                                        <input type="text" class="form-control" id="edit-department" value="IT">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="edit-registration-date" class="form-label info-label">Дата регистрации</label>
+                                        <input type="text" class="form-control" id="edit-registration-date" value="01.01.2025" readonly> <!-- Дата регистрации обычно не редактируется -->
+                                    </div>
+                                </div>
+
+                                <div class="bio-text text-start mt-4">
+                                    <h6 class="text-uppercase mb-2">О себе</h6>
+                                    <textarea class="form-control" id="edit-bio" rows="4">Краткое описание пользователя, его интересов и профессиональной деятельности. Стараюсь писать лаконично и по делу.</textarea>
+                                </div>
+
+                                <div class="d-flex justify-content-center gap-2 mt-4">
+                                    <button class="btn btn-custom-outline" id="save-profile-btn">Сохранить</button>
+                                    <button class="btn btn-custom-outline" id="cancel-edit-btn">Отменить</button>
+                                </div>
+                            </div>
+
+                            <!-- Кнопка редактировать -->
+                            <div class="text-center mt-4" id="edit-button-container">
+                                <button class="btn btn-custom-outline" id="edit-profile-btn">Редактировать</button>
+                            </div>
+                        </div>
+
+                        <div class="card-footer text-center">
+                            <!-- Футер -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-5">
+        <div class="container">
+            <p class="mb-0">© 2026 STAFF.<br>
+            <span class="small opacity-50">Все права защищены.</span></p>
+        </div>
+    </footer>
+
+    <script src="js/pages/profile.js"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
