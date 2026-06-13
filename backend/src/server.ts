@@ -17,6 +17,19 @@ import { rootQueries } from './database/queries/rootQueries';
 const app = express();
 app.use(express.json());
 
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem'
+    },
+    privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem'
+    }
+});
+
+
 // Разрешаем запросы с любого источника — иначе браузер опрокинет
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -55,6 +68,17 @@ function hashPassword(password: string, salt: string): string {
 
 function generateToken(): string {
     return crypto.randomBytes(32).toString('hex');
+}
+
+function decryptPassword(encryptedPassword: string): string {
+    return crypto.privateDecrypt(
+        {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        Buffer.from(encryptedPassword, 'base64')
+    ).toString('utf8');
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -382,11 +406,18 @@ async function seedDB() {
 
 //Авторизация
 
+app.get('/api/auth/public-key', (req: Request, res: Response) => {
+    res.json({
+        publicKey
+    });
+});
+
+
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword } = req.body;
 
-        if (!login || !password) {
+        if (!login || !encryptedPassword) {
             res.status(400).json({ error: 'Укажите логин и пароль' });
             return;
         }
@@ -395,6 +426,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
 
         if (!account) {
             res.status(401).json({ error: 'Неверный логин или пароль' });
+            return;
+        }
+
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
             return;
         }
 
@@ -434,9 +474,9 @@ res.json({
 
 app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { login, password, employee_id, level } = req.body;
+       const { login, encryptedPassword, employee_id, level } = req.body;
 
-        if (!login || !password || !employee_id || level === undefined) {
+        if (!login || !encryptedPassword || !employee_id || level === undefined) {
             res.status(400).json({ error: 'Укажите логин, пароль, id сотрудника и уровень прав' });
             return;
         }
@@ -469,6 +509,15 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
 
         if (existing) {
             res.status(409).json({ error: 'Логин уже занят' });
+            return;
+        }
+
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
             return;
         }
 
