@@ -16,6 +16,19 @@ import { accountQueries } from './database/queries/accountQueries';
 const app = express();
 app.use(express.json());
 
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem'
+    },
+    privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem'
+    }
+});
+
+
 // Разрешаем запросы с любого источника — иначе браузер опрокинет
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -38,8 +51,15 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 let db: Database;
 
 // Токены хранятся в памяти: token → { employeeId, expiresAt }
-const sessions = new Map<string, { employeeId: number; expiresAt: number }>();
+const sessions = new Map<string, { employeeId: number | null; level:number; expiresAt: number }>();
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 часов
+const ACCESS_LEVELS = {
+    GUEST: 0,
+    USER: 1,
+    HR: 2,
+    ADMIN: 3,
+    SUPER_ADMIN: 4
+} as const;
 
 function hashPassword(password: string, salt: string): string {
     return crypto.createHmac('sha256', salt).update(password).digest('hex');
@@ -47,6 +67,17 @@ function hashPassword(password: string, salt: string): string {
 
 function generateToken(): string {
     return crypto.randomBytes(32).toString('hex');
+}
+
+function decryptPassword(encryptedPassword: string): string {
+    return crypto.privateDecrypt(
+        {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        Buffer.from(encryptedPassword, 'base64')
+    ).toString('utf8');
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -62,6 +93,33 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     if (!session || session.expiresAt < Date.now()) {
         sessions.delete(token);
         res.status(401).json({ error: 'Сессия истекла, войдите снова' });
+        return;
+    }
+
+    next();
+}
+
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) {
+            sessions.delete(token);
+        }
+
+        res.status(401).json({ error: 'Сессия истекла, войдите снова' });
+        return;
+    }
+
+    if (session.level < ACCESS_LEVELS.HR) {
+        res.status(403).json({ error: 'Недостаточно прав' });
         return;
     }
 
@@ -169,6 +227,30 @@ async function seedImg(filename: string): Promise<number | null> {
 
 //Если база пустая — вставляются тестовые данные при первом запуске (иначе ничего не увидим)
 async function seedDB() {
+    const existingAdmin = await db.get(accountQueries.getByLogin, ['admin@admin']);
+
+    if (!existingAdmin) {
+        const adminLogin = 'admin@admin';
+        const adminPassword = 'admin123';
+
+        const adminSalt = crypto.randomBytes(16).toString('hex');
+        const adminHash = hashPassword(adminPassword, adminSalt);
+
+        await db.run(accountQueries.create, [
+            adminLogin,
+            adminHash,
+            adminSalt,
+            1
+        ]);
+
+        await db.run(rootQueries.create, [
+            1,
+            ACCESS_LEVELS.SUPER_ADMIN
+        ]);
+
+        console.log('Стартовый администратор создан: login admin@admin, password admin123');
+    }
+
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
@@ -299,16 +381,43 @@ async function seedDB() {
     }
     console.log('Тестовые сотрудники записаны');
 
+        const adminLogin = 'admin@admin';
+    const adminPassword = 'admin123';
+
+    const adminSalt = crypto.randomBytes(16).toString('hex');
+    const adminHash = hashPassword(adminPassword, adminSalt);
+
+    await db.run(accountQueries.create, [
+        adminLogin,
+        adminHash,
+        adminSalt,
+        1
+    ]);
+
+    await db.run(rootQueries.create, [
+        1,
+        ACCESS_LEVELS.SUPER_ADMIN
+    ]);
+
+    console.log('Стартовый администратор создан: login admin@admin, password admin123');
+
     console.log('Seed-данные вставлены');
 }
 
 //Авторизация
 
+app.get('/api/auth/public-key', (req: Request, res: Response) => {
+    res.json({
+        publicKey
+    });
+});
+
+
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword } = req.body;
 
-        if (!login || !password) {
+        if (!login || !encryptedPassword) {
             res.status(400).json({ error: 'Укажите логин и пароль' });
             return;
         }
@@ -320,6 +429,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const expectedHash = hashPassword(password, account.salt);
 
         if (expectedHash !== account.hash) {
@@ -327,8 +445,26 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
-        const token = generateToken();
-        sessions.set(token, { employeeId: account.employee_id, expiresAt: Date.now() + SESSION_TTL_MS });
+       let level = 0;
+
+if (account.employee_id) {
+    const root = await db.get(rootQueries.getByEmployeeId, [account.employee_id]);
+    level = root?.level ?? 1;
+}
+
+const token = generateToken();
+
+sessions.set(token, {
+    employeeId: account.employee_id,
+    level,
+    expiresAt: Date.now() + SESSION_TTL_MS
+});
+
+res.json({
+    token,
+    employeeId: account.employee_id,
+    level
+});
 
         res.json({ token });
     } catch (err) {
@@ -336,12 +472,36 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+       const { login, encryptedPassword, employee_id, level } = req.body;
 
-        if (!login || !password) {
-            res.status(400).json({ error: 'Укажите логин и пароль' });
+        if (!login || !encryptedPassword || !employee_id || level === undefined) {
+            res.status(400).json({ error: 'Укажите логин, пароль, id сотрудника и уровень прав' });
+            return;
+        }
+
+        const token = req.headers['authorization']?.replace('Bearer ', '');
+        const session = token ? sessions.get(token) : null;
+
+        if (!session) {
+            res.status(401).json({ error: 'Сессия не найдена' });
+            return;
+        }
+
+        const newLevel = Number(level);
+
+        if (
+            Number.isNaN(newLevel) ||
+            newLevel < ACCESS_LEVELS.USER ||
+            newLevel >= ACCESS_LEVELS.SUPER_ADMIN
+        ) {
+            res.status(400).json({ error: 'Уровень прав должен быть от 1 до 3' });
+            return;
+        }
+
+        if (newLevel >= session.level) {
+            res.status(403).json({ error: 'Нельзя создать аккаунт с уровнем равным или выше своего' });
             return;
         }
 
@@ -352,11 +512,35 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const salt = crypto.randomBytes(16).toString('hex');
         const hash = hashPassword(password, salt);
-        await db.run(accountQueries.create, [login, hash, salt, null]);
 
-        res.status(201).json({ message: 'Аккаунт создан' });
+        await db.run(accountQueries.create, [
+            login,
+            hash,
+            salt,
+            employee_id
+        ]);
+
+        await db.run(rootQueries.create, [
+            employee_id,
+            newLevel
+        ]);
+
+        res.status(201).json({
+            message: 'Аккаунт создан',
+            employee_id,
+            level: newLevel
+        });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка регистрации' });
     }
@@ -438,7 +622,7 @@ app.get('/api/employees/:id', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/employees', async (req: Request, res: Response) => {
+app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: Response) => { 
     try {
         const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee;
 
@@ -465,7 +649,7 @@ app.post('/api/employees', async (req: Request, res: Response) => {
     }
 });
 
-app.put('/api/employees/:id', async (req: Request, res: Response) => {
+app.put('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee
 
@@ -496,7 +680,7 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
     return;
 });
 
-app.delete('/api/employees/:id', async (req: Request, res: Response) => {
+app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         await db.run(employeeQueries.remove, [req.params.id]);
         res.status(200).json({ success: true, message: "Сотрудник удален" });
@@ -507,6 +691,8 @@ app.delete('/api/employees/:id', async (req: Request, res: Response) => {
 
 // Обновление сотрудника + загрузка нового фото одним запросом
 app.put('/api/employees-and-photo/:id',
+    requireAuth,
+    requireAdmin,
     express.raw({ type: 'image/*', limit: '5mb' }),
     async (req: Request, res: Response) => {
         try {
@@ -640,7 +826,7 @@ app.get('/api/departaments', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/departaments', async (req: Request, res: Response) => {
+app.post('/api/departaments', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const { name } = req.body as { name: string };
         if (name.trim() === '') return res.status(400).json({ error: 'Не введено название отдела' })
@@ -656,7 +842,7 @@ app.post('/api/departaments', async (req: Request, res: Response) => {
     }
 })
 
-app.delete('/api/departaments/:id', async (req: Request, res: Response) => {
+app.delete('/api/departaments/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const exist = await db.get(departamentQueries.getById, [req.params.id])
         if (!exist) return res.status(512).json({ error: "Не найден отдел с таким id" })
@@ -690,7 +876,7 @@ app.get('/api/posts', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/posts', async (req: Request, res: Response) => {
+app.post('/api/posts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const { departament_id, name } = req.body as post
         if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
@@ -707,7 +893,7 @@ app.post('/api/posts', async (req: Request, res: Response) => {
     }
 })
 
-app.delete('/api/posts/:id', async (req: Request, res: Response) => {
+app.delete('/api/posts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const exist: number | undefined = await db.get(postQueries.getById, [req.params.id])
 
