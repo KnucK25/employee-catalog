@@ -12,6 +12,7 @@ import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
 import { imageQueries } from './database/queries/imageQueries';
 import { accountQueries } from './database/queries/accountQueries';
+import { rootQueries } from './database/queries/rootQueries';
 
 const app = express();
 app.use(express.json());
@@ -321,15 +322,16 @@ if (!existingAdmin) {
         1
     ]);
 
-    await db.run(rootQueries.create, [
-        1,
-        ACCESS_LEVELS.SUPER_ADMIN
-    ]);
+   await db.run(rootQueries.create, [
+    1,
+    4
+]);
 
     console.log('Стартовый администратор создан: login admin@admin, password admin123');
 }
 
 console.log('Seed-данные вставлены');
+}
 
 //Авторизация
 
