@@ -4,7 +4,6 @@ import { initDB } from './database/init';
 import { Database } from 'sqlite';
 import * as path from 'path'; // Импортируем модуль для работы с путями
 import * as fs from 'fs'; // <-- Добавляем fs для чтения файлов
-//текст
 
 import * as crypto from 'crypto';
 
