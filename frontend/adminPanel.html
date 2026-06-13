@@ -27,7 +27,6 @@
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
                         <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
                         <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Админ панель</a></li> 
-                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Зарегистрироваться</a></li>               
                     </ul>
                 </div>
             </div>
@@ -53,20 +52,14 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label mb-1">ОТДЕЛ</label>
-                        <select id="departmentFilter" class="form-select">
+                        <select id="departamentFilter" class="form-select">
                             <option value="all">Все отделы</option>
-                            <option value="Управление">Управление</option>
-                            <option value="Маркетинг">Маркетинг</option>
-                            <option value="Административный отдел">Административный отдел</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label mb-1">ДОЛЖНОСТЬ</label>
-                        <select id="positionFilter" class="form-select">
+                        <select id="postFilter" class="form-select">
                             <option value="all">Все должности</option>
-                            <option value="Руководитель">Руководитель</option>
-                            <option value="Менеджер">Менеджер</option>
-                            <option value="Специалист">Специалист</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -74,6 +67,7 @@
                         <div class="d-flex gap-2">
                             <button class="btn btn-gold flex-grow-1" onclick="openControlModal()">Добавить</button>
                             <button class="btn btn-outline-dark flex-grow-1" id="exportBtn">Экспорт</button>
+                            <button class="btn btn-outline-dark flex-grow-1" onclick="openAccountModal()">Аккаунты</button>
                         </div>
                     </div>
                 </div>
@@ -114,7 +108,8 @@
                 </div>
                 <div class="modal-body">
                     <div class="d-flex gap-3 mb-4 flex-wrap">
-                        <button class="btn btn-action-type" onclick="showAddEmployeeForm()">Новый сотрудник</button>
+                        <button class="btn btn-action-type" onclick="showRegisterModal()">Регистрация сотрудника</button>
+                        <button class="btn btn-action-type" onclick="showAddEmployeeForm()">Добавить сотрудника в каталог</button>
                         <button class="btn btn-action-type" onclick="showDepartmentPanel()">Отделы</button>
                         <button class="btn btn-action-type" onclick="showPostPanel()">Должности</button>
                     </div>
@@ -155,6 +150,49 @@
         </div>
     </div>
 
+<div class="modal fade" id="accountModal" tabindex="-1" aria-labelledby="accountModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="accountModalLabel">Создание аккаунта</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Сотрудник</label>
+                    <select class="form-select" id="accountEmployeeId">
+                        <option value="">Выберите сотрудника</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Логин / Email</label>
+                    <input type="email" class="form-control" id="accountLogin" placeholder="user@company.ru">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="accountPassword" placeholder="Введите пароль">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Уровень доступа</label>
+                    <select class="form-select" id="accountLevel">
+                        <option value="1">1 — Пользователь</option>
+                        <option value="2">2 — HR</option>
+                        <option value="3">3 — Администратор</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-gold w-100" onclick="createAccountFromAdmin()">
+                    Создать аккаунт
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <!-- Модальное окно редактирования сотрудника -->
     <div class="modal fade" id="editEmployeeModal" tabindex="-1" aria-lababledby="editEmployeeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -171,7 +209,7 @@
                             <label class="form-label fw-bold">Фото сотрудника</label>
                             <div class="d-flex align-items-center gap-3">
                                 <img id="currentPhotoImg" src="" alt="Текущее фото" style="width: 80px; height: 80px; object-fit: cover;  display: none; border: 2px solid var(--accent-gold);">
-                                <input type="file" id="editEmployeePhoto" class="form-control" accept="image/*" style="flex: 1;">
+                                <input type="file" id="editEmployeePhoto" class="form-control" accept=".png,.jpeg,.jpg,.webp" style="flex: 1;">
                             </div>
                             <div id="currentPhotoPreview" class="mt-2"></div>
                         </div>
@@ -231,7 +269,48 @@
         </div>
     </div>
 
+
+
+    <!-- Модальное окно регистрации -->
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="authModalLabel">Регистрация</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Форма регистрации -->
+                <form id="registerForm">
+                    <div class="mb-3">
+                        <label for="regName" class="form-label">Имя и фамилия</label>
+                        <input type="text" class="form-control" id="regName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="regEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="regEmail" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="regPassword" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="regPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="regConfirmPassword" class="form-label">Подтвердите пароль</label>
+                        <input type="password" class="form-control" id="regConfirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100">Зарегистрироваться</button>
+                </form>
+
+                <hr class="my-4">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/pages/admin.js"></script>
+    <script src="js/authGuard.js"></script>
 </body>
 </html>

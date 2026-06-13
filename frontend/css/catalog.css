@@ -48,12 +48,10 @@
     border-radius: 0;
     background-color: var(--white);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
 }
 
 .employee-card:hover {
-    transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
@@ -93,7 +91,6 @@
     color: var(--black);
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
-    transition: all 0.3s ease;
 }
 
 .employee-card .btn-outline-dark:hover {
@@ -102,13 +99,67 @@
 }
 
 /* Адаптив */
-@media (max-width: 768px) {
+@media (max-width: 576px) {
     .search-section {
         padding: 1.5rem 0;
     }
     
+    .row.g-4 {
+        --bs-gutter-y: 1rem;
+        --bs-gutter-x: 1rem;
+    }
+    
+    .col-md-4 {
+        width: 50%;
+        flex: 0 0 auto;
+        padding-left: calc(var(--bs-gutter-x) * 0.5);
+        padding-right: calc(var(--bs-gutter-x) * 0.5);
+    }
+    
+    /* Уменьшаем отступы и размеры для компактности */
+    .employee-card .card-body {
+        padding: 1rem;
+    }
+    
+    .employee-card .card-title {
+        font-size: 0.9rem;
+    }
+    
+    .employee-card .card-text {
+        font-size: 0.75rem;
+    }
+    
+    .employee-card .btn-outline-dark {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.7rem;
+    }
+    
     .employee-card .card-img-top {
-        height: 180px;
+        height: 120px;
+    }
+    
+    .employee-photo {
+        height: 160px;
+    }
+    
+    .employee-name {
+        font-size: 0.9rem;
+    }
+    
+    .employee-position {
+        font-size: 0.75rem;
+    }
+    
+    .employee-department {
+        font-size: 0.7rem;
+    }
+    
+    .btn-details {
+        padding: 0.3rem 0.8rem;
+    }
+    
+    .btn-details a {
+        font-size: 0.75rem;
     }
 }
 
@@ -124,7 +175,7 @@
     flex-direction: column;
 }
 
-/* Фото сотрудника - фиксированный размер */
+/* Фото сотрудника  */
 .employee-photo {
     width: 100%;
     height: 280px;

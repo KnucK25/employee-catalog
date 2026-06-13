@@ -24,7 +24,7 @@ function renderCard(employee) {
 
     const photoImg = document.querySelector('.employee-photo');
     if (photoImg) {
-        photoImg.src = employee.avatar || 'img/team1.png';
+        photoImg.src = employee.avatar || 'img/bio.png';
     }
 
     const nameEl = document.querySelector('.employee-name');
@@ -49,7 +49,7 @@ function renderCard(employee) {
 
     const deptValue = document.querySelectorAll('.info-box .col-sm-6 .info-value')[2];
     if (deptValue) {
-        deptValue.textContent = employee.department;
+        deptValue.textContent = employee.departament;
     }
 
     const dateValue = document.querySelectorAll('.info-box .col-sm-6 .info-value')[3];
