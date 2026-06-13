@@ -70,3 +70,15 @@ CREATE INDEX IF NOT EXISTS idx_employee_phone ON employee(phone);
 CREATE INDEX IF NOT EXISTS idx_root_employee_id ON root(employee_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_account_login ON account(login);
 CREATE INDEX IF NOT EXISTS idx_account_employee_id ON account(employee_id);
+
+-- ==========================================
+-- 3. ТРИГЕРЫ
+-- ==========================================
+
+CREATE TRIGGER IF NOT EXISTS force_delete_image
+AFTER DELETE ON employee
+FOR EACH ROW
+WHEN OLD.image_id IS NOT NULL
+BEGIN
+    DELETE FROM image WHERE id = OLD.image_id;
+END;

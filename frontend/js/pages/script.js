@@ -5,6 +5,68 @@
     const showLoginLink = document.getElementById('showLoginLink');
     const modalTitle = document.getElementById('authModalLabel');
 
+//шифрование пароля
+async function getPublicKey() {
+    const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const res = await fetch(`${API_BASE}/api/auth/public-key`);
+    const data = await res.json();
+    return data.publicKey;
+}
+
+async function encryptPassword(password) {
+    const publicKeyPem = await getPublicKey();
+
+    const publicKey = await window.crypto.subtle.importKey(
+        'spki',
+        pemToArrayBuffer(publicKeyPem),
+        {
+            name: 'RSA-OAEP',
+            hash: 'SHA-256'
+        },
+        false,
+        ['encrypt']
+    );
+
+    const encodedPassword = new TextEncoder().encode(password);
+
+    const encrypted = await window.crypto.subtle.encrypt(
+        {
+            name: 'RSA-OAEP'
+        },
+        publicKey,
+        encodedPassword
+    );
+
+    return arrayBufferToBase64(encrypted);
+}
+
+function pemToArrayBuffer(pem) {
+    const base64 = pem
+        .replace('-----BEGIN PUBLIC KEY-----', '')
+        .replace('-----END PUBLIC KEY-----', '')
+        .replace(/\s/g, '');
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+
+    return btoa(binary);
+}
+
     // Показать форму регистрации
     if (showRegisterLink) {
         showRegisterLink.addEventListener('click', (e) => {
@@ -38,10 +100,12 @@
 
             try {
                 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+
+                const encryptedPassword = await encryptPassword(password);
                 const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ login, password })
+                    body: JSON.stringify({ login, encryptedPassword })
                 });
 
                 const data = await res.json();
@@ -52,6 +116,7 @@
                 }
 
                 localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
                 const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
                 if (modal) modal.hide();
                 loginForm.reset();
