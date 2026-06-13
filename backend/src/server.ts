@@ -12,6 +12,7 @@ import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
 import { imageQueries } from './database/queries/imageQueries';
 import { accountQueries } from './database/queries/accountQueries';
+import { rootQueries } from './database/queries/rootQueries';
 
 const app = express();
 app.use(express.json());
@@ -254,6 +255,12 @@ async function seedDB() {
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
+        const existingAdmin = await db.get(accountQueries.getByLogin, ['admin@admin']);
+
+        if (!existingAdmin) {
+            console.warn('Тестовые данные уже есть, но стартовый админ не создан');
+        }
+
         return;
     }
 
@@ -381,7 +388,7 @@ async function seedDB() {
     }
     console.log('Тестовые сотрудники записаны');
 
-        const adminLogin = 'admin@admin';
+    const adminLogin = 'admin@admin';
     const adminPassword = 'admin123';
 
     const adminSalt = crypto.randomBytes(16).toString('hex');
