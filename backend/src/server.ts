@@ -126,7 +126,6 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
     next();
 }
-
 interface getEmployee {
     id: number,
     firstname: string,
@@ -228,15 +227,33 @@ async function seedImg(filename: string): Promise<number | null> {
 
 //Если база пустая — вставляются тестовые данные при первом запуске (иначе ничего не увидим)
 async function seedDB() {
+    const existingAdmin = await db.get(accountQueries.getByLogin, ['admin@admin']);
+
+    if (!existingAdmin) {
+        const adminLogin = 'admin@admin';
+        const adminPassword = 'admin123';
+
+        const adminSalt = crypto.randomBytes(16).toString('hex');
+        const adminHash = hashPassword(adminPassword, adminSalt);
+
+        await db.run(accountQueries.create, [
+            adminLogin,
+            adminHash,
+            adminSalt,
+            1
+        ]);
+
+        await db.run(rootQueries.create, [
+            1,
+            ACCESS_LEVELS.SUPER_ADMIN
+        ]);
+
+        console.log('Стартовый администратор создан: login admin@admin, password admin123');
+    }
+
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
-        const existingAdmin = await db.get(accountQueries.getByLogin, ['admin@admin']);
-
-        if (!existingAdmin) {
-            console.warn('Тестовые данные уже есть, но стартовый админ не создан');
-        }
-
         return;
     }
 
