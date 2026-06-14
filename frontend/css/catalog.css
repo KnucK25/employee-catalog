@@ -9,7 +9,7 @@
     color: #666 !important;
 }
 
-/* Секция поиска и фильтров - ЕДИНЫЙ СТИЛЬ с adminPanel.css */
+/* Секция поиска и фильтров  */
 .search-section {
     background-color: var(--alt);
     padding: 2rem 0;
@@ -116,7 +116,6 @@
         padding-right: calc(var(--bs-gutter-x) * 0.5);
     }
     
-    /* Уменьшаем отступы и размеры для компактности */
     .employee-card .card-body {
         padding: 1rem;
     }
@@ -219,6 +218,20 @@
     font-size: 0.85rem;
     color: #666;
     margin-bottom: 1rem;
+}
+
+.employee-card .btn-details {
+    display: inline-block;
+    color: var(--accent-gold);
+    border: 1px solid var(--accent-gold);
+    padding: 8px 20px;
+    text-decoration: none;
+}
+
+.employee-card .btn-details:hover {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border-color: var(--accent-gold);
 }
 
 .btn-details {
