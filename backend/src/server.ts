@@ -52,7 +52,7 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 let db: Database;
 
 // Токены хранятся в памяти: token → { employeeId, expiresAt }
-const sessions = new Map<string, { employeeId: number | null; level:number; expiresAt: number }>();
+const sessions = new Map<string, { employeeId: number | null; level: number; expiresAt: number }>();
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 часов
 const ACCESS_LEVELS = {
     GUEST: 0,
@@ -381,7 +381,7 @@ async function seedDB() {
     }
     console.log('Тестовые сотрудники записаны');
 
-        const adminLogin = 'admin@admin';
+    const adminLogin = 'admin@admin';
     const adminPassword = 'admin123';
 
     const adminSalt = crypto.randomBytes(16).toString('hex');
@@ -445,26 +445,26 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
-       let level = 0;
+        let level = 0;
 
-if (account.employee_id) {
-    const root = await db.get(rootQueries.getByEmployeeId, [account.employee_id]);
-    level = root?.level ?? 1;
-}
+        if (account.employee_id) {
+            const root = await db.get(rootQueries.getByEmployeeId, [account.employee_id]);
+            level = root?.level ?? 1;
+        }
 
-const token = generateToken();
+        const token = generateToken();
 
-sessions.set(token, {
-    employeeId: account.employee_id,
-    level,
-    expiresAt: Date.now() + SESSION_TTL_MS
-});
+        sessions.set(token, {
+            employeeId: account.employee_id,
+            level,
+            expiresAt: Date.now() + SESSION_TTL_MS
+        });
 
-res.json({
-    token,
-    employeeId: account.employee_id,
-    level
-});
+        res.json({
+            token,
+            employeeId: account.employee_id,
+            level
+        });
 
         res.json({ token });
     } catch (err) {
@@ -474,7 +474,7 @@ res.json({
 
 app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-       const { login, encryptedPassword, employee_id, level } = req.body;
+        const { login, encryptedPassword, employee_id, level } = req.body;
 
         if (!login || !encryptedPassword || !employee_id || level === undefined) {
             res.status(400).json({ error: 'Укажите логин, пароль, id сотрудника и уровень прав' });
@@ -622,7 +622,7 @@ app.get('/api/employees/:id', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: Response) => { 
+app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee;
 
