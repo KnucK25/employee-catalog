@@ -27,6 +27,8 @@
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
                         <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
                         <li class="nav-item"><a class="nav-link active" href="adminPanel.html">Админ панель</a></li> 
+                        <li class="nav-item"><a class="nav-link" href="profile.html">Личный кабинет</a></li>
+
                     </ul>
                 </div>
             </div>
@@ -50,24 +52,25 @@
                         <label class="form-label mb-1">ПОИСК</label>
                         <input type="text" id="searchInput" class="form-control" placeholder="Введите имя, фамилию или должность...">
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label mb-1">ОТДЕЛ</label>
                         <select id="departamentFilter" class="form-select">
                             <option value="all">Все отделы</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label mb-1">ДОЛЖНОСТЬ</label>
                         <select id="postFilter" class="form-select">
                             <option value="all">Все должности</option>
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <label class="form-label mb-1">ДЕЙСТВИЯ</label>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-gold flex-grow-1" onclick="openControlModal()">Добавить</button>
-                            <button class="btn btn-outline-dark flex-grow-1" id="exportBtn">Экспорт</button>
-                            <button class="btn btn-outline-dark flex-grow-1" onclick="openAccountModal()">Аккаунты</button>
+                        <div class="d-flex gap-2 justify-content-between">
+                            <button class="btn btn-gold flex-fill" onclick="openControlModal()">Добавить</button>
+                            <button class="btn btn-outline-dark flex-fill" id="exportBtn">Экспорт</button>
+                            <!-- <button class="btn btn-outline-dark flex-fill" onclick="openAccountModal()">Аккаунты</button> -->
+                            <a href="accessPanel.html" class="btn btn-outline-dark flex-fill text-center">Аккаунты</a>
                         </div>
                     </div>
                 </div>

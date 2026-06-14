@@ -36,5 +36,17 @@ export const imageQueries = {
     SELECT image_id
     FROM employee
     WHERE id = ?;
+  `,
+
+  /**
+   * Принимает blob, тип, размер изображения, id изображения
+   */
+  update: `
+  UPDATE image
+  SET
+    binary_image = ?,
+    mime_type = ?,
+    size_bytes = ?
+  WHERE id = ?
   `
 } as const;

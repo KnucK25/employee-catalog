@@ -12,15 +12,30 @@ import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
 import { imageQueries } from './database/queries/imageQueries';
 import { accountQueries } from './database/queries/accountQueries';
+import { rootQueries } from './database/queries/rootQueries';
 
 const app = express();
 app.use(express.json());
+
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem'
+    },
+    privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem'
+    }
+});
+
 
 // Разрешаем запросы с любого источника — иначе браузер опрокинет
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    // ✅ Добавили кастомные заголовки
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Employee-Data, Size-File');
 
     if (req.method === 'OPTIONS') {
         res.sendStatus(204);
@@ -37,8 +52,15 @@ app.use(express.static(path.join(__dirname, '../../frontend')));
 let db: Database;
 
 // Токены хранятся в памяти: token → { employeeId, expiresAt }
-const sessions = new Map<string, { employeeId: number; expiresAt: number }>();
+const sessions = new Map<string, { employeeId: number | null; level: number; expiresAt: number }>();
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 часов
+const ACCESS_LEVELS = {
+    GUEST: 0,
+    USER: 1,
+    HR: 2,
+    ADMIN: 3,
+    SUPER_ADMIN: 4
+} as const;
 
 function hashPassword(password: string, salt: string): string {
     return crypto.createHmac('sha256', salt).update(password).digest('hex');
@@ -46,6 +68,17 @@ function hashPassword(password: string, salt: string): string {
 
 function generateToken(): string {
     return crypto.randomBytes(32).toString('hex');
+}
+
+function decryptPassword(encryptedPassword: string): string {
+    return crypto.privateDecrypt(
+        {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        Buffer.from(encryptedPassword, 'base64')
+    ).toString('utf8');
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -67,9 +100,74 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     next();
 }
 
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) {
+            sessions.delete(token);
+        }
+
+        res.status(401).json({ error: 'Сессия истекла, войдите снова' });
+        return;
+    }
+
+    if (session.level < ACCESS_LEVELS.HR) {
+        res.status(403).json({ error: 'Недостаточно прав' });
+        return;
+    }
+
+    next();
+}
+interface getEmployee {
+    id: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    post_name: string,
+    departament_name: string,
+    departament_id: number,
+    post_id: number,
+    email: string,
+    phone: string,
+    date_admission: string,
+    description: string,
+    image_id: number | null
+}
+
+interface setEmployee {
+    id?: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    phone: string,
+    email: string,
+    description?: string,
+    date_admission?: string,
+    post_id: number,
+    image_id: number | null
+}
+
+interface departaments {
+    id?: number,
+    name: string
+}
+
+interface post {
+    id?: number,
+    name: string,
+    departament_id: number
+}
 
 //Переводим строку из базы к формату фронта
-function mapEmployee(row: any) {
+function mapEmployee(row: getEmployee) {
     return {
         id: row.id,
         name: `${row.lastname} ${row.firstname} ${row.middlename}`,
@@ -129,6 +227,30 @@ async function seedImg(filename: string): Promise<number | null> {
 
 //Если база пустая — вставляются тестовые данные при первом запуске (иначе ничего не увидим)
 async function seedDB() {
+    const existingAdmin = await db.get(accountQueries.getByLogin, ['admin@admin']);
+
+    if (!existingAdmin) {
+        const adminLogin = 'admin@admin';
+        const adminPassword = 'admin123';
+
+        const adminSalt = crypto.randomBytes(16).toString('hex');
+        const adminHash = hashPassword(adminPassword, adminSalt);
+
+        await db.run(accountQueries.create, [
+            adminLogin,
+            adminHash,
+            adminSalt,
+            1
+        ]);
+
+        await db.run(rootQueries.create, [
+            1,
+            ACCESS_LEVELS.SUPER_ADMIN
+        ]);
+
+        console.log('Стартовый администратор создан: login admin@admin, password admin123');
+    }
+
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
@@ -259,16 +381,43 @@ async function seedDB() {
     }
     console.log('Тестовые сотрудники записаны');
 
+    const adminLogin = 'admin@admin';
+    const adminPassword = 'admin123';
+
+    const adminSalt = crypto.randomBytes(16).toString('hex');
+    const adminHash = hashPassword(adminPassword, adminSalt);
+
+    await db.run(accountQueries.create, [
+        adminLogin,
+        adminHash,
+        adminSalt,
+        1
+    ]);
+
+    await db.run(rootQueries.create, [
+        1,
+        ACCESS_LEVELS.SUPER_ADMIN
+    ]);
+
+    console.log('Стартовый администратор создан: login admin@admin, password admin123');
+
     console.log('Seed-данные вставлены');
 }
 
 //Авторизация
 
+app.get('/api/auth/public-key', (req: Request, res: Response) => {
+    res.json({
+        publicKey
+    });
+});
+
+
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword } = req.body;
 
-        if (!login || !password) {
+        if (!login || !encryptedPassword) {
             res.status(400).json({ error: 'Укажите логин и пароль' });
             return;
         }
@@ -280,6 +429,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const expectedHash = hashPassword(password, account.salt);
 
         if (expectedHash !== account.hash) {
@@ -287,8 +445,26 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
+        let level = 0;
+
+        if (account.employee_id) {
+            const root = await db.get(rootQueries.getByEmployeeId, [account.employee_id]);
+            level = root?.level ?? 1;
+        }
+
         const token = generateToken();
-        sessions.set(token, { employeeId: account.employee_id, expiresAt: Date.now() + SESSION_TTL_MS });
+
+        sessions.set(token, {
+            employeeId: account.employee_id,
+            level,
+            expiresAt: Date.now() + SESSION_TTL_MS
+        });
+
+        res.json({
+            token,
+            employeeId: account.employee_id,
+            level
+        });
 
         res.json({ token });
     } catch (err) {
@@ -296,12 +472,36 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword, employee_id, level } = req.body;
 
-        if (!login || !password) {
-            res.status(400).json({ error: 'Укажите логин и пароль' });
+        if (!login || !encryptedPassword || !employee_id || level === undefined) {
+            res.status(400).json({ error: 'Укажите логин, пароль, id сотрудника и уровень прав' });
+            return;
+        }
+
+        const token = req.headers['authorization']?.replace('Bearer ', '');
+        const session = token ? sessions.get(token) : null;
+
+        if (!session) {
+            res.status(401).json({ error: 'Сессия не найдена' });
+            return;
+        }
+
+        const newLevel = Number(level);
+
+        if (
+            Number.isNaN(newLevel) ||
+            newLevel < ACCESS_LEVELS.USER ||
+            newLevel >= ACCESS_LEVELS.SUPER_ADMIN
+        ) {
+            res.status(400).json({ error: 'Уровень прав должен быть от 1 до 3' });
+            return;
+        }
+
+        if (newLevel >= session.level) {
+            res.status(403).json({ error: 'Нельзя создать аккаунт с уровнем равным или выше своего' });
             return;
         }
 
@@ -312,11 +512,35 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const salt = crypto.randomBytes(16).toString('hex');
         const hash = hashPassword(password, salt);
-        await db.run(accountQueries.create, [login, hash, salt, null]);
 
-        res.status(201).json({ message: 'Аккаунт создан' });
+        await db.run(accountQueries.create, [
+            login,
+            hash,
+            salt,
+            employee_id
+        ]);
+
+        await db.run(rootQueries.create, [
+            employee_id,
+            newLevel
+        ]);
+
+        res.status(201).json({
+            message: 'Аккаунт создан',
+            employee_id,
+            level: newLevel
+        });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка регистрации' });
     }
@@ -326,7 +550,7 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
 
 app.get('/api/employees', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
         res.json(rows.map(mapEmployee));
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудников', err });
@@ -335,7 +559,7 @@ app.get('/api/employees', async (req: Request, res: Response) => {
 
 app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
         const employees = rows.map(mapEmployee);
 
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
@@ -398,9 +622,9 @@ app.get('/api/employees/:id', async (req: Request, res: Response) => {
     }
 });
 
-app.post('/api/employees', async (req: Request, res: Response) => {
+app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body;
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee;
 
         const result = await db.run(employeeQueries.create, [
             firstname,
@@ -414,28 +638,20 @@ app.post('/api/employees', async (req: Request, res: Response) => {
             image_id ?? null
         ]);
 
-        const newRow = await db.get(employeeQueries.getById, [result.lastID]);
-        res.status(201).json(mapEmployee(newRow));
+        const newRow: getEmployee | undefined = await db.get(employeeQueries.getById, [result.lastID]);
+        if (!newRow) {
+            res.status(500).json({ error: "Запрос на создание был отправлен, но создания не произошло" })
+            return
+        }
+        res.status(201).json({ ...mapEmployee(newRow), message: "Сотрудник успешно создан" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка создания' });
     }
 });
 
-app.put('/api/employees/:id', async (req: Request, res: Response) => {
-    interface body {
-        firstname: string,
-        lastname: String,
-        middlename: String,
-        email: String,
-        phone: String,
-        date_admission: String,
-        description: String,
-        departament_id: number,
-        post_id: number,
-        image_id: number;
-    }
+app.put('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body as body
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee
 
         await db.run(employeeQueries.update, [
             firstname,
@@ -445,56 +661,256 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
             phone,
             date_admission,
             description ?? '',
-            departament_id,
             post_id,
             image_id ?? null,
             req.params.id
         ]);
 
-        const updated = await db.get(employeeQueries.getById, [req.params.id]);
+        const updated: getEmployee | undefined = await db.get(employeeQueries.getById, [req.params.id]);
 
         if (!updated) {
-            res.status(404).json({ error: 'Сотрудник не найден' });
+            res.status(500).json({ error: 'Сотрудник был обновлен, но не был найден' });
             return;
         }
-
-        res.json(mapEmployee(updated));
+        const employee = mapEmployee(updated)
+        res.json({ ...mapEmployee(updated), message: "Сотрудник успешно сохранен" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка обновления' });
     }
     return;
 });
 
-app.delete('/api/employees/:id', async (req: Request, res: Response) => {
+app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         await db.run(employeeQueries.remove, [req.params.id]);
-        res.json({ success: true });
+        res.status(200).json({ success: true, message: "Сотрудник удален" });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка удаления' });
     }
 });
 
+// Обновление сотрудника + загрузка нового фото одним запросом
+app.put('/api/employees-and-photo/:id',
+    requireAuth,
+    requireAdmin,
+    express.raw({ type: 'image/*', limit: '5mb' }),
+    async (req: Request, res: Response) => {
+        try {
+            const employeeId = Number(req.params.id);
+            if (isNaN(employeeId)) {
+                res.status(400).json({ error: 'Некорректный ID сотрудника' });
+                return;
+            }
+
+            const existing: getEmployee | undefined = await db.get(employeeQueries.getById, [employeeId]);
+            if (!existing) {
+                res.status(404).json({ error: 'Сотрудник не найден' });
+                return;
+            }
+
+            const employeeHeader = req.headers['x-employee-data'];
+            if (!employeeHeader) {
+                res.status(400).json({ error: 'Отсутствуют данные сотрудника (X-Employee-Data)' });
+                return;
+            }
+
+            let employeeData: setEmployee;
+            try {
+                const decoded = decodeURIComponent(employeeHeader as string);
+                employeeData = JSON.parse(decoded);
+            } catch (e) {
+                res.status(400).json({ error: 'Некорректный JSON в X-Employee-Data' });
+                return;
+            }
+
+            // Валидация бинарных данных
+            const imageBuffer: Buffer = req.body;
+            if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
+                res.status(400).json({ error: 'Отсутствует файл изображения' });
+                return;
+            }
+
+            const declaredSizeHeader = req.headers['size-file'];
+            if (!declaredSizeHeader) {
+                res.status(400).json({ error: 'Отсутствует заголовок Size-File' });
+                return;
+            }
+
+            const declaredSize = parseInt(declaredSizeHeader as string, 10);
+            if (isNaN(declaredSize)) {
+                res.status(400).json({ error: 'Некорректный размер файла в заголовке Size-File' });
+                return;
+            }
+
+            const actualSize = imageBuffer.length;
+            if (declaredSize !== actualSize) {
+                res.status(400).json({
+                    error: `Несоответствие размера файла: заявлено ${declaredSize} байт, получено ${actualSize} байт.`
+                });
+                return;
+            }
+
+            const mimeType = (req.headers['content-type'] ?? '').toLowerCase();
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!allowedTypes.includes(mimeType)) {
+                res.status(400).json({ error: 'Недопустимый формат изображения' });
+                return;
+            }
+
+            if (actualSize > 5 * 1024 * 1024) {
+                res.status(400).json({ error: 'Файл слишком большой (макс. 5 МБ)' });
+                return;
+            }
+
+            const dbMimeType = mimeType.replace('image/', '');
+
+            // ✅ ИСПРАВЛЕНИЕ: правильно определяем finalImageId
+            let finalImageId: number | null;
+
+            if (!employeeData.image_id) {
+                // Создаём новую запись
+                const imgResult = await db.run(imageQueries.create, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize
+                ]);
+                finalImageId = imgResult.lastID ?? null;
+            } else {
+                // Обновляем существующую запись
+                await db.run(imageQueries.update, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize,
+                    employeeData.image_id
+                ]);
+                // ✅ При UPDATE lastID не обновляется! Используем известный ID
+                finalImageId = employeeData.image_id;
+            }
+
+            // Обновляем сотрудника
+            await db.run(employeeQueries.update, [
+                employeeData.firstname,
+                employeeData.lastname,
+                employeeData.middlename ?? '',
+                employeeData.email,
+                employeeData.phone,
+                employeeData.date_admission ?? existing.date_admission,
+                employeeData.description ?? '',
+                employeeData.post_id,
+                finalImageId,  // ✅ Теперь всегда корректный ID
+                employeeId
+            ]);
+
+            const updated = await db.get(employeeQueries.getById, [employeeId]);
+            if (!updated) {
+                res.status(500).json({ error: 'Сотрудник обновлён, но не найден после сохранения' });
+                return;
+            }
+
+            res.json({ ...mapEmployee(updated), message: 'Сотрудник и фото успешно обновлены' });
+
+        } catch (err: any) {
+            console.error('Ошибка в /api/employees-and-photo/:id', err);
+            res.status(500).json({ error: err.message ?? 'Ошибка сервера' });
+        }
+    });
+
 //Маршруты отделов
 
 app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(departamentQueries.getAll);
+        const rows: Array<departaments> = await db.all(departamentQueries.getAll);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения отделов' });
     }
 });
 
+app.post('/api/departaments', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { name } = req.body as { name: string };
+        if (name.trim() === '') return res.status(400).json({ error: 'Не введено название отдела' })
+
+        const exist: departaments | undefined = await db.get(departamentQueries.existByNameExceptId, [name])
+        if (exist) return res.status(409).json({ error: 'Такой отдел уже существует' })
+
+        const result = await db.run(departamentQueries.create, [name])
+        const newRow = await db.get(departamentQueries.getById, [result.lastID])
+        return res.status(201).json({ id: newRow.id, name: newRow.name })
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/departaments/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const exist = await db.get(departamentQueries.getById, [req.params.id])
+        if (!exist) return res.status(512).json({ error: "Не найден отдел с таким id" })
+
+        const posts: Array<post> = await db.all(postQueries.getByDepId, [req.params.id])
+        let employees: Array<getEmployee> = []
+        for (const post of posts) {
+            const id = post.id
+            employees.push(...(await db.all<Array<getEmployee>>(employeeQueries.getByPostId, id)))
+        }
+
+        const result = await db.run(departamentQueries.remove, [req.params.id])
+        const existAfterDelete = await db.get(departamentQueries.getById, [result.lastID])
+
+        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+
+        return res.status(200).json({ message: `Отдел с id ${req.params.id} был удален`, deleted_posts: posts, deleted_employee: employees })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
+
 //Маршруты должностей
 
 app.get('/api/posts', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(postQueries.getAll);
+        const rows: Array<post> = await db.all(postQueries.getAll);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения должностей' });
     }
 });
+
+app.post('/api/posts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { departament_id, name } = req.body as post
+        if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
+
+        const exist: number | undefined = await db.get(postQueries.existByNameExceptId, [name])
+        if (exist) return res.status(409).json({ error: "Такая должность уже существует" })
+
+        const result = await db.run(postQueries.create, [departament_id, name])
+        const newRow: post | undefined = await db.get(postQueries.getById, [result.lastID])
+        if (!newRow) return res.status(500).json({ message: "Новая должность была создана, но не была найдена" })
+        return res.status(201).json({ id: newRow.id, name: newRow.name, departament_id: newRow.departament_id })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/posts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const exist: number | undefined = await db.get(postQueries.getById, [req.params.id])
+
+        if (!exist) return res.status(512).json({ error: "Не найдена должность с таким id" })
+
+        const employee: Array<getEmployee> = await db.all(employeeQueries.getByPostId, [req.params.id])
+
+        await db.run(postQueries.remove, [req.params.id])
+        const existAfterDelete: number | undefined = await db.get(postQueries.getById, [req.params.id])
+
+        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+
+        return res.status(200).json({ message: `Должность с id ${req.params.id} был удален`, deleted_employee: employee })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
 
 //Отдаём изображение по его id из таблицы image
 
