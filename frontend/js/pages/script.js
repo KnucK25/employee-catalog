@@ -74,8 +74,6 @@ function arrayBufferToBase64(buffer) {
             loginForm.style.display = 'none';
             registerForm.style.display = 'block';
             modalTitle.textContent = 'Регистрация';
-            // Вам также нужно будет добавить showRegisterLink в HTML, если он еще не добавлен
-            // Пример: <a href="#" id="showRegisterLink">Зарегистрироваться</a>
         });
     }
 
@@ -89,23 +87,64 @@ function arrayBufferToBase64(buffer) {
         });
     }
 
-    // Обработка авторизации
+    // Обработка авторизации (временная заглушка)
+    // if (loginForm) {
+    //     loginForm.addEventListener('submit', async (e) => {
+    //         e.preventDefault();
+    //         const login = document.getElementById('loginEmail').value;
+    //         const password = document.getElementById('loginPassword').value;
+
+    //         if (!login || !password) { alert('Заполните все поля'); return; }
+
+    //         try {
+    //             const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+
+    //             const encryptedPassword = await encryptPassword(password);
+    //             const res = await fetch(`${API_BASE}/api/auth/login`, {
+    //                 method: 'POST',
+    //                 headers: { 'Content-Type': 'application/json' },
+    //                 body: JSON.stringify({ login, encryptedPassword })
+    //             });
+
+    //             const data = await res.json();
+
+    //             if (!res.ok) {
+    //                 alert(data.error || 'Ошибка входа');
+    //                 return;
+    //             }
+
+    //             localStorage.setItem('authToken', data.token);
+    //             localStorage.setItem('level', data.level);
+    //             const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+    //             if (modal) modal.hide();
+    //             loginForm.reset();
+    //             alert('Вход выполнен');
+    //         } catch (err) {
+    //             alert('Ошибка сети при входе');
+    //         }
+    //     });
+    // }
+
+    // Обработка авторизации (без шифрования) ВРЕМЕННО
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const login = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            if (!login || !password) { alert('Заполните все поля'); return; }
+            if (!login || !password) {
+                alert('Заполните все поля');
+                return;
+            }
 
             try {
                 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
-
-                const encryptedPassword = await encryptPassword(password);
+                
+                // Отправляем пароль без шифрования
                 const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ login, encryptedPassword })
+                    body: JSON.stringify({ login, password })
                 });
 
                 const data = await res.json();
@@ -117,21 +156,18 @@ function arrayBufferToBase64(buffer) {
 
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('level', data.level);
+                
                 const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
                 if (modal) modal.hide();
                 loginForm.reset();
                 alert('Вход выполнен');
-
-                // --- ДОБАВЛЕНО: Переход на страницу profile.html после успешного входа ---
-                window.location.href = 'profile.html';
-
             } catch (err) {
+                console.error('Ошибка:', err);
                 alert('Ошибка сети при входе');
             }
         });
     }
 
-    // Обработка регистрации (без изменений)
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();

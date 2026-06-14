@@ -410,3 +410,26 @@
         font-size: 0.7rem;
     }
 }
+
+
+/* панель прав доступа */
+
+.access-level-badge {
+    padding: 4px 12px;
+    border-radius: 0;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+.level-1 { background-color: #6c757d; color: white; }
+.level-2 { background-color: #17a2b8; color: white; }
+.level-3 { background-color: var(--accent-gold); color: black; }
+        
+.login-text {
+    color: #999;
+    font-size: 0.85rem;
+}
+        
+.password-placeholder {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
