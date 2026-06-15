@@ -12,6 +12,7 @@ let employees = [];
 let departamentsList = [];
 let postsList = [];
 let selectedDepartament = null
+let photovers = 1
 
 function getAuthHeaders(contentType = 'application/json') {
     const token = localStorage.getItem('authToken');
@@ -107,10 +108,10 @@ function createEmployeeRow(employee) {
     row.setAttribute('data-department', employee.departament);
     row.setAttribute('data-name', employee.name.toLowerCase());
     row.setAttribute('data-position', employee.post.toLowerCase());
-
+    const avatarUrl =employee.avatar ? `${employee.avatar}?v=${photovers}` : 'img/bio.png'
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0" data-label="Сотрудник">
-            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 60px; object-fit: cover;">
+            <img src="${avatarUrl}" class="admin-employee-photo me-3" style="width: 50px; height: 60px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -233,6 +234,7 @@ function connectSSE() {
             // Обрабатываем разные типы событий
             if (message.type === 'employees.updated') {
                 console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
                 loadEmployees().then(() => {
                     filter_and_search();
                 });
@@ -240,6 +242,7 @@ function connectSSE() {
             
             if (message.type === 'departments.updated') {
                 console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
                 loadEmployees().then(
                     () => populateDepartamentMenu().then(
                         () => filter_and_search()
@@ -250,6 +253,7 @@ function connectSSE() {
             if (message.type === 'posts.updated') {
                 console.log('🔄 Должности обновлены, перезагружаем...');
                 const selectedDep = document.getElementById('departamentFilter').value
+                photovers++
                 loadEmployees().then(
                     () => populatePostMenu(selectedDep).then(
                         () => filter_and_search()
@@ -446,7 +450,7 @@ async function editEmployee(employeeId) {
     // Показываем текущее фото, если есть
     const photoImg = document.getElementById('currentPhotoImg');
     if (employee.avatar && employee.avatar !== 'img/bio.png') {
-        photoImg.src = employee.avatar;
+        photoImg.src = `${employee.avatar}?v=${photovers}`;
         photoImg.style.display = 'block';
     } else {
         photoImg.style.display = 'none';
