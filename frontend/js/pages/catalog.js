@@ -117,8 +117,7 @@ function renderCatalog(employeesList) {
 
     container.innerHTML = '';
     employeesList.forEach(emp => {
-        const avatarUrl = emp.avatar ? `${emp.avatar}?v=${photovers}` : 'img/bio.png'
-        // ИСПОЛЬЗУЕМ ВАШИ КЛАССЫ ИЗ catalog.css
+        // ИСПОЛЬЗУЕМ КЛАССЫ ИЗ catalog.css
         const cardHtml = `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="employee-card">
@@ -129,10 +128,8 @@ function renderCatalog(employeesList) {
                         <h5 class="employee-name">${emp.name}</h5>
                         <p class="employee-position">${emp.post}</p>
                         <p class="employee-department">${emp.departament}</p>
-                        </div>
-                        <button class="btn btn-details" data-id="${emp.id}">
-                            <a>Подробнее</a>
-                        </button>
+                        <a href="card.html?id=${emp.id}" class="btn btn-details">Подробнее</a>
+                    </div>
                 </div>
             </div>
         `;
