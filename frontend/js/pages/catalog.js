@@ -116,7 +116,8 @@ function renderCatalog(employeesList) {
 
     container.innerHTML = '';
     employeesList.forEach(emp => {
-        container.innerHTML += `
+        // ИСПОЛЬЗУЕМ ВАШИ КЛАССЫ ИЗ catalog.css
+        const cardHtml = `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="employee-card">
                     <div class="employee-photo">
@@ -126,11 +127,24 @@ function renderCatalog(employeesList) {
                         <h5 class="employee-name">${emp.name}</h5>
                         <p class="employee-position">${emp.post}</p>
                         <p class="employee-department">${emp.departament}</p>
-                        <a href="card.html?id=${emp.id}" class="btn btn-details">Подробнее</a>
-                    </div>
+                        </div>
+                        <button class="btn btn-details" data-id="${emp.id}">
+                            <a>Подробнее</a>
+                        </button>
                 </div>
             </div>
         `;
+        container.innerHTML += cardHtml;
+    });
+
+    // Добавляем обработчик событий после рендеринга всех карточек
+    document.querySelectorAll('.btn-details').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const employeeId = event.target.dataset.id;
+            if (employeeId) {
+                window.location.href = `card.html?id=${employeeId}`;
+            }
+        });
     });
 }
 
