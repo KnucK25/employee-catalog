@@ -260,8 +260,8 @@ function openCreateAccountModal() {
         select.innerHTML = '<option value="">Выберите сотрудника</option>';
         
         // Отфильтровываем сотрудников, у которых уже есть аккаунт
-        const employeesWithAccount = allAccountsData.map(acc => acc.employeeId);
-        const availableEmployees = employeesList.filter(emp => !employeesWithAccount.includes(emp.id));
+       const employeesWithAccount = allAccountsData.map(acc => Number(acc.employee_id));
+       const availableEmployees = employeesList.filter(emp => !employeesWithAccount.includes(Number(emp.id)));
         
         availableEmployees.forEach(emp => {
             select.innerHTML += `<option value="${emp.id}">${emp.name} — ${emp.post}</option>`;
