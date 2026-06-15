@@ -1,0 +1,96 @@
+:root {
+    --alt: #F1EEE6;
+    --white: #FFFFFF;
+    --black: #000000;
+    --accent-gold: #C29F64;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--white);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.error-container {
+    text-align: center;
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: 800;
+    color: var(--black);
+    margin-bottom: 1rem;
+    letter-spacing: 4px;
+}
+
+.error-message {
+    font-size: 1.5rem;
+    color: gray;
+    margin-bottom: 2rem;
+    font-weight: 500;
+}
+
+.error-image {
+    margin: 2rem 0;
+}
+
+.error-image img {
+    max-width: 100%;
+    height: auto;
+    max-height: 300px;
+
+}
+
+.btn-home {
+    display: inline-block;
+    background-color: var(--black);
+    color: var(--white);
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.btn-home:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+}
+
+/* Адаптив для телефонов */
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 5rem;
+    }
+    
+    .error-message {
+        font-size: 1.2rem;
+    }
+    
+    .error-image img {
+        max-height: 200px;
+    }
+    
+    .btn-home {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
