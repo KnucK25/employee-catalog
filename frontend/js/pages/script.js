@@ -1,4 +1,4 @@
-    // Переключение между формами входа и регистрации
+// Переключение между формами входа и регистрации
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const showRegisterLink = document.getElementById('showRegisterLink');
@@ -89,29 +89,29 @@ function arrayBufferToBase64(buffer) {
 
     // Обработка авторизации (временная заглушка)
     if (loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const login = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
+         loginForm.addEventListener('submit', async (e) => {
+             e.preventDefault();
+             const login = document.getElementById('loginEmail').value;
+             const password = document.getElementById('loginPassword').value;
 
             if (!login || !password) { alert('Заполните все поля'); return; }
 
-            try {
-                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+             try {
+                 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
 
                 const encryptedPassword = await encryptPassword(password);
-                const res = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ login, encryptedPassword })
-                });
+                 const res = await fetch(`${API_BASE}/api/auth/login`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({ login, encryptedPassword })
+                 });
 
-                const data = await res.json();
+                 const data = await res.json();
 
-                if (!res.ok) {
-                    alert(data.error || 'Ошибка входа');
-                    return;
-                }
+                 if (!res.ok) {
+                     alert(data.error || 'Ошибка входа');
+                     return;
+                 }
 
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('level', data.level);
@@ -126,47 +126,48 @@ function arrayBufferToBase64(buffer) {
     }
 
     // Обработка авторизации (без шифрования) ВРЕМЕННО
-    // if (loginForm) {
-    //     loginForm.addEventListener('submit', async (e) => {
-    //         e.preventDefault();
-    //         const login = document.getElementById('loginEmail').value;
-    //         const password = document.getElementById('loginPassword').value;
+   /* if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const login = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
 
-    //         if (!login || !password) {
-    //             alert('Заполните все поля');
-    //             return;
-    //         }
+            if (!login || !password) {
+                alert('Заполните все поля');
+                return;
+            }
 
-    //         try {
-    //             const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+            try {
+                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
                 
-    //             // Отправляем пароль без шифрования
-    //             const res = await fetch(`${API_BASE}/api/auth/login`, {
-    //                 method: 'POST',
-    //                 headers: { 'Content-Type': 'application/json' },
-    //                 body: JSON.stringify({ login, password })
-    //             });
+                // Отправляем пароль без шифрования
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, password })
+                });
 
-    //             const data = await res.json();
+                const data = await res.json();
 
-    //             if (!res.ok) {
-    //                 alert(data.error || 'Ошибка входа');
-    //                 return;
-    //             }
+                if (!res.ok) {
+                    alert(data.error || 'Ошибка входа');
+                    return;
+                }
 
-    //             localStorage.setItem('authToken', data.token);
-    //             localStorage.setItem('level', data.level);
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
                 
-    //             const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
-    //             if (modal) modal.hide();
-    //             loginForm.reset();
-    //             alert('Вход выполнен');
-    //         } catch (err) {
-    //             console.error('Ошибка:', err);
-    //             alert('Ошибка сети при входе');
-    //         }
-    //     });
-    // }
+                const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                if (modal) modal.hide();
+                loginForm.reset();
+                alert('Вход выполнен');
+            } catch (err) {
+                console.error('Ошибка:', err);
+                alert('Ошибка сети при входе');
+            }
+        });
+    }
+        */
 
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
