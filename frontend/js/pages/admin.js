@@ -211,8 +211,66 @@ async function loadEmployees() {
                 </div>`;
         }
     }
-}
+}// Подключение к SSE для получения уведомлений об изменениях
+let eventSource = null;
 
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                loadEmployees().then(() => {
+                    filter_and_search();
+                });
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                loadEmployees().then(
+                    () => populateDepartamentMenu().then(
+                        () => filter_and_search()
+                    )
+                )
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                const selectedDep = document.getElementById('departamentFilter').value
+                loadEmployees().then(
+                    () => populatePostMenu(selectedDep).then(
+                        () => filter_and_search()
+                    )
+                );
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
+}
 
 //Первая отрисовка страницы и слушатели фильтров + поиска
 document.addEventListener('DOMContentLoaded', function() {
@@ -221,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('departamentFilter').addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
+    connectSSE();
 });
 //---------------------------------------------------------------------------------------------------------
 
@@ -261,6 +320,100 @@ async function deleteEmployee(employeeId) {
     //Обновляем поиск чтобы при удалении последнего пользователя вывелось что по поиску сотрудников не найдено
     filter_and_search()
 }
+
+// Добавляем функцию для отображения модального окна подтверждения удаления
+function confirmDeleteModal(employeeId) {
+    // Создаем элементы модального окна
+    const modalContainer = document.createElement('div');
+    modalContainer.className = 'modal fade';
+    modalContainer.id = `confirmDeleteModal_${employeeId}`;
+    modalContainer.setAttribute('tabindex', '-1');
+    modalContainer.setAttribute('aria-labelledby', `confirmDeleteModalLabel_${employeeId}`);
+    modalContainer.setAttribute('aria-hidden', 'true');
+
+    modalContainer.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel_${employeeId}">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить этого сотрудника? Действие нельзя будет отменить.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" onclick="performDeleteAction(${employeeId})">Удалить</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Добавляем модальное окно в DOM
+    document.body.appendChild(modalContainer);
+
+    // Создаем экземпляр модального окна Bootstrap
+    const modal = new bootstrap.Modal(modalContainer);
+    modal.show();
+}
+
+// Функция, которая будет вызвана после подтверждения в модальном окне
+async function performDeleteAction(employeeId) {
+    try {
+        // Закрываем модальное окно подтверждения
+        const modalElement = document.getElementById(`confirmDeleteModal_${employeeId}`);
+        if (modalElement) {
+            bootstrap.Modal.getInstance(modalElement).hide();
+            modalElement.remove(); // Удаляем модальное окно из DOM после закрытия
+        }
+
+        // Выполняем фактическое удаление
+        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+    } catch (err) {
+        console.warn('Ошибка удаления на сервере:', err);
+        alert('Произошла ошибка при удалении сотрудника.');
+        return; // Прерываем дальнейшее выполнение, если произошла ошибка
+    }
+
+    // Удаляем строку из таблицы
+    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (row) {
+        row.remove();
+    }
+
+    // Удаляем сотрудника из массива employees
+    const index = employees.findIndex(emp => emp.id === employeeId);
+    if (index !== -1) {
+        employees.splice(index, 1);
+    }
+
+    // Обновляем отображение, если таблица стала пустой
+    if (employees.length === 0) {
+        const container = document.getElementById('employeesContainer');
+        container.innerHTML = `
+            <div class="row">
+                <div class="col-12 text-center py-4">
+                    <p class="text-muted">Сотрудники не найдены</p>
+                </div>
+            </div>
+        `;
+    } else {
+        // Если остались сотрудники, запускаем фильтрацию заново, чтобы обновить видимость
+        filter_and_search();
+    }
+
+    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
+}
+
+// Измененная функция deleteEmployee
+async function deleteEmployee(employeeId) {
+    // Перед фактическим удалением показываем модальное окно подтверждения
+    confirmDeleteModal(employeeId);
+}
+
 
 // Функция открытия модального окна редактирования
 async function editEmployee(employeeId) {
