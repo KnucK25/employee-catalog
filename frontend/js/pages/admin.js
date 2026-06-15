@@ -953,28 +953,38 @@ async function deletePost(id) {
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
     const emptyEmployee = {
-        lastname: 'НОВЫЙ',
-        firstname: '00_СОТРУДНИК',
+        lastname: '', //Хватит заполнять пустого сотрудника, он и так отлично отображается
+        firstname: '',
         middlename: '',
         email: '',
         phone: '',
         date_admission: new Date().toISOString().split('T')[0],
         description: '',
-        departament_id: 1,
         post_id: 1,
         image_id: null
     };
 
-    await fetch(`${API_BASE}/api/employees`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(emptyEmployee)
-    });
+    try {
+        const res = await fetch(`${API_BASE}/api/employees`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(emptyEmployee)
+        });
 
-    const modal = bootstrap.Modal.getInstance(document.getElementById('controlModal'));
-    if (modal) modal.hide();
+        if (!res.ok) {
+            const data = await res.json();
+            alert('Ошибка ' + res.status + ` ${data.error}`);
+            return;
+        }
 
-    await loadEmployees();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('controlModal'));
+        if (modal) modal.hide();
+
+        await loadEmployees();
+    } catch (err) {
+        console.error('Ошибка создания сотрудника:', err);
+        alert('Ошибка сети при создании сотрудника');
+    }
 }
 
 function openAccountModal() {
