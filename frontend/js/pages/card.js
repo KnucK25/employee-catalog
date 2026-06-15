@@ -1,5 +1,7 @@
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 
+let photovers = 1
+
 function getEmployeeIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return parseInt(params.get('id'));
@@ -24,7 +26,8 @@ function renderCard(employee) {
 
     const photoImg = document.querySelector('.employee-photo');
     if (photoImg) {
-        photoImg.src = employee.avatar || 'img/bio.png';
+        const photoUrl = employee.avatar? `${employee.avatar}?v=${photovers}` : "img/bio.png"
+        photoImg.src = photoUrl
     }
 
     const nameEl = document.querySelector('.employee-name');
@@ -34,7 +37,7 @@ function renderCard(employee) {
 
     const positionEl = document.querySelector('.employee-name + p');
     if (positionEl) {
-        positionEl.textContent = employee.position;
+        positionEl.textContent = employee.post;
     }
 
     const emailValue = document.querySelector('.info-box .col-sm-6:first-child .info-value');
@@ -63,6 +66,64 @@ function renderCard(employee) {
     }
 }
 
+let eventSource = null;
+
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = async (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const id = getEmployeeIdFromURL();
 
@@ -76,4 +137,5 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.innerHTML = '<div class="alert alert-danger m-4">Сотрудник не найден или сервер недоступен</div>';
         }
     }
+    connectSSE()
 });
