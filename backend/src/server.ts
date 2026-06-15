@@ -17,6 +17,22 @@ import { rootQueries } from './database/queries/rootQueries';
 const app = express();
 app.use(express.json());
 
+// Хранилище подключённых SSE-клиентов
+const sseClients = new Set<Response>();
+
+// Функция для отправки события всем подключённым клиентам
+function broadcastEvent(eventType: string, data?: any) {
+    const message = {
+        type: eventType,
+        data: data || {},
+        timestamp: Date.now()
+    };
+
+    sseClients.forEach(client => {
+        client.write(`data: ${JSON.stringify(message)}\n\n`);
+    });
+}
+
 const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -156,12 +172,12 @@ interface setEmployee {
 }
 
 interface departaments {
-    id?: number,
+    id: number,
     name: string
 }
 
 interface post {
-    id?: number,
+    id: number,
     name: string,
     departament_id: number
 }
@@ -186,6 +202,112 @@ function mapEmployee(row: getEmployee) {
         image_id: row.image_id
     };
 }
+
+interface CacheEntry<T> {
+    data: T;
+    expiresAt: number;
+}
+
+class DataCache {
+    private employees: CacheEntry<Array<ReturnType<typeof mapEmployee>>> | null = null
+    private departaments: CacheEntry<Array<departaments>> | null = null
+    private posts: CacheEntry<Array<post>> | null = null
+
+    private TTL = 60 * 1000; //Устаревание через минуту
+
+    async getEmployees(): Promise<Array<ReturnType<typeof mapEmployee>>> {
+        if (this.employees && this.employees.expiresAt > Date.now()) {
+            return this.employees.data
+        }
+
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll)
+        const data = rows.map(mapEmployee)
+
+        this.employees = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getDepartaments(): Promise<Array<departaments>> {
+        if (this.departaments && this.departaments.expiresAt > Date.now()) {
+            return this.departaments.data
+        }
+
+        const data = await db.all(departamentQueries.getAll)
+
+        this.departaments = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getPosts(): Promise<Array<post>> {
+        if (this.posts && this.posts.expiresAt > Date.now()) {
+            return this.posts.data
+        }
+
+        const data = await db.all(postQueries.getAll)
+
+        this.posts = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getEmployeeById(id: number) {
+        const employees = await this.getEmployees()
+        return employees.find(e => e.id === id)
+    }
+
+    async getDepartamentById(id: number) {
+        const departaments = await this.getDepartaments()
+        return departaments.find(d => d.id === id)
+    }
+
+    async getPostById(id: number) {
+        const posts = await this.getPosts()
+        return posts.find(p => p.id === id)
+    }
+
+    async departamentExistByName(name: string) {
+        const departaments = await this.getDepartaments()
+        const departament = departaments.find(d => d.name === name)
+        return departament?.id
+    }
+
+    async postExistByName(name: string) {
+        const posts = await this.getPosts()
+        const post = posts.find(p => p.name === name)
+        return post?.id
+    }
+
+    invalidateEmployees(): void {
+        this.employees = null
+    }
+
+    invalidateDepartaments(): void {
+        this.departaments = null
+    }
+
+    invalidatePosts(): void {
+        this.posts = null
+    }
+
+    invalidateAll(): void {
+        this.employees = null
+        this.departaments = null
+        this.posts = null
+    }
+}
+
+const dataCache = new DataCache()
 
 // Загружает тестовые фотографии из папки test_images. Не использовать для загрузки с клиента.
 async function seedImg(filename: string): Promise<number | null> {
@@ -227,6 +349,7 @@ async function seedImg(filename: string): Promise<number | null> {
 
 //Если база пустая — вставляются тестовые данные при первом запуске (иначе ничего не увидим)
 async function seedDB() {
+
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
@@ -380,6 +503,28 @@ async function seedDB() {
     console.log('Seed-данные вставлены');
 }
 
+// SSE эндпоинт для уведомлений клиентов
+app.get('/api/events', (req: Request, res: Response) => {
+    // Устанавливаем заголовки для SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    // Добавляем клиент в список
+    sseClients.add(res);
+    console.log(`SSE клиент подключён. Всего клиентов: ${sseClients.size}`);
+
+    // Отправляем приветственное событие
+    res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
+
+    // Удаляем клиент при отключении
+    req.on('close', () => {
+        sseClients.delete(res);
+        console.log(`SSE клиент отключён. Всего клиентов: ${sseClients.size}`);
+    });
+});
+
 //Авторизация
 
 app.get('/api/auth/public-key', (req: Request, res: Response) => {
@@ -441,8 +586,8 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             employeeId: account.employee_id,
             level
         });
-
-        res.json({ token });
+        // Никогда не произойдет
+        // res.json({ token });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка авторизации' });
     }
@@ -526,8 +671,8 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
 
 app.get('/api/employees', async (req: Request, res: Response) => {
     try {
-        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
-        res.json(rows.map(mapEmployee));
+        const employees = await dataCache.getEmployees()
+        res.status(200).json(employees)
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудников', err });
     }
@@ -535,8 +680,7 @@ app.get('/api/employees', async (req: Request, res: Response) => {
 
 app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Response) => {
     try {
-        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll);
-        const employees = rows.map(mapEmployee);
+        const employees = await dataCache.getEmployees()
 
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
 
@@ -572,27 +716,33 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
         res.status(500).json({ error: 'Ошибка экспорта' });
     }
 });
-
-app.get('/api/employees/search', async (req: Request, res: Response) => {
-    try {
-        const q = `%${req.query.q ?? ''}%`;
-        const rows = await db.all(employeeQueries.search, { search: q });
-        res.json(rows.map(mapEmployee));
-    } catch (err) {
-        res.status(500).json({ error: 'Ошибка поиска' });
-    }
-});
+// Не используется
+// app.get('/api/employees/search', async (req: Request, res: Response) => {
+//     try {
+//         const q = `%${req.query.q ?? ''}%`;
+//         const rows = await db.all(employeeQueries.search, { search: q });
+//         res.json(rows.map(mapEmployee));
+//     } catch (err) {
+//         res.status(500).json({ error: 'Ошибка поиска' });
+//     }
+// });
 
 app.get('/api/employees/:id', async (req: Request, res: Response) => {
     try {
-        const row = await db.get(employeeQueries.getById, [req.params.id]);
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+            // Перенаправлять на 404 стр?
+        }
+        const id = Number(req.params.id)
+        const employee = await dataCache.getEmployeeById(id)
 
-        if (!row) {
+
+        if (!employee) {
             res.status(404).json({ error: 'Сотрудник не найден' });
             return;
         }
 
-        res.json(mapEmployee(row));
+        res.json(employee);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудника' });
     }
@@ -614,12 +764,17 @@ app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: 
             image_id ?? null
         ]);
 
-        const newRow: getEmployee | undefined = await db.get(employeeQueries.getById, [result.lastID]);
-        if (!newRow) {
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated')
+
+        if (!result.lastID) {
             res.status(500).json({ error: "Запрос на создание был отправлен, но создания не произошло" })
             return
         }
-        res.status(201).json({ ...mapEmployee(newRow), message: "Сотрудник успешно создан" });
+
+        const employee = await dataCache.getEmployeeById(result.lastID)
+
+        res.status(201).json({ ...employee, message: "Сотрудник успешно создан" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка создания' });
     }
@@ -627,6 +782,11 @@ app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: 
 
 app.put('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+
         const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee
 
         await db.run(employeeQueries.update, [
@@ -639,27 +799,33 @@ app.put('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, re
             description ?? '',
             post_id,
             image_id ?? null,
-            req.params.id
+            id
         ]);
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated', { id })
+        const employee = await dataCache.getEmployeeById(id)
 
-        const updated: getEmployee | undefined = await db.get(employeeQueries.getById, [req.params.id]);
-
-        if (!updated) {
+        if (!employee) {
             res.status(500).json({ error: 'Сотрудник был обновлен, но не был найден' });
             return;
         }
-        const employee = mapEmployee(updated)
-        res.json({ ...mapEmployee(updated), message: "Сотрудник успешно сохранен" });
+
+        res.json({ ...employee, message: "Сотрудник успешно сохранен" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка обновления' });
     }
-    return;
 });
 
 app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        await db.run(employeeQueries.remove, [req.params.id]);
-        res.status(200).json({ success: true, message: "Сотрудник удален" });
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        await db.run(employeeQueries.remove, [id]);
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated', { id })
+        res.status(200).json({ message: "Сотрудник удален" });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка удаления' });
     }
@@ -672,13 +838,12 @@ app.put('/api/employees-and-photo/:id',
     express.raw({ type: 'image/*', limit: '5mb' }),
     async (req: Request, res: Response) => {
         try {
-            const employeeId = Number(req.params.id);
-            if (isNaN(employeeId)) {
-                res.status(400).json({ error: 'Некорректный ID сотрудника' });
-                return;
+            if (!/^\d+$/.test(req.params.id as string)) {
+                return res.status(404).json({ error: 'Невалидный параметр' })
             }
+            const id = Number(req.params.id)
 
-            const existing: getEmployee | undefined = await db.get(employeeQueries.getById, [employeeId]);
+            const existing = await dataCache.getEmployeeById(id)
             if (!existing) {
                 res.status(404).json({ error: 'Сотрудник не найден' });
                 return;
@@ -695,8 +860,7 @@ app.put('/api/employees-and-photo/:id',
                 const decoded = decodeURIComponent(employeeHeader as string);
                 employeeData = JSON.parse(decoded);
             } catch (e) {
-                res.status(400).json({ error: 'Некорректный JSON в X-Employee-Data' });
-                return;
+                return res.status(400).json({ error: 'Некорректный JSON в X-Employee-Data' });
             }
 
             // Валидация бинарных данных
@@ -714,37 +878,30 @@ app.put('/api/employees-and-photo/:id',
 
             const declaredSize = parseInt(declaredSizeHeader as string, 10);
             if (isNaN(declaredSize)) {
-                res.status(400).json({ error: 'Некорректный размер файла в заголовке Size-File' });
-                return;
+                return res.status(400).json({ error: 'Некорректный размер файла в заголовке Size-File' });
             }
 
             const actualSize = imageBuffer.length;
             if (declaredSize !== actualSize) {
-                res.status(400).json({
-                    error: `Несоответствие размера файла: заявлено ${declaredSize} байт, получено ${actualSize} байт.`
-                });
-                return;
+                return res.status(400).json({ error: `Несоответствие размера файла: заявлено ${declaredSize} байт, получено ${actualSize} байт.` });
             }
 
             const mimeType = (req.headers['content-type'] ?? '').toLowerCase();
             const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
             if (!allowedTypes.includes(mimeType)) {
-                res.status(400).json({ error: 'Недопустимый формат изображения' });
-                return;
+                return res.status(400).json({ error: 'Недопустимый формат изображения' });
             }
 
             if (actualSize > 5 * 1024 * 1024) {
-                res.status(400).json({ error: 'Файл слишком большой (макс. 5 МБ)' });
-                return;
+                return res.status(400).json({ error: 'Файл слишком большой (макс. 5 МБ)' });
             }
 
             const dbMimeType = mimeType.replace('image/', '');
 
-            // ✅ ИСПРАВЛЕНИЕ: правильно определяем finalImageId
             let finalImageId: number | null;
 
             if (!employeeData.image_id) {
-                // Создаём новую запись
+                // Создаём новую запись, если у сотрудника нет фото
                 const imgResult = await db.run(imageQueries.create, [
                     imageBuffer,
                     dbMimeType,
@@ -752,14 +909,13 @@ app.put('/api/employees-and-photo/:id',
                 ]);
                 finalImageId = imgResult.lastID ?? null;
             } else {
-                // Обновляем существующую запись
+                // Обновляем существующую запись, если у сотрудника уже была фотография
                 await db.run(imageQueries.update, [
                     imageBuffer,
                     dbMimeType,
                     actualSize,
                     employeeData.image_id
                 ]);
-                // ✅ При UPDATE lastID не обновляется! Используем известный ID
                 finalImageId = employeeData.image_id;
             }
 
@@ -770,20 +926,23 @@ app.put('/api/employees-and-photo/:id',
                 employeeData.middlename ?? '',
                 employeeData.email,
                 employeeData.phone,
-                employeeData.date_admission ?? existing.date_admission,
+                employeeData.date_admission ?? existing.hireDate,
                 employeeData.description ?? '',
                 employeeData.post_id,
                 finalImageId,  // ✅ Теперь всегда корректный ID
-                employeeId
+                id
             ]);
 
-            const updated = await db.get(employeeQueries.getById, [employeeId]);
-            if (!updated) {
-                res.status(500).json({ error: 'Сотрудник обновлён, но не найден после сохранения' });
-                return;
+            dataCache.invalidateEmployees()
+            broadcastEvent('employees.updated', { id })
+
+            const employee = await dataCache.getEmployeeById(id)
+
+            if (!employee) {
+                return res.status(500).json({ error: 'Сотрудник обновлён, но не найден после сохранения' });
             }
 
-            res.json({ ...mapEmployee(updated), message: 'Сотрудник и фото успешно обновлены' });
+            res.json({ ...employee, message: 'Сотрудник и фото успешно обновлены' });
 
         } catch (err: any) {
             console.error('Ошибка в /api/employees-and-photo/:id', err);
@@ -795,8 +954,8 @@ app.put('/api/employees-and-photo/:id',
 
 app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
-        const rows: Array<departaments> = await db.all(departamentQueries.getAll);
-        res.json(rows);
+        const departaments = await dataCache.getDepartaments()
+        res.json(departaments);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения отделов' });
     }
@@ -805,14 +964,28 @@ app.get('/api/departaments', async (req: Request, res: Response) => {
 app.post('/api/departaments', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         const { name } = req.body as { name: string };
-        if (name.trim() === '') return res.status(400).json({ error: 'Не введено название отдела' })
 
-        const exist: departaments | undefined = await db.get(departamentQueries.existByNameExceptId, [name])
+        if (name.trim() === '') {
+            return res.status(400).json({ error: 'Не введено название отдела' })
+        }
+
+        const exist = await dataCache.departamentExistByName(name)
         if (exist) return res.status(409).json({ error: 'Такой отдел уже существует' })
 
         const result = await db.run(departamentQueries.create, [name])
-        const newRow = await db.get(departamentQueries.getById, [result.lastID])
-        return res.status(201).json({ id: newRow.id, name: newRow.name })
+
+        dataCache.invalidateDepartaments()
+        broadcastEvent('departments.updated');
+
+        if (!result.lastID) {
+            return res.status(500).json({ error: "Строка не была создана" })
+        }
+
+        const departament = await dataCache.getDepartamentById(result.lastID)
+        if (!departament) {
+            return res.status(500).json({ error: "Отдел создан, но не найден" })
+        }
+        return res.status(201).json(departament)
     } catch (err: any) {
         return res.status(500).json({ error: err.message ?? 'Ошибка сервера' })
     }
@@ -820,22 +993,33 @@ app.post('/api/departaments', requireAuth, requireAdmin, async (req: Request, re
 
 app.delete('/api/departaments/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const exist = await db.get(departamentQueries.getById, [req.params.id])
-        if (!exist) return res.status(512).json({ error: "Не найден отдел с таким id" })
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        const exist = await dataCache.getDepartamentById(id)
+        if (!exist) return res.status(404).json({ error: "Не найден отдел с таким id" })
 
-        const posts: Array<post> = await db.all(postQueries.getByDepId, [req.params.id])
-        let employees: Array<getEmployee> = []
-        for (const post of posts) {
-            const id = post.id
-            employees.push(...(await db.all<Array<getEmployee>>(employeeQueries.getByPostId, id)))
+        const posts = await dataCache.getPosts()
+        const deleted_posts = posts.filter(p => p.departament_id === id)
+
+        const deleted_posts_ids = new Set(deleted_posts.map(p => p.id))
+
+        const employees = await dataCache.getEmployees()
+        const deleted_employees = employees.filter(e => deleted_posts_ids.has(e.post_id))
+
+        await db.run(departamentQueries.remove, [id])
+        dataCache.invalidateAll()
+        broadcastEvent('departments.updated');
+        broadcastEvent('posts.updated')
+        broadcastEvent('employees.updated')
+        const existAfterDelete = await dataCache.getDepartamentById(id)
+
+        if (existAfterDelete) {
+            return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
         }
 
-        const result = await db.run(departamentQueries.remove, [req.params.id])
-        const existAfterDelete = await db.get(departamentQueries.getById, [result.lastID])
-
-        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
-
-        return res.status(200).json({ message: `Отдел с id ${req.params.id} был удален`, deleted_posts: posts, deleted_employee: employees })
+        return res.status(200).json({ message: `Отдел с id ${id} был удален`, deleted_posts, deleted_employees })
     } catch (error: any) {
         return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
     }
@@ -845,8 +1029,8 @@ app.delete('/api/departaments/:id', requireAuth, requireAdmin, async (req: Reque
 
 app.get('/api/posts', async (req: Request, res: Response) => {
     try {
-        const rows: Array<post> = await db.all(postQueries.getAll);
-        res.json(rows);
+        const posts = await dataCache.getPosts()
+        res.json(posts);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения должностей' });
     }
@@ -857,13 +1041,20 @@ app.post('/api/posts', requireAuth, requireAdmin, async (req: Request, res: Resp
         const { departament_id, name } = req.body as post
         if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
 
-        const exist: number | undefined = await db.get(postQueries.existByNameExceptId, [name])
+        const exist = await dataCache.postExistByName(name)
         if (exist) return res.status(409).json({ error: "Такая должность уже существует" })
 
         const result = await db.run(postQueries.create, [departament_id, name])
-        const newRow: post | undefined = await db.get(postQueries.getById, [result.lastID])
-        if (!newRow) return res.status(500).json({ message: "Новая должность была создана, но не была найдена" })
-        return res.status(201).json({ id: newRow.id, name: newRow.name, departament_id: newRow.departament_id })
+        dataCache.invalidatePosts()
+        broadcastEvent('posts.updated')
+        if (!result.lastID) {
+            return res.status(500).json({ message: "Новая должность была создана, но не была найдена" })
+        }
+        const post = await dataCache.getPostById(result.lastID)
+        if (!post) {
+            return res.status(500).json({ error: "Должность создана, но не найдена" })
+        }
+        return res.status(201).json(post)
     } catch (error: any) {
         return res.status(500).json({ error: error.message ?? 'Ошибка сервера' })
     }
@@ -871,18 +1062,26 @@ app.post('/api/posts', requireAuth, requireAdmin, async (req: Request, res: Resp
 
 app.delete('/api/posts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const exist: number | undefined = await db.get(postQueries.getById, [req.params.id])
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        const exist = await dataCache.getPostById(id)
 
-        if (!exist) return res.status(512).json({ error: "Не найдена должность с таким id" })
+        if (!exist) return res.status(404).json({ error: `Не найдена должность с id ${id}` })
 
-        const employee: Array<getEmployee> = await db.all(employeeQueries.getByPostId, [req.params.id])
+        const employees = await dataCache.getEmployees()
+        const deleted_employees = employees.filter(e => e.post_id === id)
 
-        await db.run(postQueries.remove, [req.params.id])
-        const existAfterDelete: number | undefined = await db.get(postQueries.getById, [req.params.id])
+        await db.run(postQueries.remove, [id])
+        dataCache.invalidateAll()
+        broadcastEvent('posts.updated')
+        broadcastEvent('employees.updated')
+        const existAfterDelete = await dataCache.getPostById(id)
 
         if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
 
-        return res.status(200).json({ message: `Должность с id ${req.params.id} был удален`, deleted_employee: employee })
+        return res.status(200).json({ message: `Должность с id ${id} была удалена`, deleted_employees })
     } catch (error: any) {
         return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
     }
