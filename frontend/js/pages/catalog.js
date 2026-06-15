@@ -202,22 +202,22 @@ function connectSSE() {
             if (message.type === 'departments.updated') {
                 console.log('🔄 Отделы обновлены, перезагружаем...');
                 photovers++
-                loadEmployees().then(
-                    () => populateDepartamentMenu().then(
-                        () => filter_and_search()
-                    )
-                )
+                const selectedDep = document.getElementById('departamentFilter').value
+                loadEmployees().then(() => {
+                    populateDepartamentFilter()
+                    populatePostFilter(selectedDep)
+                    filter_and_search()
+                })
             }
             
             if (message.type === 'posts.updated') {
                 console.log('🔄 Должности обновлены, перезагружаем...');
                 photovers++
                 const selectedDep = document.getElementById('departamentFilter').value
-                loadEmployees().then(
-                    () => populatePostMenu(selectedDep).then(
-                        () => filter_and_search()
-                    )
-                );
+                loadEmployees().then(() => {
+                    populatePostFilter(selectedDep)
+                    filter_and_search()
+                })
             }
             
             if (message.type === 'connected') {
