@@ -35,6 +35,7 @@ const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 let employees = [];
 let departamentsList = [];
 let postsList = [];
+let photovers = 1
 
 function populateDepartamentFilter() {
     const filter = document.getElementById('departamentFilter')
@@ -116,24 +117,36 @@ function renderCatalog(employeesList) {
 
     container.innerHTML = '';
     employeesList.forEach(emp => {
+        const avatarUrl = emp.avatar ? `${emp.avatar}?v=${photovers}` : 'img/bio.png'
         // ИСПОЛЬЗУЕМ ВАШИ КЛАССЫ ИЗ catalog.css
-        container.innerHTML += `
+        const cardHtml = `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="employee-card">
                     <div class="employee-photo">
-                        <img src="${emp.avatar || 'img/bio.png'}" alt="${emp.name}">
+                        <img src="${avatarUrl}" alt="${emp.name}">
                     </div>
                     <div class="employee-info">
                         <h5 class="employee-name">${emp.name}</h5>
                         <p class="employee-position">${emp.post}</p>
                         <p class="employee-department">${emp.departament}</p>
-                        <button class="btn btn-details">
-                            <a href="card.html?id=${emp.id}">Подробнее</a>
+                        </div>
+                        <button class="btn btn-details" data-id="${emp.id}">
+                            <a>Подробнее</a>
                         </button>
-                    </div>
                 </div>
             </div>
         `;
+        container.innerHTML += cardHtml;
+    });
+
+    // Добавляем обработчик событий после рендеринга всех карточек
+    document.querySelectorAll('.btn-details').forEach(button => {
+        button.addEventListener('click', (event) => {
+            const employeeId = event.target.dataset.id;
+            if (employeeId) {
+                window.location.href = `card.html?id=${employeeId}`;
+            }
+        });
     });
 }
 
@@ -161,9 +174,73 @@ function filter_and_search() {
     
 }
 
+let eventSource = null;
+
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
+                loadEmployees().then(() => {
+                    filter_and_search();
+                });
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
+                loadEmployees().then(
+                    () => populateDepartamentMenu().then(
+                        () => filter_and_search()
+                    )
+                )
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                photovers++
+                const selectedDep = document.getElementById('departamentFilter').value
+                loadEmployees().then(
+                    () => populatePostMenu(selectedDep).then(
+                        () => filter_and_search()
+                    )
+                );
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadEmployees();
     document.getElementById('departamentFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
+    connectSSE()
 });

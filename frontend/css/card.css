@@ -127,6 +127,12 @@
     padding: 1rem 1.5rem 1.5rem 1.5rem;
 }
 
+.card-footer:hover {
+    background-color: var(--black);
+    border-top: none;
+    color: var(--white);
+}
+
 /* Адаптив для карточки */
 @media (max-width: 768px) {
     .employee-name {
