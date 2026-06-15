@@ -50,6 +50,26 @@ body::-webkit-scrollbar {
     color: var(--accent-gold);
 }
 
+/* Стили для кнопок авторизации/выхода в навигации */
+.navbar-nav .nav-link.auth-btn,
+.navbar-nav .nav-link.logout-btn {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--accent-gold);
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 0;
+    text-align: center;
+}
+
+.navbar-nav .nav-link.auth-btn:hover,
+.navbar-nav .nav-link.logout-btn:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+    border-color: var(--accent-gold);
+}
+
+
 /* Бургер-меню (белый цвет) */
 .navbar-toggler {
     border-color: rgba(255, 255, 255, 0.5);
