@@ -120,7 +120,7 @@ function arrayBufferToBase64(buffer) {
                 loginForm.reset();
                 alert('Вход выполнен');
             } catch (err) {
-                alert('Ошибка сети при входе');
+                alert('Ошибка сети при входе'+err);
             }
         });
     }
