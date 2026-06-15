@@ -232,17 +232,22 @@ section h2::after {
 /* Адаптив для главной страницы */
 @media (max-width: 768px) {
     .hero-section {
-        min-height: 60vh;
-        padding: 2rem 0;
+        min-height: 25vh;
+        padding: 1rem 0;
     }
     
     .hero-section h1 {
-        font-size: 2rem;
-        letter-spacing: 2px;
+        font-size: 1rem;
+        letter-spacing: 1px;
     }
     
     .hero-section .lead {
         font-size: 1rem;
+    }
+
+    .hero-section .mx-auto {
+        font-size: 1rem;
+        color: var(--white);
     }
     
     .hero-section .btn {
@@ -252,12 +257,21 @@ section h2::after {
     }
     
     section h2 {
-        font-size: 1.5rem;
+        font-size: 1rem;
         margin-bottom: 2rem;
     }
     
     .stats-section .fs-1 {
         font-size: 1.8rem;
+    }
+    .advantages-section img {
+        width: 3px;
+        height: 3px;
+    }
+
+    .advantages-section .col-md-4 {
+        flex: 0 0 33.333%;
+        max-width: 33.333%;
     }
     
     .advantages-section,
@@ -270,25 +284,82 @@ section h2::after {
 
 @media (max-width: 576px) {
     .hero-section h1 {
-        font-size: 1.5rem;
+        font-size: 1rem;
+    }
+
+    .hero-section .lead {
+        font-size: 0.8rem;
+    }
+
+    .hero-section .mx-auto {
+        font-size: 0.8rem;
+        color: var(--white);
     }
     
     .hero-section .d-flex {
-        flex-direction: column;
+        flex-direction: row;           /* ← меняем column на row */
+        justify-content: center;       /* ← центрируем по горизонтали */
         gap: 1rem !important;
     }
     
     .hero-section .btn {
-        width: 100%;
+        width: 40%;
         max-width: 250px;
+        margin: 0 0;
+        font-size: 0.74rem;
+    }
+
+    .about-section p {
+        line-height: 1.5;
+        font-size: 0.8rem;
+        max-width: 750px;
         margin: 0 auto;
+    }
+
+    .about-section .fs-1 {
+        font-size: 1.2rem;
+    }
+
+    .about-section .small {
+        font-size: 0.6rem;
     }
     
     .about-section .d-flex {
         gap: 1.5rem !important;
+        
+    }
+
+    /* преимущества */
+
+    .advantages-section {
+        padding: 2rem 0;
     }
     
+    .advantages-section h4 {
+        font-size: 0.8rem;
+    }
+    
+    .advantages-section p {
+        font-size: 0.8rem;
+        max-width: 70%;
+    }
+    
+    .advantages-section img {
+        width: 40px !important;     
+        height: 40px !important;
+    }
+    
+    /* СТАТА */
+    
+    .stats-section .fs-1 {
+        font-size: 0.9rem;
+    }
+
+    .stats-section .small {
+    font-size: 0.65rem;
+}
     .stats-section .row {
         gap: 1.5rem 0;
     }
 }
+
