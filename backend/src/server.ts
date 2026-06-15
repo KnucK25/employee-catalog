@@ -62,8 +62,31 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 //Отдаём HTML/CSS/JS фронта
-app.use(express.static(path.join(__dirname, '../../frontend')));
+app.use('/css', express.static(path.join(__dirname, '../../frontend/css')));
 
+app.use('/js', express.static(path.join(__dirname, '../../frontend/js')));
+
+app.use('/img', express.static(path.join(__dirname, '../../frontend/img')));
+
+app.use(
+    '/assets',
+    express.static(path.join(__dirname, '../../frontend/assets'))
+);
+
+app.use(
+    '/css',
+    express.static(path.join(__dirname, '../../frontend/css'))
+);
+
+app.use(
+    '/js',
+    express.static(path.join(__dirname, '../../frontend/js'))
+);
+
+app.use(
+    '/img',
+    express.static(path.join(__dirname, '../../frontend/img'))
+);
 //Глобальная переменная для экземпляра БД
 let db: Database;
 
@@ -142,6 +165,57 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
     next();
 }
+
+function getCookieToken(req: Request): string | null {
+    const cookie = req.headers.cookie;
+
+    if (!cookie) {
+        return null;
+    }
+
+    const cookies = cookie.split(';').map(c => c.trim());
+
+    for (const item of cookies) {
+        const [name, value] = item.split('=');
+
+        if (name === 'authToken') {
+            return value;
+        }
+    }
+
+    return null;
+}
+
+function requirePageLevel(minLevel: number) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const token = getCookieToken(req);
+
+        if (!token) {
+            res.redirect('/');
+            return;
+        }
+
+        const session = sessions.get(token);
+
+        if (!session || session.expiresAt < Date.now()) {
+            if (token) {
+                sessions.delete(token);
+            }
+
+            res.clearCookie('authToken');
+            res.redirect('/');
+            return;
+        }
+
+        if (session.level < minLevel) {
+            res.redirect('/');
+            return;
+        }
+
+        next();
+    };
+}
+
 interface getEmployee {
     id: number,
     firstname: string,
@@ -526,12 +600,40 @@ app.get('/api/events', (req: Request, res: Response) => {
 });
 
 //Авторизация
+app.get('/profile.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/profile.html'));
+});
+
+app.get('/', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/index.html', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/catalog.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/catalog.html'));
+});
+
+app.get('/card.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/card.html'));
+});
+
+app.get('/adminPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/adminPanel.html'));
+});
+
+app.get('/accessPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/accessPanel.html'));
+});
 
 app.get('/api/auth/public-key', (req: Request, res: Response) => {
     res.json({
         publicKey
     });
 });
+
 
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
@@ -579,6 +681,12 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             employeeId: account.employee_id,
             level,
             expiresAt: Date.now() + SESSION_TTL_MS
+        });
+
+        res.cookie('authToken', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: SESSION_TTL_MS
         });
 
         res.json({
@@ -664,6 +772,62 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
         });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка регистрации' });
+    }
+});
+
+// Маршруты аккаунтов
+
+app.get('/api/accounts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const rows = await db.all(`
+            SELECT
+                a.id,
+                a.login,
+                a.employee_id,
+                COALESCE(r.level, 1) as access_level
+            FROM account a
+            LEFT JOIN root r
+            ON r.employee_id = a.employee_id
+            ORDER BY a.id
+        `);
+
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({
+            error: 'Ошибка получения аккаунтов'
+        });
+    }
+});
+
+app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+
+        res.json({
+            message: 'Редактирование аккаунтов пока отключено'
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: 'Ошибка обновления аккаунта'
+        });
+
+    }
+});
+
+app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+
+        res.json({
+            message: 'Удаление аккаунтов пока отключено'
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: 'Ошибка удаления аккаунта'
+        });
+
     }
 });
 
