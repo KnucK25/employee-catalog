@@ -35,6 +35,7 @@ const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
 let employees = [];
 let departamentsList = [];
 let postsList = [];
+let photovers = 1
 
 function populateDepartamentFilter() {
     const filter = document.getElementById('departamentFilter')
@@ -116,12 +117,13 @@ function renderCatalog(employeesList) {
 
     container.innerHTML = '';
     employeesList.forEach(emp => {
+        const avatarUrl = emp.avatar ? `${emp.avatar}?v=${photovers}` : 'img/bio.png'
         // ИСПОЛЬЗУЕМ ВАШИ КЛАССЫ ИЗ catalog.css
         const cardHtml = `
             <div class="col-lg-4 col-md-6 mb-4">
                 <div class="employee-card">
                     <div class="employee-photo">
-                        <img src="${emp.avatar || 'img/bio.png'}" alt="${emp.name}">
+                        <img src="${avatarUrl}" alt="${emp.name}">
                     </div>
                     <div class="employee-info">
                         <h5 class="employee-name">${emp.name}</h5>
@@ -172,6 +174,8 @@ function filter_and_search() {
     
 }
 
+let eventSource = null;
+
 function connectSSE() {
     if (eventSource) {
         eventSource.close();
@@ -191,6 +195,7 @@ function connectSSE() {
             // Обрабатываем разные типы событий
             if (message.type === 'employees.updated') {
                 console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
                 loadEmployees().then(() => {
                     filter_and_search();
                 });
@@ -198,6 +203,7 @@ function connectSSE() {
             
             if (message.type === 'departments.updated') {
                 console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
                 loadEmployees().then(
                     () => populateDepartamentMenu().then(
                         () => filter_and_search()
@@ -207,6 +213,7 @@ function connectSSE() {
             
             if (message.type === 'posts.updated') {
                 console.log('🔄 Должности обновлены, перезагружаем...');
+                photovers++
                 const selectedDep = document.getElementById('departamentFilter').value
                 loadEmployees().then(
                     () => populatePostMenu(selectedDep).then(
@@ -235,4 +242,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('departamentFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
+    connectSSE()
 });
