@@ -37,7 +37,7 @@ function renderCard(employee) {
 
     const positionEl = document.querySelector('.employee-name + p');
     if (positionEl) {
-        positionEl.textContent = employee.position;
+        positionEl.textContent = employee.post;
     }
 
     const emailValue = document.querySelector('.info-box .col-sm-6:first-child .info-value');
@@ -103,7 +103,6 @@ function connectSSE() {
             
             if (message.type === 'posts.updated') {
                 console.log('🔄 Должности обновлены, перезагружаем...');
-                const selectedDep = document.getElementById('departamentFilter').value
                 photovers++
                 const id = getEmployeeIdFromURL()
                 const employee = await loadEmployeeById(id)
