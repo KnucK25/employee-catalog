@@ -113,20 +113,17 @@ function arrayBufferToBase64(buffer) {
                      return;
                  }
 
-                 localStorage.setItem('authToken', data.token);
-                 localStorage.setItem('level', data.level);
-                 const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
-                 if (modal) modal.hide();
-                 loginForm.reset();
-                 alert('Вход выполнен');
-             } catch
-
-
-(err) {
-                 alert('Ошибка сети при входе');
-             }
-         });
-     }
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                if (modal) modal.hide();
+                loginForm.reset();
+                alert('Вход выполнен');
+            } catch (err) {
+                alert('Ошибка сети при входе'+err);
+            }
+        });
+    }
 
     // Обработка авторизации (без шифрования) ВРЕМЕННО
    /* if (loginForm) {

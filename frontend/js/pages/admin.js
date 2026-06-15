@@ -12,6 +12,7 @@ let employees = [];
 let departamentsList = [];
 let postsList = [];
 let selectedDepartament = null
+let photovers = 1
 
 function getAuthHeaders(contentType = 'application/json') {
     const token = localStorage.getItem('authToken');
@@ -107,10 +108,10 @@ function createEmployeeRow(employee) {
     row.setAttribute('data-department', employee.departament);
     row.setAttribute('data-name', employee.name.toLowerCase());
     row.setAttribute('data-position', employee.post.toLowerCase());
-
+    const avatarUrl =employee.avatar ? `${employee.avatar}?v=${photovers}` : 'img/bio.png'
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0" data-label="Сотрудник">
-            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3" style="width: 50px; height: 60px; object-fit: cover;">
+            <img src="${avatarUrl}" class="admin-employee-photo me-3" style="width: 50px; height: 60px; object-fit: cover;">
             <div>
                 <div class="admin-employee-name">${employee.name}</div>
                 <div class="admin-employee-text">ID: ${String(employee.id).padStart(4, '0')}</div>
@@ -211,8 +212,69 @@ async function loadEmployees() {
                 </div>`;
         }
     }
-}
+}// Подключение к SSE для получения уведомлений об изменениях
+let eventSource = null;
 
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
+                loadEmployees().then(() => {
+                    filter_and_search();
+                });
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
+                loadEmployees().then(
+                    () => populateDepartamentMenu().then(
+                        () => filter_and_search()
+                    )
+                )
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                const selectedDep = document.getElementById('departamentFilter').value
+                photovers++
+                loadEmployees().then(
+                    () => populatePostMenu(selectedDep).then(
+                        () => filter_and_search()
+                    )
+                );
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
+}
 
 //Первая отрисовка страницы и слушатели фильтров + поиска
 document.addEventListener('DOMContentLoaded', function() {
@@ -221,6 +283,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('departamentFilter').addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
+    connectSSE();
 });
 //---------------------------------------------------------------------------------------------------------
 
@@ -387,7 +450,7 @@ async function editEmployee(employeeId) {
     // Показываем текущее фото, если есть
     const photoImg = document.getElementById('currentPhotoImg');
     if (employee.avatar && employee.avatar !== 'img/bio.png') {
-        photoImg.src = employee.avatar;
+        photoImg.src = `${employee.avatar}?v=${photovers}`;
         photoImg.style.display = 'block';
     } else {
         photoImg.style.display = 'none';
