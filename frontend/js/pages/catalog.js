@@ -129,10 +129,8 @@ function renderCatalog(employeesList) {
                         <h5 class="employee-name">${emp.name}</h5>
                         <p class="employee-position">${emp.post}</p>
                         <p class="employee-department">${emp.departament}</p>
-                        </div>
-                        <button class="btn btn-details" data-id="${emp.id}">
-                            <a>Подробнее</a>
-                        </button>
+                        <a href="card.html?id=${emp.id}" class="btn btn-details">Подробнее</a>
+                    </div>
                 </div>
             </div>
         `;
