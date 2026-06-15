@@ -158,6 +158,64 @@ function filter_and_search() {
     
 }
 
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                loadEmployees().then(() => {
+                    filter_and_search();
+                });
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                loadEmployees().then(
+                    () => populateDepartamentMenu().then(
+                        () => filter_and_search()
+                    )
+                )
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                const selectedDep = document.getElementById('departamentFilter').value
+                loadEmployees().then(
+                    () => populatePostMenu(selectedDep).then(
+                        () => filter_and_search()
+                    )
+                );
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadEmployees();
     document.getElementById('departamentFilter')?.addEventListener('change', filter_and_search);
