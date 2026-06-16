@@ -32,7 +32,7 @@
 // }
 
 
-
+/*
 
 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 const token = localStorage.getItem('authToken');
@@ -70,3 +70,5 @@ if (!token || level === 0) {
         window.location.href = 'index.html';
     }
 }
+
+*/

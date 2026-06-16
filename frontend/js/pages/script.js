@@ -72,18 +72,6 @@ function arrayBufferToBase64(buffer) {
     return btoa(binary);
 }
 
-<<<<<<< HEAD
-    // Показать форму регистрации
-    if (showRegisterLink) {
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-            modalTitle.textContent = 'Регистрация';
-            // Вам также нужно будет добавить showRegisterLink в HTML, если он еще не добавлен
-            // Пример: <a href="#" id="showRegisterLink">Зарегистрироваться</a>
-        });
-=======
 // Функция для отображения сообщения об ошибке в модальном окне
 function showAuthError(message, details = null) {
     const existingError = document.querySelector('#loginForm .auth-error');
@@ -102,7 +90,6 @@ function showAuthError(message, details = null) {
         detailsSpan.style.cssText = 'font-size: 0.75rem; margin-top: 0.3rem; opacity: 0.8;';
         detailsSpan.textContent = details;
         errorDiv.appendChild(detailsSpan);
->>>>>>> origin/main
     }
     
     const loginForm = document.getElementById('loginForm');
@@ -145,19 +132,53 @@ async function checkServerStatus() {
     }
 }
 
-<<<<<<< HEAD
-    // Обработка авторизации
+// Обработка авторизации ЗАГЛУШКА
     if (loginForm) {
-         loginForm.addEventListener('submit', async (e) => {
-             e.preventDefault();
-             const login = document.getElementById('loginEmail').value;
-             const password = document.getElementById('loginPassword').value;
-=======
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const login = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!login || !password) { alert('Заполните все поля'); return; }
+
+            try {
+                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+
+                const encryptedPassword = await encryptPassword(password);
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, encryptedPassword })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Ошибка входа');
+                    return;
+                }
+
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                if (modal) modal.hide();
+                loginForm.reset();
+                alert('Вход выполнен');
+
+                // --- ДОБАВЛЕНО: Переход на страницу profile.html после успешного входа ---
+                window.location.href = 'profile.html';
+
+            } catch (err) {
+                alert('Ошибка сети при входе');
+            }
+        });
+    }
+
+/*
 // Обработка авторизации
 const loginForm = document.getElementById('loginForm');
 const loginEmail = document.getElementById('loginEmail');
 const loginPassword = document.getElementById('loginPassword');
->>>>>>> origin/main
 
 if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
@@ -229,35 +250,10 @@ if (loginForm) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ login, encryptedPassword })
                 });
-<<<<<<< HEAD
-
-                const data = await res.json();
-
-                if (!res.ok) {
-                    alert(data.error || 'Ошибка входа');
-                    return;
-                }
-
-                localStorage.setItem('authToken', data.token);
-                localStorage.setItem('level', data.level);
-                
-                const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
-                if (modal) modal.hide();
-                loginForm.reset();
-                alert('Вход выполнен');
-
-                // --- ДОБАВЛЕНО: Переход на страницу profile.html после успешного входа ---
-                window.location.href = 'profile.html';
-
-            } catch (err) {
-                console.error('Ошибка:', err);
-                alert('Ошибка сети при входе');
-=======
             } catch (fetchErr) {
                 console.error('Ошибка сети:', fetchErr);
                 showAuthError('Нет соединения с сервером', 'Проверьте интернет-соединение и запущен ли сервер');
                 return;
->>>>>>> origin/main
             }
             
             // ОБРАБОТКА ОТВЕТА 
@@ -323,6 +319,8 @@ if (loginForm) {
     });
 }
 
+*/
+
 // Очищаем поля и сообщения при открытии модального окна
 document.addEventListener('DOMContentLoaded', function() {
     const authModal = document.getElementById('authModal');
@@ -340,38 +338,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТОКЕНА
 // ========================================
 
-<<<<<<< HEAD
-    // Обработка регистрации (без изменений)
-    if (registerForm) {
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const login = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const confirm = document.getElementById('regConfirmPassword').value;
-
-            if (!login || !password || !confirm) { alert('Заполните все поля'); return; }
-            if (password !== confirm) { alert('Пароли не совпадают'); return; }
-
-            try {
-                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
-                const res = await fetch(`${API_BASE}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ login, password })
-                });
-
-                const data = await res.json();
-                if (!res.ok) { alert(data.error || 'Ошибка регистрации'); return; }
-
-                alert('Аккаунт создан. Теперь войдите.');
-                registerForm.reset();
-                registerForm.style.display = 'none';
-                loginForm.style.display = 'block';
-                modalTitle.textContent = 'Вход в аккаунт';
-            } catch (err) {
-                alert('Ошибка сети при регистрации');
-            }
-=======
 document.addEventListener('DOMContentLoaded', async function() {
     const token = localStorage.getItem('authToken');
     
@@ -384,7 +350,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         const res = await fetch(`${API_BASE}/api/auth/me`, {
             headers: { 'Authorization': `Bearer ${token}` },
             credentials: 'include'
->>>>>>> origin/main
         });
         
         // Если токен невалиден — очищаем localStorage
