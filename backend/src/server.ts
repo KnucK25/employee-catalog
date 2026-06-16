@@ -1428,13 +1428,4 @@ async function startServer() {
     })
 }
 
-app.use('/css', express.static(path.join(__dirname, '../../frontend/css')));
-app.use('/js', express.static(path.join(__dirname, '../../frontend/js')));
-app.use('/img', express.static(path.join(__dirname, '../../frontend/img')));
-app.use('/assets', express.static(path.join(__dirname, '../../frontend/assets')));
-
-app.use((req: Request, res: Response) => {
-    res.status(404).sendFile(path.join(__dirname, '../../frontend/notFound.html'));
-});
-
 startServer().catch(console.error)
