@@ -1129,3 +1129,39 @@ async function createAccountFromAdmin() {
         console.error(error);
     }
 }
+
+function checkAccessAndRedirect() {
+    const level = Number(localStorage.getItem('level') || 0);
+    
+    if (level < 3) {
+        // Показываем модальное окно о недостатке прав
+        const modalContainer = document.createElement('div');
+        modalContainer.className = 'modal fade';
+        modalContainer.id = 'accessDeniedModal';
+        modalContainer.setAttribute('tabindex', '-1');
+        modalContainer.setAttribute('aria-hidden', 'true');
+        modalContainer.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Доступ запрещён</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p class="mb-3">Страница "Права доступа" доступна только администраторам.</p>
+                        <p class="text-muted small">Обратитесь к администратору для получения доступа.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalContainer);
+        const modal = new bootstrap.Modal(modalContainer);
+        modal.show();
+        modalContainer.addEventListener('hidden.bs.modal', () => modalContainer.remove());
+    } else {
+        window.location.href = 'accessPanel.html';
+    }
+}

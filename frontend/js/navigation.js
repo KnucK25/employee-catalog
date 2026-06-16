@@ -5,7 +5,8 @@ function updateNavigation() {
     const navList = document.querySelector('.navbar-nav.ms-auto');
     if (navList) {
         const isAuth = token && level > 0;
-        const isAdmin = level >= 2;
+        const isHR = level >= 2;          
+        const isSuperAdmin = level >= 3;  
         
         navList.innerHTML = '';
         
@@ -15,8 +16,12 @@ function updateNavigation() {
             addNavItem(navList, 'Каталог сотрудников', 'catalog.html');
         }
         
-        if (isAdmin) {
+        if (isHR) {
             addNavItem(navList, 'Админ панель', 'adminPanel.html');
+        }
+        
+        if (isSuperAdmin) {
+            addNavItem(navList, 'Права доступа', 'accessPanel.html');
         }
         
         if (isAuth) {
