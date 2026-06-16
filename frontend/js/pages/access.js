@@ -191,12 +191,25 @@ function confirmDeleteModal(accountId, accountName) {
 }
 
 async function performDeleteAccount(accountId) {
-    // Закрываем модальное окно
+    const currentEmployeeId = localStorage.getItem('employeeId');
+    const account = allAccountsData.find(acc => acc.id === accountId);
+    if (account && account.employee_id === Number(currentEmployeeId)) {
+        const errorContainer = document.getElementById('accessContainer');
+        if (errorContainer) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-warning mt-3';
+            errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+            errorDiv.textContent = 'Вы не можете удалить свой собственный аккаунт';
+            errorContainer.prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
+        return;
+    }
+    
     const modalElement = document.getElementById(`confirmDeleteModal_${accountId}`);
     if (modalElement) {
         const modal = bootstrap.Modal.getInstance(modalElement);
         if (modal) modal.hide();
-        // Удаляем из DOM после закрытия
         setTimeout(() => {
             if (modalElement.parentNode) modalElement.remove();
         }, 300);
