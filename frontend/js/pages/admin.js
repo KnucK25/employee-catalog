@@ -425,7 +425,7 @@ async function saveEmployee(employeeId) {
         alert('Логин не может быть пустым');
         return;
     }
-
+}
 // Функция, которая будет вызвана после подтверждения в модальном окне
 async function performDeleteAction(employeeId) {
     try {
