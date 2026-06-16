@@ -387,31 +387,37 @@ function confirmDeleteModal(employeeId) {
                 </div>
             </div>
         </div>
+        <div class="col-md-6 mb-3 mb-md-0">
+            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Логин">
+            <input type="password" class="form-control form-control-sm border-light edit-password" placeholder="${passwordPlaceholder}">
+        </div>
+        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+            <button type="button" class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${employeeId})" title="Отмена">✕</button>
+        </div>
     `;
-
-    // Добавляем модальное окно в DOM
-    document.body.appendChild(modalContainer);
-
-    // Создаем экземпляр модального окна Bootstrap
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
 }
 
+// Сохранение изменений
+async function saveEmployee(employeeId) {
+    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (!row) return;
+
+    const login = row.querySelector('.edit-login').value.trim();
+    const password = row.querySelector('.edit-password').value;
+
+    if (!login) {
+        alert('Логин не может быть пустым');
+        return;
+    }
 
 // Функция, которая будет вызвана после подтверждения в модальном окне
 async function performDeleteAction(employeeId) {
     try {
-        // Закрываем модальное окно подтверждения
-        const modalElement = document.getElementById(`confirmDeleteModal_${employeeId}`);
-        if (modalElement) {
-            bootstrap.Modal.getInstance(modalElement).hide();
-            modalElement.remove(); // Удаляем модальное окно из DOM после закрытия
-        }
-
-        // Выполняем фактическое удаление
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, password: password || undefined })
         });
         if (res.status === 401) {
             alert('Сессия истекла. Войдите снова.');
@@ -425,10 +431,22 @@ async function performDeleteAction(employeeId) {
         return; // Прерываем дальнейшее выполнение, если произошла ошибка
     }
 
-    // Удаляем строку из таблицы
-    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
-    if (row) {
-        row.remove();
+    editingEmployeeId = null;
+    renderEmployees();
+    console.log(`Аккаунт сотрудника ${employeeId} обновлён`);
+}
+
+// Отмена редактирования
+function cancelEdit(employeeId) {
+    editingEmployeeId = null; // ✅ Сбрасываем флаг
+    renderEmployees();
+}
+
+function renderEmployees() {
+    const container = document.getElementById('employeesContainer');
+    if (!container) {
+        console.error('Контейнер employeesContainer НЕ найден!');
+        return;
     }
 
     // Удаляем сотрудника из массива employees
@@ -1406,4 +1424,5 @@ function showMessageModal(title, message, type = 'info', callback = null) {
             callback();
         }
     });
+}
 }

@@ -845,59 +845,62 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
     }
 });
 
-// Маршруты аккаунтов
+//Маршруты аккаунтов
 
-app.get('/api/accounts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+app.get('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(`
-            SELECT
-                a.id,
-                a.login,
-                a.employee_id,
-                COALESCE(r.level, 1) as access_level
-            FROM account a
-            LEFT JOIN root r
-            ON r.employee_id = a.employee_id
-            ORDER BY a.id
-        `);
-
-        res.json(rows);
+        const row = await db.get(accountQueries.getByEmployeeId, [req.params.employeeId]);
+        if (!row) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
+        res.json({ login: row.login });
     } catch (err) {
-        res.status(500).json({
-            error: 'Ошибка получения аккаунтов'
-        });
+        res.status(500).json({ error: 'Ошибка получения аккаунта' });
     }
 });
 
-app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+app.put('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
     try {
+        const { login, password } = req.body;
+        const employeeId = parseInt(req.params.employeeId as string);
 
-        res.json({
-            message: 'Редактирование аккаунтов пока отключено'
-        });
+        const account = await db.get(accountQueries.getByEmployeeId, [employeeId]);
 
-    } catch (err) {
+        if (!account) {
+            // Аккаунта нет — создаём
+            if (!login || !password) {
+                res.status(400).json({ error: 'Для создания аккаунта нужны логин и пароль' });
+                return;
+            }
+            const existing = await db.get(accountQueries.getByLogin, [login]);
+            if (existing) {
+                res.status(409).json({ error: 'Логин уже занят' });
+                return;
+            }
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = hashPassword(password, salt);
+            await db.run(accountQueries.create, [login, hash, salt, employeeId]);
+        } else {
+            // Аккаунт есть — обновляем только заполненные поля
+            if (login) {
+                const existing = await db.get(accountQueries.getByLogin, [login]);
+                if (existing && existing.employee_id !== employeeId) {
+                    res.status(409).json({ error: 'Логин уже занят' });
+                    return;
+                }
+                await db.run(accountQueries.updateLogin, [login, employeeId]);
+            }
+            if (password) {
+                const salt = crypto.randomBytes(16).toString('hex');
+                const hash = hashPassword(password, salt);
+                await db.run(accountQueries.updatePassword, [hash, salt, account.id]);
+            }
+        }
 
-        res.status(500).json({
-            error: 'Ошибка обновления аккаунта'
-        });
-
-    }
-});
-
-app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    try {
-
-        res.json({
-            message: 'Удаление аккаунтов пока отключено'
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            error: 'Ошибка удаления аккаунта'
-        });
-
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message ?? 'Ошибка обновления аккаунта' });
     }
 });
 
