@@ -17,22 +17,6 @@ import { rootQueries } from './database/queries/rootQueries';
 const app = express();
 app.use(express.json());
 
-// Хранилище подключённых SSE-клиентов
-const sseClients = new Set<Response>();
-
-// Функция для отправки события всем подключённым клиентам
-function broadcastEvent(eventType: string, data?: any) {
-    const message = {
-        type: eventType,
-        data: data || {},
-        timestamp: Date.now()
-    };
-
-    sseClients.forEach(client => {
-        client.write(`data: ${JSON.stringify(message)}\n\n`);
-    });
-}
-
 const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -578,24 +562,81 @@ async function seedDB() {
 }
 
 // SSE эндпоинт для уведомлений клиентов
+// Хранилище подключённых SSE-клиентов
+const sseClients = new Set<Response>();
+
+// ✅ Функция отправки события с проверкой активности клиентов
+function broadcastEvent(eventType: string, data?: any) {
+    const message = {
+        type: eventType,
+        data: data || {},
+        timestamp: Date.now()
+    };
+    const payload = `data: ${JSON.stringify(message)}\n\n`;
+
+    sseClients.forEach(client => {
+        try {
+            // Проверяем, что соединение ещё открыто
+            if (!client.writable) {
+                sseClients.delete(client);
+                return;
+            }
+            client.write(payload);
+        } catch (err) {
+            // Если запись упала — удаляем мёртвого клиента
+            console.log('🗑️ Удаляем мёртвого SSE-клиента');
+            sseClients.delete(client);
+        }
+    });
+}
+
+// ✅ Периодический пинг каждые 15 секунд для обнаружения мёртвых соединений
+setInterval(() => {
+    sseClients.forEach(client => {
+        try {
+            // SSE-комментарий (начинается с ":") — игнорируется клиентом, но поддерживает TCP-соединение
+            client.write(`: heartbeat\n\n`);
+        } catch (err) {
+            console.log('🗑️ Удаляем мёртвого клиента (heartbeat failed)');
+            sseClients.delete(client);
+        }
+    });
+}, 15000);
+
+// ✅ SSE эндпоинт с корректной очисткой
 app.get('/api/events', (req: Request, res: Response) => {
-    // Устанавливаем заголовки для SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Accel-Buffering', 'no'); // Для Nginx/Railway прокси
 
-    // Добавляем клиент в список
     sseClients.add(res);
-    console.log(`SSE клиент подключён. Всего клиентов: ${sseClients.size}`);
+    console.log(`✅ SSE клиент подключён. Всего: ${sseClients.size}`);
 
-    // Отправляем приветственное событие
+    // Отправляем приветствие
     res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
 
-    // Удаляем клиент при отключении
+    // Локальный heartbeat для этого клиента
+    const heartbeat = setInterval(() => {
+        try {
+            res.write(`: ping\n\n`);
+        } catch {
+            clearInterval(heartbeat);
+        }
+    }, 15000);
+
+    // ✅ При закрытии соединения — очищаем
     req.on('close', () => {
+        clearInterval(heartbeat);
         sseClients.delete(res);
-        console.log(`SSE клиент отключён. Всего клиентов: ${sseClients.size}`);
+        console.log(`❌ SSE клиент отключён. Осталось: ${sseClients.size}`);
+    });
+
+    // На всякий случай — обработчик ошибки
+    req.on('error', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
     });
 });
 

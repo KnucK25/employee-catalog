@@ -285,6 +285,32 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
     connectSSE();
 });
+
+// Принудительно закрываем SSE при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        console.log('🔌 Закрываем SSE при уходе со страницы');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Также закрываем при скрытии вкладки (на всякий случай)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && eventSource) {
+        console.log('👁️ Вкладка скрыта, закрываем SSE');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Переподключаемся, когда вкладка снова стала активной
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !eventSource) {
+        console.log('👁️ Вкладка активна, переподключаем SSE');
+        connectSSE();
+    }
+});
 //---------------------------------------------------------------------------------------------------------
 
 async function deleteEmployee(employeeId) {
