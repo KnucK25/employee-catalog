@@ -132,6 +132,49 @@ async function checkServerStatus() {
     }
 }
 
+// Обработка авторизации ЗАГЛУШКА
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const login = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!login || !password) { alert('Заполните все поля'); return; }
+
+            try {
+                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+
+                const encryptedPassword = await encryptPassword(password);
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ login, encryptedPassword })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    alert(data.error || 'Ошибка входа');
+                    return;
+                }
+
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('level', data.level);
+                const modal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+                if (modal) modal.hide();
+                loginForm.reset();
+                alert('Вход выполнен');
+
+                // --- ДОБАВЛЕНО: Переход на страницу profile.html после успешного входа ---
+                window.location.href = 'profile.html';
+
+            } catch (err) {
+                alert('Ошибка сети при входе');
+            }
+        });
+    }
+
+/*
 // Обработка авторизации
 const loginForm = document.getElementById('loginForm');
 const loginEmail = document.getElementById('loginEmail');
@@ -275,6 +318,8 @@ if (loginForm) {
         }
     });
 }
+
+*/
 
 // Очищаем поля и сообщения при открытии модального окна
 document.addEventListener('DOMContentLoaded', function() {
