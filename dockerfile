@@ -16,7 +16,7 @@ WORKDIR /app/backend
 
 # Устанавливаем ВСЕ зависимости (включая dev для TypeScript)
 # И пересобираем sqlite3 из исходников
-RUN npm ci && npm rebuild sqlite3 --build-from-source
+RUN npm i && npm rebuild sqlite3 --build-from-source
 
 WORKDIR /app
 
