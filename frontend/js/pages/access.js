@@ -405,12 +405,20 @@ async function createAccount() {
     if (hasError) return;
     
     try {
+        let encryptedPassword;
+        try {
+            encryptedPassword = await encryptPassword(password);
+        } catch (err) {
+            showFieldError(passwordInput, 'Ошибка шифрования пароля');
+            return;
+        }
+
         const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({
                 login: login,
-                encryptedPassword: password,
+                encryptedPassword: encryptedPassword,
                 employee_id: parseInt(employeeId),
                 level: level
             })
