@@ -127,14 +127,30 @@ async function performDeleteAccount(accountId) {
         
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка удаления: ' + (error.error || 'Неизвестная ошибка'));
+            const errorContainer = document.getElementById('accessContainer');
+            if (errorContainer) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+                errorDiv.textContent = 'Ошибка удаления: ' + (error.error || 'Неизвестная ошибка');
+                errorContainer.prepend(errorDiv);
+                setTimeout(() => errorDiv.remove(), 3000);
+            }
             return;
         }
         
         await loadAccessData();
     } catch (err) {
         console.error('Ошибка удаления:', err);
-        alert('Ошибка сети при удалении');
+        const errorContainer = document.getElementById('accessContainer');
+        if (errorContainer) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+            errorDiv.textContent = 'Ошибка сети при удалении';
+            errorContainer.prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
     }
 }
 
@@ -405,12 +421,20 @@ async function createAccount() {
     if (hasError) return;
     
     try {
+        let encryptedPassword;
+        try {
+            encryptedPassword = await encryptPassword(password);
+        } catch (err) {
+            showFieldError(passwordInput, 'Ошибка шифрования пароля');
+            return;
+        }
+
         const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({
                 login: login,
-                encryptedPassword: password,
+                encryptedPassword: encryptedPassword,
                 employee_id: parseInt(employeeId),
                 level: level
             })
