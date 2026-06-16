@@ -433,3 +433,33 @@
     font-family: monospace;
     letter-spacing: 2px;
 }
+
+/* Квадратная кнопка удаления в модальном окне */
+.btn-danger-square {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-danger-square:hover {
+    background-color: #b02a37;
+    color: white;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+}

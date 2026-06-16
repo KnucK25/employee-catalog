@@ -363,3 +363,87 @@ section h2::after {
     }
 }
 
+/* Модальное окно авторизации */
+
+#authModal .modal-header {
+    background-color: var(--black);
+    border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+#authModal .modal-title {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+#authModal .btn-close-white {
+    filter: invert(1);
+}
+
+#authModal .modal-body {
+    padding: 1.5rem;
+}
+
+#authModal .form-label {
+    color: var(--black);
+    font-weight: 500;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
+}
+
+#authModal .form-control {
+    border-radius: 0;
+    border: 1px solid #ddd;
+    padding: 0.7rem 1rem;
+}
+
+#authModal .form-control:focus {
+    border-color: var(--accent-gold);
+    box-shadow: none;
+    outline: none;
+}
+
+#authModal .btn-auth {
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 0;
+    padding: 0.7rem 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid var(--black);
+    font-size: 0.9rem;
+}
+
+#authModal .btn-auth:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+    border-color: var(--accent-gold);
+}
+
+#authModal hr {
+    opacity: 0.5;
+    margin: 1rem 0;
+}
+
+/* Модальное окно для сообщения о необходимости авторизации */
+#authRequiredModal .modal-header {
+    background-color: var(--black);
+    border-bottom: none;
+}
+
+#authRequiredModal .btn {
+    border-radius: 0px;
+}
+
+#authRequiredModal .modal-title {
+    color: var(--accent-gold);
+}
+
+#authRequiredModal .btn-dark {
+    background-color: var(--black);
+}
+
+#authRequiredModal .btn-dark:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+}
