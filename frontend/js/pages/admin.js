@@ -187,7 +187,12 @@ async function loadEmployees() {
             fetch(`${API_BASE}/api/departaments`),
             fetch(`${API_BASE}/api/posts`)
         ]);
-        
+        if (employeesRes.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+        }
         if (!employeesRes.ok) throw new Error('Ошибка сервера');
         
         // Парсим все ответы
@@ -315,10 +320,16 @@ document.addEventListener('visibilitychange', () => {
 
 async function deleteEmployee(employeeId) {
     try {
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-    });
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+        });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
     }
@@ -398,10 +409,16 @@ async function performDeleteAction(employeeId) {
         }
 
         // Выполняем фактическое удаление
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
         alert('Произошла ошибка при удалении сотрудника.');
@@ -567,6 +584,12 @@ async function saveEmployeeFromModal() {
                 headers: getAuthHeaders(),
                 body: json_body
             });
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
 
             const data = await res.json()
         
@@ -602,6 +625,12 @@ async function saveEmployeeFromModal() {
 },
                 body:blob
             })
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
             const data = await res.json()
             if (!res.ok) {
                 alert("Ошибка " + res.status + ` ${data.error}`)
@@ -810,6 +839,13 @@ async function addDepartment() {
             body: JSON.stringify({ name })
         });
 
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
          * @type {({error:string } | {id:number, name:string })}
          */
@@ -835,9 +871,16 @@ async function addDepartment() {
 async function deleteDepartment(id) {
     try {
         const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         /**
         * @typedef {Object} PostItem
@@ -908,6 +951,12 @@ async function addPost() {
             departament_id: parseInt(departamentId)
         })
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
         /**
          * @type {({error:string}|{id:number, name:string, departament_id:number})}
          */
@@ -935,9 +984,17 @@ async function addPost() {
 async function deletePost(id) {
     try {
         const res = await fetch(`${API_BASE}/api/posts/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
         * @typedef {Object} EmployeeItem
         * @property {number} id
@@ -996,6 +1053,13 @@ async function addEmptyEmployee() {
             headers: getAuthHeaders(),
             body: JSON.stringify(emptyEmployee)
         });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         if (!res.ok) {
             const data = await res.json();
@@ -1057,6 +1121,13 @@ async function createAccountFromAdmin() {
                 level
             })
         });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         const data = await res.json();
 

@@ -675,7 +675,36 @@ app.get('/api/auth/public-key', (req: Request, res: Response) => {
     });
 });
 
+// Проверка актуальности токена
+app.get('/api/auth/me', (req: Request, res: Response) => {
+    // Пробуем получить токен из Authorization header
+    let token: string | null | undefined = req.headers['authorization']?.replace('Bearer ', '');
 
+    // Если нет — пробуем из cookie
+    if (!token) {
+        token = getCookieToken(req);
+    }
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) sessions.delete(token);
+        res.clearCookie('authToken');  // Очищаем cookie при истечении
+        res.status(401).json({ error: 'Сессия истекла' });
+        return;
+    }
+
+    res.json({
+        employeeId: session.employeeId,
+        level: session.level,
+        expiresAt: session.expiresAt
+    });
+});
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
