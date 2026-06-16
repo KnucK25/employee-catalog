@@ -1129,3 +1129,4 @@ async function createAccountFromAdmin() {
         console.error(error);
     }
 }
+}
