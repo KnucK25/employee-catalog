@@ -46,7 +46,7 @@ function showAuthSuccess(message, modal, form) {
         if (modal) modal.hide();
         form.reset();
         window.location.href = 'index.html';
-    }, 3000);
+    }, 1500);
 }
 
 // Функция для проверки состояния сервера
@@ -102,11 +102,11 @@ if (loginForm) {
             return emailRegex.test(email);
         }
 
-        if (!isValidEmail(login)) {
-            showAuthError('Неверный формат email');
-            return;
+        if (!login) { 
+            showAuthError('Введите логин'); 
+            return; 
         }
-        
+
         //  ПРОВЕРКА СЕРВЕРА 
         const serverAvailable = await checkServerStatus();
         if (!serverAvailable) {

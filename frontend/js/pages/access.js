@@ -127,14 +127,30 @@ async function performDeleteAccount(accountId) {
         
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка удаления: ' + (error.error || 'Неизвестная ошибка'));
+            const errorContainer = document.getElementById('accessContainer');
+            if (errorContainer) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+                errorDiv.textContent = 'Ошибка удаления: ' + (error.error || 'Неизвестная ошибка');
+                errorContainer.prepend(errorDiv);
+                setTimeout(() => errorDiv.remove(), 3000);
+            }
             return;
         }
         
         await loadAccessData();
     } catch (err) {
         console.error('Ошибка удаления:', err);
-        alert('Ошибка сети при удалении');
+        const errorContainer = document.getElementById('accessContainer');
+        if (errorContainer) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+            errorDiv.textContent = 'Ошибка сети при удалении';
+            errorContainer.prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
     }
 }
 
