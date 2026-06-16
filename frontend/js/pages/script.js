@@ -97,7 +97,7 @@ function arrayBufferToBase64(buffer) {
             if (!login || !password) { alert('Заполните все поля'); return; }
 
              try {
-                 const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+                 const API_BASE = window.location.origin;
 
                 const encryptedPassword = await encryptPassword(password);
                  const res = await fetch(`${API_BASE}/api/auth/login`, {
@@ -180,7 +180,7 @@ function arrayBufferToBase64(buffer) {
             if (password !== confirm) { alert('Пароли не совпадают'); return; }
 
             try {
-                const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+                const API_BASE = window.location.origin;
                 const res = await fetch(`${API_BASE}/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
