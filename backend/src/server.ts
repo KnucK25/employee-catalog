@@ -322,6 +322,65 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
     }
 });
 
+//Маршруты аккаунтов
+
+app.get('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
+    try {
+        const row = await db.get(accountQueries.getByEmployeeId, [req.params.employeeId]);
+        if (!row) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
+        res.json({ login: row.login });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка получения аккаунта' });
+    }
+});
+
+app.put('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
+    try {
+        const { login, password } = req.body;
+        const employeeId = parseInt(req.params.employeeId as string);
+
+        const account = await db.get(accountQueries.getByEmployeeId, [employeeId]);
+
+        if (!account) {
+            // Аккаунта нет — создаём
+            if (!login || !password) {
+                res.status(400).json({ error: 'Для создания аккаунта нужны логин и пароль' });
+                return;
+            }
+            const existing = await db.get(accountQueries.getByLogin, [login]);
+            if (existing) {
+                res.status(409).json({ error: 'Логин уже занят' });
+                return;
+            }
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = hashPassword(password, salt);
+            await db.run(accountQueries.create, [login, hash, salt, employeeId]);
+        } else {
+            // Аккаунт есть — обновляем только заполненные поля
+            if (login) {
+                const existing = await db.get(accountQueries.getByLogin, [login]);
+                if (existing && existing.employee_id !== employeeId) {
+                    res.status(409).json({ error: 'Логин уже занят' });
+                    return;
+                }
+                await db.run(accountQueries.updateLogin, [login, employeeId]);
+            }
+            if (password) {
+                const salt = crypto.randomBytes(16).toString('hex');
+                const hash = hashPassword(password, salt);
+                await db.run(accountQueries.updatePassword, [hash, salt, account.id]);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message ?? 'Ошибка обновления аккаунта' });
+    }
+});
+
 //Маршруты сотрудников
 
 app.get('/api/employees', async (req: Request, res: Response) => {

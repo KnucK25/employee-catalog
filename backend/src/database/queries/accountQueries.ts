@@ -36,6 +36,26 @@ export const accountQueries = {
   `,
 
   /**
+   * Принимает employee_id.
+   * Отдает аккаунт сотрудника (id, login, employee_id).
+   */
+  getByEmployeeId: `
+    SELECT id, login, employee_id
+    FROM account
+    WHERE employee_id = ?;
+  `,
+
+  /**
+   * Принимает логин, employee_id.
+   * Обновляет логин аккаунта.
+   */
+  updateLogin: `
+    UPDATE account
+    SET login = ?
+    WHERE employee_id = ?;
+  `,
+
+  /**
    * Принимает id аккаунта.
    * Удаляет аккаунт.
    */

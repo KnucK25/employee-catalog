@@ -152,15 +152,15 @@ async function deleteEmployee(employeeId) {
 }
 
 // Функция редактирования
-function editEmployee(employeeId) {
+async function editEmployee(employeeId) {
     // Если уже редактируется ДРУГАЯ строка — отменяем предыдущую
     if (editingEmployeeId !== null && editingEmployeeId !== employeeId) {
         cancelEdit(editingEmployeeId);
     }
-    
+
     // Если эта же строка уже редактируется — ничего не делаем
     if (editingEmployeeId === employeeId) return;
-    
+
     editingEmployeeId = employeeId;
 
     const employee = employees.find(emp => emp.id === employeeId);
@@ -169,37 +169,31 @@ function editEmployee(employeeId) {
     const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
     if (!row) return;
 
-    const deptOptions = (departmentsList || []).map(d => {
-        const isSelected = String(d.id) === String(employee.departament_id) ? 'selected' : '';
-        return `<option value="${d.id}" ${isSelected}>${d.name}</option>`;
-    }).join('');
+    let currentLogin = '';
+    try {
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`);
+        if (res.ok) {
+            const data = await res.json();
+            currentLogin = data.login ?? '';
+        }
+    } catch (err) {
+        console.warn('Не удалось загрузить логин:', err);
+    }
 
-    const postOptions = (postsList || []).map(p => {
-        const isSelected = String(p.id) === String(employee.post_id) ? 'selected' : '';
-        return `<option value="${p.id}" ${isSelected}>${p.name}</option>`;
-    }).join('');
+    const hasAccount = currentLogin !== '';
+    const passwordPlaceholder = hasAccount ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль (обязательно)';
 
     row.innerHTML = `
         <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
             <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
-            <input type="file" accept=".png,.jpeg,.jpg,.webp"/>
-            <div class="w-100">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-lastname" value="${employee.lastname || ''}" placeholder="Фамилия">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-firstname" value="${employee.firstname || ''}" placeholder="Имя">
-                <input type="text" class="form-control form-control-sm border-light mb-1 edit-middlename" value="${employee.middlename || ''}" placeholder="Отчество">
+            <div>
+                <div class="admin-employee-name">${employee.name}</div>
+                ${!hasAccount ? '<div class="text-warning small">Аккаунт не создан</div>' : ''}
             </div>
         </div>
-        <div class="col-md-3 mb-2 mb-md-0">
-            <select class="form-select form-select-sm border-light mb-1 edit-department-id" style="width: 100%;">
-                ${deptOptions}
-            </select>
-            <select class="form-select form-select-sm border-light edit-post-id" style="width: 100%;">
-                ${postOptions}
-            </select>
-        </div>
-        <div class="col-md-3 mb-3 mb-md-0">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-phone" value="${employee.phone}" placeholder="Телефон">
-            <input type="email" class="form-control form-control-sm border-light edit-email" value="${employee.email}" placeholder="Email">
+        <div class="col-md-6 mb-3 mb-md-0">
+            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Логин">
+            <input type="password" class="form-control form-control-sm border-light edit-password" placeholder="${passwordPlaceholder}">
         </div>
         <div class="col-md-2 d-flex gap-2 justify-content-md-end">
             <button type="button" class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
@@ -210,39 +204,22 @@ function editEmployee(employeeId) {
 
 // Сохранение изменений
 async function saveEmployee(employeeId) {
-    const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) return;
-
     const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (!row) return;
 
-    const lastname = row.querySelector('.edit-lastname').value.trim();
-    const firstname = row.querySelector('.edit-firstname').value.trim();
-    const middlename = row.querySelector('.edit-middlename').value.trim();
+    const login = row.querySelector('.edit-login').value.trim();
+    const password = row.querySelector('.edit-password').value;
 
-    const departament_id = parseInt(row.querySelector('.edit-department-id').value);
-    const post_id = parseInt(row.querySelector('.edit-post-id').value);
-
-    const phone = row.querySelector('.edit-phone').value.trim();
-    const email = row.querySelector('.edit-email').value.trim();
-
-    const json_body = JSON.stringify({
-        firstname,
-        lastname,
-        middlename,
-        email,
-        phone,
-        date_admission: employee.hireDate,
-        description: employee.bio ?? '',
-        departament_id,
-        post_id,
-        image_id: employee.image_id ?? null
-    });
+    if (!login) {
+        alert('Логин не может быть пустым');
+        return;
+    }
 
     try {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: json_body
+            body: JSON.stringify({ login, password: password || undefined })
         });
 
         if (!res.ok) {
@@ -256,9 +233,9 @@ async function saveEmployee(employeeId) {
         return;
     }
 
-    editingEmployeeId = null; // ✅ Сбрасываем флаг редактирования
-    await loadEmployees();
-    console.log(`Сотрудник ${employeeId} обновлён`);
+    editingEmployeeId = null;
+    renderEmployees();
+    console.log(`Аккаунт сотрудника ${employeeId} обновлён`);
 }
 
 // Отмена редактирования
