@@ -904,6 +904,80 @@ app.put('/api/accounts/by-employee/:employeeId', async (req: Request, res: Respo
     }
 });
 
+app.get('/api/accounts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const accounts = await db.all(accountQueries.getAll);
+        res.json(accounts);
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка получения аккаунтов' });
+    }
+});
+
+app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            res.status(400).json({ error: 'Невалидный параметр' });
+            return;
+        }
+        const id = Number(req.params.id);
+        const { login, password, access_level } = req.body;
+
+        const account = await db.get(accountQueries.getById, [id]);
+        if (!account) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
+
+        if (login) {
+            const existing = await db.get(accountQueries.getByLogin, [login]);
+            if (existing && existing.id !== id) {
+                res.status(409).json({ error: 'Логин уже занят' });
+                return;
+            }
+            await db.run(accountQueries.updateLoginById, [login, id]);
+        }
+
+        if (password) {
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = hashPassword(password, salt);
+            await db.run(accountQueries.updatePasswordById, [hash, salt, id]);
+        }
+
+        if (access_level !== undefined && account.employee_id) {
+            await db.run(rootQueries.updateLevel, [Number(access_level), account.employee_id]);
+        }
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message ?? 'Ошибка обновления аккаунта' });
+    }
+});
+
+app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            res.status(400).json({ error: 'Невалидный параметр' });
+            return;
+        }
+        const id = Number(req.params.id);
+
+        const account = await db.get(accountQueries.getById, [id]);
+        if (!account) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
+
+        if (account.employee_id) {
+            await db.run(rootQueries.removeByEmployeeId, [account.employee_id]);
+        }
+        await db.run(accountQueries.removeById, [id]);
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message ?? 'Ошибка удаления аккаунта' });
+    }
+});
+
 //Маршруты сотрудников
 
 app.get('/api/employees', async (req: Request, res: Response) => {
