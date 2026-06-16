@@ -2,7 +2,8 @@
   "scripts":{
     "dev": "ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "rebuild": "npm rebuild sqlite3"
   },
   "dependencies": {
     "express": "^5.2.1",
