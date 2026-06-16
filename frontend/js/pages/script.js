@@ -2,7 +2,7 @@
 
 // Шифрование пароля
 async function getPublicKey() {
-    const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const API_BASE = window.location.origin;
     try {
         const res = await fetch(`${API_BASE}/api/auth/public-key`);
         if (!res.ok) {
@@ -123,7 +123,7 @@ function showAuthSuccess(message, modal, form) {
 
 // Функция для проверки состояния сервера
 async function checkServerStatus() {
-    const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const API_BASE = window.location.origin;
     try {
         const res = await fetch(`${API_BASE}/api/employees`, { method: 'HEAD' });
         return res.ok;
@@ -187,7 +187,7 @@ if (loginForm) {
         }
         
         try {
-            const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+            const API_BASE = window.location.origin;
             
             //  ШИФРОВАНИЕ ПАРОЛЯ 
             let encryptedPassword;
