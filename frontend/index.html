@@ -206,8 +206,8 @@
                 <div class="modal-body">
                     <form id="loginForm">
                         <div class="mb-3">
-                            <label for="loginEmail" class="form-label">Email</label>
-                            <input type="text" class="form-control" id="loginEmail" placeholder="pochta@company.ru">
+                            <label for="loginEmail" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="loginEmail" required>
                         </div>
                         <div class="mb-3">
                             <label for="loginPassword" class="form-label">Пароль</label>
@@ -221,6 +221,26 @@
                     <div class="text-center">
                         <p class="mb-0 text-muted small">Пароль для авторизации предоставляется администратором</p>
                     </div>
+
+                    <!-- Форма регистрации (скрыта по умолчанию) -->
+                    <form id="registerForm" style="display: none;">
+                        <div class="mb-3">
+                            <label for="regEmail" class="form-label">Логин</label>
+                            <input type="text" class="form-control" id="regEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="regPassword" class="form-label">Пароль</label>
+                            <input type="password" class="form-control" id="regPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="regConfirmPassword" class="form-label">Подтвердите пароль</label>
+                            <input type="password" class="form-control" id="regConfirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-dark w-100">Зарегистрироваться</button>
+                        <div class="text-center mt-3">
+                            <a href="#" id="showLoginLink">← Вернуться ко входу</a>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
