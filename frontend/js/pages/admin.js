@@ -1,4 +1,4 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
+const API_BASE = window.location.origin
 
 // const currentToken = localStorage.getItem('authToken');
 // const currentLevel = Number(localStorage.getItem('level') || 0);
@@ -187,7 +187,12 @@ async function loadEmployees() {
             fetch(`${API_BASE}/api/departaments`),
             fetch(`${API_BASE}/api/posts`)
         ]);
-        
+        if (employeesRes.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+        }
         if (!employeesRes.ok) throw new Error('Ошибка сервера');
         
         // Парсим все ответы
@@ -285,14 +290,46 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
     connectSSE();
 });
+
+// Принудительно закрываем SSE при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        console.log('🔌 Закрываем SSE при уходе со страницы');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Также закрываем при скрытии вкладки (на всякий случай)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && eventSource) {
+        console.log('👁️ Вкладка скрыта, закрываем SSE');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Переподключаемся, когда вкладка снова стала активной
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !eventSource) {
+        console.log('👁️ Вкладка активна, переподключаем SSE');
+        connectSSE();
+    }
+});
 //---------------------------------------------------------------------------------------------------------
 
 async function deleteEmployee(employeeId) {
     try {
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-    });
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+        });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
     }
@@ -372,10 +409,16 @@ async function performDeleteAction(employeeId) {
         }
 
         // Выполняем фактическое удаление
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
         alert('Произошла ошибка при удалении сотрудника.');
@@ -541,6 +584,12 @@ async function saveEmployeeFromModal() {
                 headers: getAuthHeaders(),
                 body: json_body
             });
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
 
             const data = await res.json()
         
@@ -576,6 +625,12 @@ async function saveEmployeeFromModal() {
 },
                 body:blob
             })
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
             const data = await res.json()
             if (!res.ok) {
                 alert("Ошибка " + res.status + ` ${data.error}`)
@@ -784,6 +839,13 @@ async function addDepartment() {
             body: JSON.stringify({ name })
         });
 
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
          * @type {({error:string } | {id:number, name:string })}
          */
@@ -809,9 +871,16 @@ async function addDepartment() {
 async function deleteDepartment(id) {
     try {
         const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         /**
         * @typedef {Object} PostItem
@@ -882,6 +951,12 @@ async function addPost() {
             departament_id: parseInt(departamentId)
         })
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
         /**
          * @type {({error:string}|{id:number, name:string, departament_id:number})}
          */
@@ -909,9 +984,17 @@ async function addPost() {
 async function deletePost(id) {
     try {
         const res = await fetch(`${API_BASE}/api/posts/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
         * @typedef {Object} EmployeeItem
         * @property {number} id
@@ -953,28 +1036,45 @@ async function deletePost(id) {
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
     const emptyEmployee = {
-        lastname: 'НОВЫЙ',
-        firstname: '00_СОТРУДНИК',
+        lastname: '', //Хватит заполнять пустого сотрудника, он и так отлично отображается
+        firstname: '',
         middlename: '',
         email: '',
         phone: '',
         date_admission: new Date().toISOString().split('T')[0],
         description: '',
-        departament_id: 1,
         post_id: 1,
         image_id: null
     };
 
-    await fetch(`${API_BASE}/api/employees`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(emptyEmployee)
-    });
+    try {
+        const res = await fetch(`${API_BASE}/api/employees`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(emptyEmployee)
+        });
 
-    const modal = bootstrap.Modal.getInstance(document.getElementById('controlModal'));
-    if (modal) modal.hide();
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
-    await loadEmployees();
+        if (!res.ok) {
+            const data = await res.json();
+            alert('Ошибка ' + res.status + ` ${data.error}`);
+            return;
+        }
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('controlModal'));
+        if (modal) modal.hide();
+
+        await loadEmployees();
+    } catch (err) {
+        console.error('Ошибка создания сотрудника:', err);
+        alert('Ошибка сети при создании сотрудника');
+    }
 }
 
 function openAccountModal() {
@@ -1021,6 +1121,13 @@ async function createAccountFromAdmin() {
                 level
             })
         });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         const data = await res.json();
 

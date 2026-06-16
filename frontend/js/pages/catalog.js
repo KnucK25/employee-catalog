@@ -1,4 +1,4 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
+const API_BASE = window.location.origin
 
 // interface Employee{
 //     id: number,
@@ -202,22 +202,22 @@ function connectSSE() {
             if (message.type === 'departments.updated') {
                 console.log('🔄 Отделы обновлены, перезагружаем...');
                 photovers++
-                loadEmployees().then(
-                    () => populateDepartamentMenu().then(
-                        () => filter_and_search()
-                    )
-                )
+                const selectedDep = document.getElementById('departamentFilter').value
+                loadEmployees().then(() => {
+                    populateDepartamentFilter()
+                    populatePostFilter(selectedDep)
+                    filter_and_search()
+                })
             }
             
             if (message.type === 'posts.updated') {
                 console.log('🔄 Должности обновлены, перезагружаем...');
                 photovers++
                 const selectedDep = document.getElementById('departamentFilter').value
-                loadEmployees().then(
-                    () => populatePostMenu(selectedDep).then(
-                        () => filter_and_search()
-                    )
-                );
+                loadEmployees().then(() => {
+                    populatePostFilter(selectedDep)
+                    filter_and_search()
+                })
             }
             
             if (message.type === 'connected') {
@@ -241,4 +241,30 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
     connectSSE()
+});
+
+// Принудительно закрываем SSE при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        console.log('🔌 Закрываем SSE при уходе со страницы');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Также закрываем при скрытии вкладки (на всякий случай)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && eventSource) {
+        console.log('👁️ Вкладка скрыта, закрываем SSE');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Переподключаемся, когда вкладка снова стала активной
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !eventSource) {
+        console.log('👁️ Вкладка активна, переподключаем SSE');
+        connectSSE();
+    }
 });

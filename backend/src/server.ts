@@ -17,22 +17,6 @@ import { rootQueries } from './database/queries/rootQueries';
 const app = express();
 app.use(express.json());
 
-// Хранилище подключённых SSE-клиентов
-const sseClients = new Set<Response>();
-
-// Функция для отправки события всем подключённым клиентам
-function broadcastEvent(eventType: string, data?: any) {
-    const message = {
-        type: eventType,
-        data: data || {},
-        timestamp: Date.now()
-    };
-
-    sseClients.forEach(client => {
-        client.write(`data: ${JSON.stringify(message)}\n\n`);
-    });
-}
-
 const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -62,8 +46,31 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 //Отдаём HTML/CSS/JS фронта
-app.use(express.static(path.join(__dirname, '../../frontend')));
+app.use('/css', express.static(path.join(__dirname, '../../frontend/css')));
 
+app.use('/js', express.static(path.join(__dirname, '../../frontend/js')));
+
+app.use('/img', express.static(path.join(__dirname, '../../frontend/img')));
+
+app.use(
+    '/assets',
+    express.static(path.join(__dirname, '../../frontend/assets'))
+);
+
+app.use(
+    '/css',
+    express.static(path.join(__dirname, '../../frontend/css'))
+);
+
+app.use(
+    '/js',
+    express.static(path.join(__dirname, '../../frontend/js'))
+);
+
+app.use(
+    '/img',
+    express.static(path.join(__dirname, '../../frontend/img'))
+);
 //Глобальная переменная для экземпляра БД
 let db: Database;
 
@@ -142,6 +149,57 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
     next();
 }
+
+function getCookieToken(req: Request): string | null {
+    const cookie = req.headers.cookie;
+
+    if (!cookie) {
+        return null;
+    }
+
+    const cookies = cookie.split(';').map(c => c.trim());
+
+    for (const item of cookies) {
+        const [name, value] = item.split('=');
+
+        if (name === 'authToken') {
+            return value;
+        }
+    }
+
+    return null;
+}
+
+function requirePageLevel(minLevel: number) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const token = getCookieToken(req);
+
+        if (!token) {
+            res.redirect('/');
+            return;
+        }
+
+        const session = sessions.get(token);
+
+        if (!session || session.expiresAt < Date.now()) {
+            if (token) {
+                sessions.delete(token);
+            }
+
+            res.clearCookie('authToken');
+            res.redirect('/');
+            return;
+        }
+
+        if (session.level < minLevel) {
+            res.redirect('/');
+            return;
+        }
+
+        next();
+    };
+}
+
 interface getEmployee {
     id: number,
     firstname: string,
@@ -504,28 +562,112 @@ async function seedDB() {
 }
 
 // SSE эндпоинт для уведомлений клиентов
+// Хранилище подключённых SSE-клиентов
+const sseClients = new Set<Response>();
+
+// ✅ Функция отправки события с проверкой активности клиентов
+function broadcastEvent(eventType: string, data?: any) {
+    const message = {
+        type: eventType,
+        data: data || {},
+        timestamp: Date.now()
+    };
+    const payload = `data: ${JSON.stringify(message)}\n\n`;
+
+    sseClients.forEach(client => {
+        try {
+            // Проверяем, что соединение ещё открыто
+            if (!client.writable) {
+                sseClients.delete(client);
+                return;
+            }
+            client.write(payload);
+        } catch (err) {
+            // Если запись упала — удаляем мёртвого клиента
+            console.log('🗑️ Удаляем мёртвого SSE-клиента');
+            sseClients.delete(client);
+        }
+    });
+}
+
+// ✅ Периодический пинг каждые 15 секунд для обнаружения мёртвых соединений
+setInterval(() => {
+    sseClients.forEach(client => {
+        try {
+            // SSE-комментарий (начинается с ":") — игнорируется клиентом, но поддерживает TCP-соединение
+            client.write(`: heartbeat\n\n`);
+        } catch (err) {
+            console.log('🗑️ Удаляем мёртвого клиента (heartbeat failed)');
+            sseClients.delete(client);
+        }
+    });
+}, 15000);
+
+// ✅ SSE эндпоинт с корректной очисткой
 app.get('/api/events', (req: Request, res: Response) => {
-    // Устанавливаем заголовки для SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Accel-Buffering', 'no'); // Для Nginx/Railway прокси
 
-    // Добавляем клиент в список
     sseClients.add(res);
-    console.log(`SSE клиент подключён. Всего клиентов: ${sseClients.size}`);
+    console.log(`✅ SSE клиент подключён. Всего: ${sseClients.size}`);
 
-    // Отправляем приветственное событие
+    // Отправляем приветствие
     res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
 
-    // Удаляем клиент при отключении
+    // Локальный heartbeat для этого клиента
+    const heartbeat = setInterval(() => {
+        try {
+            res.write(`: ping\n\n`);
+        } catch {
+            clearInterval(heartbeat);
+        }
+    }, 15000);
+
+    // ✅ При закрытии соединения — очищаем
     req.on('close', () => {
+        clearInterval(heartbeat);
         sseClients.delete(res);
-        console.log(`SSE клиент отключён. Всего клиентов: ${sseClients.size}`);
+        console.log(`❌ SSE клиент отключён. Осталось: ${sseClients.size}`);
+    });
+
+    // На всякий случай — обработчик ошибки
+    req.on('error', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
     });
 });
 
 //Авторизация
+app.get('/profile.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/profile.html'));
+});
+
+app.get('/', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/index.html', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/catalog.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/catalog.html'));
+});
+
+app.get('/card.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/card.html'));
+});
+
+app.get('/adminPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/adminPanel.html'));
+});
+
+app.get('/accessPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/accessPanel.html'));
+});
 
 app.get('/api/auth/public-key', (req: Request, res: Response) => {
     res.json({
@@ -533,6 +675,36 @@ app.get('/api/auth/public-key', (req: Request, res: Response) => {
     });
 });
 
+// Проверка актуальности токена
+app.get('/api/auth/me', (req: Request, res: Response) => {
+    // Пробуем получить токен из Authorization header
+    let token: string | null | undefined = req.headers['authorization']?.replace('Bearer ', '');
+
+    // Если нет — пробуем из cookie
+    if (!token) {
+        token = getCookieToken(req);
+    }
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) sessions.delete(token);
+        res.clearCookie('authToken');  // Очищаем cookie при истечении
+        res.status(401).json({ error: 'Сессия истекла' });
+        return;
+    }
+
+    res.json({
+        employeeId: session.employeeId,
+        level: session.level,
+        expiresAt: session.expiresAt
+    });
+});
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
@@ -579,6 +751,12 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             employeeId: account.employee_id,
             level,
             expiresAt: Date.now() + SESSION_TTL_MS
+        });
+
+        res.cookie('authToken', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: SESSION_TTL_MS
         });
 
         res.json({
@@ -664,6 +842,62 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
         });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка регистрации' });
+    }
+});
+
+// Маршруты аккаунтов
+
+app.get('/api/accounts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const rows = await db.all(`
+            SELECT
+                a.id,
+                a.login,
+                a.employee_id,
+                COALESCE(r.level, 1) as access_level
+            FROM account a
+            LEFT JOIN root r
+            ON r.employee_id = a.employee_id
+            ORDER BY a.id
+        `);
+
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({
+            error: 'Ошибка получения аккаунтов'
+        });
+    }
+});
+
+app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+
+        res.json({
+            message: 'Редактирование аккаунтов пока отключено'
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: 'Ошибка обновления аккаунта'
+        });
+
+    }
+});
+
+app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+
+        res.json({
+            message: 'Удаление аккаунтов пока отключено'
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: 'Ошибка удаления аккаунта'
+        });
+
     }
 });
 
