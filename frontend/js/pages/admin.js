@@ -388,7 +388,7 @@ function confirmDeleteModal(employeeId) {
             </div>
         </div>
         <div class="col-md-6 mb-3 mb-md-0">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Логин">
+            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Email">
             <input type="password" class="form-control form-control-sm border-light edit-password" placeholder="${passwordPlaceholder}">
         </div>
         <div class="col-md-2 d-flex gap-2 justify-content-md-end">
@@ -407,10 +407,10 @@ async function saveEmployee(employeeId) {
     const password = row.querySelector('.edit-password').value;
 
     if (!login) {
-        alert('Логин не может быть пустым');
+        alert('Email не может быть пустым');
         return;
     }
-
+}
 // Функция, которая будет вызвана после подтверждения в модальном окне
 async function performDeleteAction(employeeId) {
     try {
@@ -1425,4 +1425,4 @@ function showMessageModal(title, message, type = 'info', callback = null) {
         }
     });
 }
-}
+
