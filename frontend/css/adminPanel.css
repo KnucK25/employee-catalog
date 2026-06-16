@@ -42,7 +42,6 @@
     transition: all 0.3s ease;
     border: 1px solid var(--black);
     font-size: 0.9rem;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-gold:hover {
@@ -59,7 +58,6 @@
     border: 1px solid var(--black);
     color: var(--black);
     background-color: transparent;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-outline-dark:hover {
@@ -75,7 +73,6 @@
     padding: 0.5rem 1.2rem;
     transition: all 0.3s ease;
     font-size: 0.9rem;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-action-type:hover {
@@ -145,7 +142,6 @@
     font-size: 0.8rem;
     border-radius: 0;
     margin-left: 0.5rem;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-edit {
@@ -250,10 +246,10 @@
     background-color: #6c757d;
     color: white;
     border: none;
-    border-radius: 0;
+    border-radius: 20px;
     padding: 6px 20px;
     font-size: 14px;
-    white-space: nowrap; /* ← текст в одну строку */
+    border-radius: 0;
 }
 
 .btn-cancel:hover {
@@ -268,7 +264,6 @@
     border-radius: 0;
     padding: 6px 20px;
     font-size: 14px;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-save:hover {
@@ -288,96 +283,50 @@
     flex-shrink: 1;
 }
 
-/* ===== АДАПТИВ ПОД ТЕЛЕФОН (до 768px) ===== */
+/*АДАПТИВ ПОД ТЕЛЕФОН (до 768px) */
 @media (max-width: 768px) {
-    /* Шапка и подвал компактнее */
-    header, footer {
-        padding: 0.5rem 0;
-    }
-
-    header .navbar-brand {
-        font-size: 1.1rem; /* название сайта меньше */
-    }
-
-    footer {
-        font-size: 0.8rem;
-    }
-
-    /* Заголовок страницы */
-    .container h1 {
-        font-size: 1.5rem;
-        letter-spacing: 1px;
-    }
-
     /* Секция поиска */
     .search-section {
         padding: 1.5rem 0;
         margin: 1rem 0;
     }
-
-    .search-section label {
-        font-size: 0.75rem;
-    }
-
-    .search-section .row > [class*="col-"] {
-        margin-bottom: 0.8rem;
-    }
-
-    /* Кнопки компактнее, но текст в одну строку */
+    
+    /* Кнопки на всю ширину */
     .btn-gold,
-    .btn-outline-dark {
+    .btn-outline-dark,
+    .btn-action-type {
         width: 100%;
         margin-bottom: 0.5rem;
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
-        white-space: nowrap;
     }
-
-    .btn-action-type {
-        width: auto;
-        flex: 1;
-        text-align: center;
-        padding: 0.5rem 0.8rem;
-        font-size: 0.8rem;
-        white-space: nowrap;
-    }
-
+    
     /* Группа кнопок действий */
     .d-flex.gap-2 {
         flex-direction: row;
         justify-content: flex-start;
         gap: 0.5rem !important;
         margin-top: 0.8rem;
-        flex-wrap: wrap;
     }
-
-    .d-flex.gap-3.mb-4 {
-        flex-wrap: wrap;
-        gap: 0.5rem !important;
-    }
-
+    
     /* Строка таблицы в карточку */
     .employee-row,
     .admin-employee-row {
-        padding: 0.8rem;
+        padding: 1rem;
         margin-bottom: 1rem;
         border: 1px solid #eee;
         background-color: var(--white);
     }
-
+    
     .admin-header-row {
         display: none !important;
     }
-
+    
     .employee-row [class*="col-md"],
     .admin-employee-row [class*="col-md"] {
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.5rem;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
-        font-size: 0.85rem;
     }
-
-    /* Лейблы для мобильной таблицы */
+    
     .employee-row [class*="col-md"]:before {
         content: attr(data-label);
         display: inline-block;
@@ -386,201 +335,100 @@
         text-transform: uppercase;
         color: var(--accent-gold);
         margin-right: 0.5rem;
-        width: 75px;
+        width: 80px;
     }
-
+    
     .admin-employee-photo {
         width: 40px;
         height: 48px;
     }
-
-    .employee-photo img {
-        height: 150px;
-    }
-
-    /* Модальное окно */
+    
     .modal-dialog {
         margin: 0.5rem;
-        max-width: calc(100% - 1rem);
     }
-
-    .modal-header {
-        padding: 0.8rem 1rem;
-    }
-
-    .modal-header .modal-title {
-        font-size: 1.1rem;
-    }
-
+    
     .modal-body {
         padding: 1rem;
     }
-
-    .modal-body .form-label {
-        font-size: 0.8rem;
-    }
-
-    .modal-body .form-control,
-    .modal-body .form-select {
-        font-size: 0.85rem;
-        padding: 0.6rem 0.8rem;
-    }
-
+    
     .d-flex.align-items-center.gap-3 {
         flex-direction: column;
         align-items: flex-start !important;
-        gap: 0.8rem !important;
     }
-
+    
     #currentPhotoImg {
         width: 60px;
         height: 75px;
         margin-bottom: 0.5rem;
     }
-
+    
     #editEmployeePhoto {
         width: 100%;
-        font-size: 0.8rem;
-        padding: 6px;
     }
-
+    
     .modal-footer {
         flex-direction: column;
         gap: 0.5rem;
-        padding: 0.8rem 1rem;
     }
-
+    
     .modal-footer .btn {
         width: 100%;
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
-        white-space: nowrap;
     }
-
-    /* Кнопки в модалке */
-    .btn-cancel,
-    .btn-save,
-    .btn-danger-square {
-        width: 100%;
-        padding: 0.6rem 1rem;
-        font-size: 0.85rem;
-        white-space: nowrap;
+    
+    .btn-action-type {
+        width: auto;
+        flex: 1;
+        text-align: center;
     }
-
-    .btn-sm-action {
-        padding: 0.25rem 0.6rem;
-        font-size: 0.75rem;
-        margin-left: 0.3rem;
-        white-space: nowrap;
+    
+    .d-flex.gap-3.mb-4 {
+        flex-wrap: wrap;
     }
-
-    /* Панель прав доступа */
-    .access-level-badge {
-        font-size: 0.7rem;
-        padding: 3px 10px;
-    }
-
-    .login-text {
-        font-size: 0.75rem;
-    }
-}
-
-/* ===== ДЛЯ ПЛАНШЕТОВ (768px - 992px) ===== */
-@media (min-width: 768px) and (max-width: 992px) {
-    /* Шапка и подвал */
-    header .navbar-brand {
-        font-size: 1.2rem;
-    }
-
+    
     .container h1 {
         font-size: 1.8rem;
     }
-
-    .admin-header-row h6 {
-        font-size: 0.75rem;
-        letter-spacing: 0;
+    
+    .employee-photo img {
+        height: 150px;
     }
+}
 
+/* ДЛЯ ПЛАНШЕТОВ (768px - 992px)  */
+@media (min-width: 768px) and (max-width: 992px) {
+    .admin-header-row h6 {
+        font-size: 0.8rem;
+    }
+    
     .employee-row .employee-name,
     .admin-employee-name {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
     }
-
-    .employee-row .employee-position,
-    .employee-row .employee-phone,
-    .admin-employee-text {
-        font-size: 0.8rem;
-    }
-
+    
     .btn-sm-action {
-        padding: 0.2rem 0.5rem;
+        padding: 0.2rem 0.6rem;
         font-size: 0.7rem;
-        margin-left: 0.2rem;
-        white-space: nowrap;
-    }
-
-    .admin-employee-photo {
-        width: 40px;
-        height: 48px;
-    }
-
-    .d-flex.gap-2 {
-        gap: 0.3rem !important;
     }
 }
 
-/* ===== ОЧЕНЬ МАЛЕНЬКИЕ ЭКРАНЫ (до 400px) ===== */
-@media (max-width: 400px) {
-    .container h1 {
-        font-size: 1.3rem;
-    }
-
-    .search-section {
-        padding: 1rem 0;
-    }
-
-    .search-section .col-6 {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-
-    .btn-action-type {
-        flex: 1 1 45%;
-        margin-bottom: 0.3rem;
-    }
-
-    .employee-row [class*="col-md"]:before {
-        width: 65px;
-        font-size: 0.65rem;
-    }
-
-    .employee-row [class*="col-md"] {
-        font-size: 0.8rem;
-    }
-
-    .modal-header .modal-title {
-        font-size: 1rem;
-    }
-}
 
 /* панель прав доступа */
+
 .access-level-badge {
     padding: 4px 12px;
     border-radius: 0;
     font-size: 0.8rem;
     font-weight: 500;
-    white-space: nowrap;
 }
-
 .level-1 { background-color: #6c757d; color: white; }
 .level-2 { background-color: #17a2b8; color: white; }
 .level-3 { background-color: var(--accent-gold); color: black; }
-
+        
 .login-text {
     color: #999;
     font-size: 0.85rem;
 }
-
+        
 .password-placeholder {
     font-family: monospace;
     letter-spacing: 2px;
@@ -595,7 +443,6 @@
     padding: 6px 20px;
     font-size: 14px;
     transition: all 0.2s;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-danger-square:hover {
@@ -610,7 +457,6 @@
     border-radius: 0;
     padding: 6px 20px;
     font-size: 14px;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .btn-cancel:hover {

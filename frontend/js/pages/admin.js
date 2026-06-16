@@ -319,77 +319,49 @@ document.addEventListener('visibilitychange', () => {
 });
 //---------------------------------------------------------------------------------------------------------
 
-async function deleteEmployee(employeeId) {
-    try {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-        method: 'DELETE',
-        headers: getAuthHeaders()
-        });
-        if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
-            localStorage.clear();
-            window.location.href = '/';
-            return;
-        }
-    } catch (err) {
-        console.warn('Ошибка удаления на сервере:', err);
+
+// Функция редактирования
+async function editEmployee(employeeId) {
+    // Если уже редактируется ДРУГАЯ строка — отменяем предыдущую
+    if (editingEmployeeId !== null && editingEmployeeId !== employeeId) {
+        cancelEdit(editingEmployeeId);
     }
+
+    // Если эта же строка уже редактируется — ничего не делаем
+    if (editingEmployeeId === employeeId) return;
+
+    editingEmployeeId = employeeId;
+
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return;
 
     const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (!row) return;
 
-    if (row) {
-        row.remove();
+    let currentLogin = '';
+    try {
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`);
+        if (res.ok) {
+            const data = await res.json();
+            currentLogin = data.login ?? '';
+        }
+    } catch (err) {
+        console.warn('Не удалось загрузить логин:', err);
     }
 
-    const index = employees.findIndex(emp => emp.id === employeeId);
+    const hasAccount = currentLogin !== '';
+    const passwordPlaceholder = hasAccount ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль (обязательно)';
 
-    if (index !== -1) {
-        employees.splice(index, 1);
-    }
-
-    if (employees.length === 0) {
-        const container = document.getElementById('employeesContainer');
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted">Сотрудники не найдены</p>
-                </div>
-            </div>
-        `;
-    }
-
-    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
-    //Обновляем поиск чтобы при удалении последнего пользователя вывелось что по поиску сотрудников не найдено
-    filter_and_search()
-}
-// Добавляем функцию для отображения модального окна подтверждения удаления
-function confirmDeleteModal(employeeId) {
-    // Создаем элементы модального окна
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    modalContainer.id = `confirmDeleteModal_${employeeId}`;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `confirmDeleteModalLabel_${employeeId}`);
-    modalContainer.setAttribute('aria-hidden', 'true');
-
-    modalContainer.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteModalLabel_${employeeId}">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить этого сотрудника? Действие нельзя будет отменить.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-save" onclick="performDeleteAction(${employeeId})">Удалить</button>
-                </div>
+    row.innerHTML = `
+        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <div>
+                <div class="admin-employee-name">${employee.name}</div>
+                ${!hasAccount ? '<div class="text-warning small">Аккаунт не создан</div>' : ''}
             </div>
         </div>
         <div class="col-md-6 mb-3 mb-md-0">
-            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Email">
+            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Логин">
             <input type="password" class="form-control form-control-sm border-light edit-password" placeholder="${passwordPlaceholder}">
         </div>
         <div class="col-md-2 d-flex gap-2 justify-content-md-end">
@@ -408,7 +380,7 @@ async function saveEmployee(employeeId) {
     const password = row.querySelector('.edit-password').value;
 
     if (!login) {
-        alert('Email не может быть пустым');
+        alert('Логин не может быть пустым');
         return;
     }
 }
@@ -558,48 +530,20 @@ async function saveEmployeeFromModal() {
     const phone = document.getElementById('editPhone').value.trim();
     const email = document.getElementById('editEmail').value.trim();
     const description = document.getElementById('editDescription').value.trim();
-
-    // Валидация с всплывающими сообщениями об ошибках
-    if (!lastname) {
-        showProfileError('Фамилия обязательна для заполнения', 'Пожалуйста, укажите фамилию сотрудника');
+    
+    // Валидация
+    if (!lastname || !firstname) {
+        alert('Фамилия и имя обязательны для заполнения');
         return;
     }
-
-    if (!firstname) {
-        showProfileError('Имя обязательно для заполнения', 'Пожалуйста, укажите имя сотрудника');
+    
+    if (!departamentId || !postId) {
+        alert('Выберите отдел и должность');
         return;
     }
-
-    if (!departamentId || isNaN(departamentId)) {
-        showProfileError('Выберите отдел', 'Пожалуйста, выберите отдел из списка');
-        return;
-    }
-
-    if (!postId || isNaN(postId)) {
-        showProfileError('Выберите должность', 'Пожалуйста, выберите должность из списка');
-        return;
-    }
-
-    // Проверка email (если указан)
-    if (email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            showProfileError('Некорректный Email', 'Пожалуйста, введите email в формате example@domain.com');
-            return;
-        }
-    }
-
-    // Проверка номера телефона (если указан) - только цифры, знаки +, -, скобки и пробелы
-    if (phone) {
-        const phoneRegex = /^[0-9+\-() ]+$/;
-        if (!phoneRegex.test(phone)) {
-            showProfileError('Некорректный номер телефона', 'Номер телефона может содержать только цифры, знаки +, -, скобки и пробелы');
-            return;
-        }
-    }
-
+    
     const fullName = `${lastname} ${firstname} ${middlename}`.trim();
-
+    
     const json_body = JSON.stringify({
         firstname: firstname,
         lastname: lastname,
@@ -617,108 +561,88 @@ async function saveEmployeeFromModal() {
      * @type {File}
      */
     const file = photoInput.files[0]
-
-    // Функция для выполнения запроса и обработки результата
-    async function processSaveResponse(res, employeeId) {
-        if (res.status === 401) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-            if (modal) modal.hide();
-            showProfileError('Сессия истекла', 'Пожалуйста, войдите снова');
-            setTimeout(() => {
+    if (!file) {
+        try {
+            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: json_body
+            });
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
                 localStorage.clear();
                 window.location.href = '/';
-            }, 2000);
-            return;
-        }
-
-        const data = await res.json()
-
-        if (!res.ok) {
-            // Не показываем ошибку сети, только реальные ошибки сервера
-            if (res.status !== 0 && res.status !== 504 && res.status !== 503) {
-                showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
+                return;
             }
-            // Если статус 0 или 5xx - это сеть/сервер, игнорируем
-            return;
-        }
 
-        // Закрываем модальное окно редактирования
-        const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
-        if (modal) modal.hide();
-
-        // Показываем модальное окно об успехе
-        showMessageModal('Успех', 'Профиль сотрудника успешно обновлен!', 'success', async () => {
+            const data = await res.json()
+        
+            if (!res.ok) {
+                alert("Ошибка " + res.status + ` ${data.error}`)
+                return
+            }
+        
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            if (modal) modal.hide();
+            
             // Перезагружаем данные
             await loadEmployees()
             // Обновляем поиск если он есть
             filter_and_search()
-        });
-    }
-
-    if (!file) {
-        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'PUT',
-            headers: getAuthHeaders(),
-            body: json_body
-        });
-
-        await processSaveResponse(res, employeeId);
-        return;
-    }
-
-    if (file) {
-        // Проверка расширения файла
-        if (!/\.(png|jpe?g|webp)$/i.test(file.name)) {
-            showProfileError('Недопустимый формат файла', 'Допустимы только .png, .jpg, .jpeg, .webp');
-            return;
+            
+        } catch (err) {
+            console.warn('Ошибка сохранения на сервере:', err);
+            alert('Ошибка сети при сохранении');
         }
+        return
+    }
+    if (file) {
+        try {
+            const blob = new Blob([file], {type:file.type})
+            const res = await fetch(`/api/employees-and-photo/${employeeId}`, {
+                method: 'PUT',
+               headers: {
+                    ...getAuthHeaders(file.type),
+                    'Size-File': String(blob.size),
+                    'X-Employee-Data': encodeURIComponent(json_body)
+},
+                body:blob
+            })
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
+            const data = await res.json()
+            if (!res.ok) {
+                alert("Ошибка " + res.status + ` ${data.error}`)
+                return
+            }
 
-        const blob = new Blob([file], {type:file.type})
-        const res = await fetch(`/api/employees-and-photo/${employeeId}`, {
-            method: 'PUT',
-           headers: {
-                ...getAuthHeaders(file.type),
-                'Size-File': String(blob.size),
-                'X-Employee-Data': encodeURIComponent(json_body)
-            },
-            body:blob
-        });
-
-        await processSaveResponse(res, employeeId);
-        return;
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+            if (modal) modal.hide();
+            
+            // Перезагружаем данные
+            await loadEmployees()
+            const updatedEmployee = employees.find(e => e.id == employeeId);
+            if (updatedEmployee) {
+                updatedEmployee.avatar = `/api/images/${data.image_id}?t=${Date.now()}`;
+            }
+            // Обновляем поиск если он есть
+            filter_and_search()
+            
+        } catch (err) {
+            console.warn('Ошибка сохранения на сервере:', err);
+            alert('Ошибка сети при сохранении');
+        }
+        return
     }
 
-    showProfileError('Ошибка сохранения', 'Пожалуйста, попробуйте снова');
-    return;
-}
-
-
-// Функция для отображения сообщения об ошибке в стиле всплывающего предупреждения
-function showProfileError(message, details = null) {
-    const existingError = document.querySelector('#editEmployeeModal .profile-error');
-    if (existingError) existingError.remove();
-
-    const modalBody = document.querySelector('#editEmployeeModal .modal-body');
-    if (!modalBody) return;
-
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'profile-error alert alert-danger mt-3';
-    errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem; margin-bottom: 0;';
-
-    errorDiv.innerHTML = `${message}`;
-
-    if (details) {
-        const detailsSpan = document.createElement('div');
-        detailsSpan.style.cssText = 'font-size: 0.75rem; margin-top: 0.3rem; opacity: 0.8;';
-        detailsSpan.textContent = details;
-        errorDiv.appendChild(detailsSpan);
-    }
-
-    modalBody.appendChild(errorDiv);
-
-    setTimeout(() => {
-        if (errorDiv) errorDiv.remove();
-    }, 10000);
+    alert("Возникла ошибка")
+    return
 }
 
 // Добавляем обработчик загрузки фото в модальное окно
@@ -929,118 +853,64 @@ async function addDepartment() {
 
 // Удаление отдела
 async function deleteDepartment(id) {
-    // Сначала показываем модальное окно подтверждения
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    const modalId = 'confirmDeleteDepartmentModal';
-    modalContainer.id = modalId;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
-    modalContainer.setAttribute('aria-hidden', 'true');
+    try {
+        const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
 
-    modalContainer.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="${modalId}Label">Подтверждение</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="mb-0">Вы уверены, что хотите удалить этот отдел?</p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отменить</button>
-                    <button type="button" class="btn btn-save" id="confirmDeleteBtn">Удалить</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modalContainer);
-
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
-
-    // Обработчик для кнопки "Удалить"
-    document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
-        // Закрываем модальное окно подтверждения
-        modal.hide();
-
-        // Выполняем удаление
-        try {
-            const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
-
-            if (res.status === 401) {
-                showProfileError('Сессия истекла', 'Пожалуйста, войдите снова');
-                setTimeout(() => {
-                    localStorage.clear();
-                    window.location.href = '/';
-                }, 2000);
-                return;
-            }
-
-            /**
-            * @typedef {Object} PostItem
-            * @property {number} id
-            * @property {string} name
-            * @property {number} departament_id
-            * 
-            * @typedef {Object} EmployeeItem
-            * @property {number} id
-            * @property {string} lastname
-            * @property {string} firstname
-            * @property {string} middlename
-            * @property {string} email
-            * @property {string} phone
-            * @property {string} date_admission
-            * @property {string} [description]
-            * @property {number} post_id
-            * @property {number|null} [image_id]
-            * 
-            * @typedef {PostItem[]} PostsArray
-            * @typedef {EmployeeItem[]} EmployeesArray
-            * 
-            * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
-            */
-            /**
-             * @type {DeleteResponse}
-             */
-            const data = await res.json()
-
-            if (!res.ok) {
-                showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
-                return
-            }
-
-            // Формируем сообщение об успешном удалении
-            let successMessage = data.message;
-            if (data.deleted_posts && data.deleted_posts.length > 0) {
-                successMessage += `\nУдалено должностей: ${data.deleted_posts.length}`;
-            }
-            if (data.deleted_employees && data.deleted_employees.length > 0) {
-                successMessage += `\nУдалено сотрудников: ${data.deleted_employees.length}`;
-            }
-
-            showMessageModal('Успех', successMessage, 'success', async () => {
-                await loadDepartmentsForModal();
-                await loadEmployees();
-            });
-
-        } catch (error) {
-            // Не показываем ошибку сети
-            console.error("Ошибка сети: ", error)
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
         }
-    });
 
-    // Удаляем модальное окно после закрытия
-    modalContainer.addEventListener('hidden.bs.modal', function () {
-        document.body.removeChild(modalContainer);
-    });
+        /**
+        * @typedef {Object} PostItem
+        * @property {number} id
+        * @property {string} name
+        * @property {number} departament_id
+        * 
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {PostItem[]} PostsArray       // Массив объектов PostItem
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
+
+        if (!res.ok) {
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
+        }
+
+        alert(JSON.stringify(data, null, 2))
+
+        await loadDepartmentsForModal();
+        await loadEmployees();
+        return
+
+    } catch (error) {
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
+    }
 }
-
 
 // Добавление должности (с привязкой к отделу)
 async function addPost() {
@@ -1094,175 +964,58 @@ async function addPost() {
     }
 }
 
-// Функция-обертка для совместимости с HTML вызовом
-async function deletePost(postId) {
-    // Получаем название из DOM
-    const row = document.querySelector(`tr[data-post-id="${postId}"]`);
-    const postName = row ? row.querySelector('.post-name')?.textContent.trim() : `должности #${postId}`;
-
-    await deletePostFromModal(postId, postName);
-}
-
-async function loadPosts() {
+// Удаление должности
+async function deletePost(id) {
     try {
-        const res = await fetch(`${API_BASE}/api/posts`, {
-            headers: getAuthHeaders()
-        });
-
-        if (res.status === 401) {
-            showProfileError('Сессия истекла', 'Пожалуйста, войдите снова');
-            setTimeout(() => {
-                localStorage.clear();
-                window.location.href = '/';
-            }, 2000);
-            return;
-        }
-
-        if (!res.ok) throw new Error('Ошибка загрузки должностей');
-
-        const posts = await res.json();
-        renderPostsTable(posts);
-
-    } catch (error) {
-        console.error('Ошибка загрузки должностей:', error);
-        showProfileError('Ошибка', 'Не удалось загрузить список должностей');
-    }
-}
-
-async function performDeletePost(postId) {
-    try {
-        const res = await fetch(`${API_BASE}/api/posts/${postId}`, {
+        const res = await fetch(`${API_BASE}/api/posts/${id}`, {
             method: 'DELETE',
             headers: getAuthHeaders()
         });
 
         if (res.status === 401) {
-            showProfileError('Сессия истекла', 'Пожалуйста, войдите снова');
-            setTimeout(() => {
-                localStorage.clear();
-                window.location.href = '/';
-            }, 2000);
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
             return;
         }
 
-        if (res.status === 404) {
-            showProfileError('Не найдено', 'Должность не найдена');
-            return;
-        }
-
-        if (res.status === 409) {
-            showProfileError('Невозможно удалить', 'К этой должности привязаны сотрудники. Сначала переназначьте их.');
-            return;
-        }
+        /**
+        * @typedef {Object} EmployeeItem
+        * @property {number} id
+        * @property {string} lastname
+        * @property {string} firstname
+        * @property {string} middlename
+        * @property {string} email
+        * @property {string} phone
+        * @property {string} date_admission
+        * @property {string} [description] // Квадратные скобки = необязательное поле
+        * @property {number} post_id
+        * @property {number|null} [image_id]
+        * 
+        * @typedef {EmployeeItem[]} EmployeesArray // Массив объектов EmployeeItem
+        * 
+        * @typedef { {error: string} | {message: string, deleted_posts: PostsArray, deleted_employees: EmployeesArray} } DeleteResponse
+        */
+        /**
+         * @type {DeleteResponse}
+         */
+        const data = await res.json()
 
         if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
-            return;
+            alert("Ошибка " + res.status + ` ${data.error}`)
+            return
         }
-
-        // Закрываем модальное окно редактирования если оно открыто
-        const editModal = bootstrap.Modal.getInstance(document.getElementById('editPostModal'));
-        if (editModal) editModal.hide();
-
-        // Показываем модальное окно об успехе
-        showMessageModal('Успех', 'Должность успешно удалена!', 'success', async () => {
-            // Перезагружаем список должностей
-            await loadPosts();
-        });
+        alert(JSON.stringify(data, null, 2))
+        await loadPostsForModal();
+        await loadEmployees();
+        return
 
     } catch (error) {
-        console.error('Ошибка при удалении должности:', error);
-        showProfileError('Ошибка сети', 'Не удалось удалить должность. Проверьте подключение к интернету.');
+        alert('Сервер не доступен')
+        console.error("Ошибка сети: ",error)
+        return
     }
 }
-
-// Функция удаления должности из модального окна
-async function deletePostFromModal(postId, postName) {
-    if (!postId) {
-        showProfileError('Ошибка', 'ID должности не указан');
-        return;
-    }
-
-    // Если название не передано, ищем в DOM
-    if (!postName) {
-        const row = document.querySelector(`tr[data-post-id="${postId}"]`);
-        postName = row ? row.querySelector('.post-name')?.textContent.trim() : `должности #${postId}`;
-    }
-
-    // Создаем модальное окно подтверждения
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    const modalId = `confirmDeletePostModal`;
-    modalContainer.id = modalId;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
-    modalContainer.setAttribute('aria-hidden', 'true');
-
-    modalContainer.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="${modalId}Label">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="mb-2">Вы уверены, что хотите удалить должность?</p>
-                    <p class="text-muted small mt-2">Это действие нельзя отменить. Все сотрудники с этой должностью будут переназначены.</p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-save" id="confirmDeletePostBtn">Удалить</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modalContainer);
-
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
-
-    // Обработчик для кнопки "Удалить"
-    document.getElementById('confirmDeletePostBtn').addEventListener('click', async function() {
-        // Закрываем модальное окно подтверждения
-        modal.hide();
-
-        // Выполняем удаление
-        await performDeletePost(postId);
-    });
-
-    // Удаляем модальное окно после закрытия
-    modalContainer.addEventListener('hidden.bs.modal', function () {
-        document.body.removeChild(modalContainer);
-    });
-}
-
-function addDeleteButtonToPostModal() {
-    const modalFooter = document.querySelector('#editPostModal .modal-footer');
-    if (modalFooter) {
-        if (!document.getElementById('deletePostBtn')) {
-            const deleteBtn = document.createElement('button');
-            deleteBtn.type = 'button';
-            deleteBtn.className = 'btn btn-danger ms-auto';
-            deleteBtn.id = 'deletePostBtn';
-            deleteBtn.innerHTML = '<i class="bi bi-trash"></i> Удалить';
-
-            deleteBtn.addEventListener('click', function() {
-                const postId = document.getElementById('editPostId').value;
-                const postName = document.getElementById('editPostName').value; // Добавили получение имени
-                if (postId) {
-                    deletePostFromModal(parseInt(postId), postName); // Передаем имя
-                }
-            });
-
-            modalFooter.insertBefore(deleteBtn, modalFooter.firstChild);
-        }
-    }
-}
-
-
-
 
 // Добавление пустого сотрудника
 async function addEmptyEmployee() {
@@ -1376,47 +1129,40 @@ async function createAccountFromAdmin() {
         alert('Ошибка сети при создании аккаунта');
         console.error(error);
     }
-} // <-- Закрытие функции createAccountFromAdmin
-
-// Функция для отображения модального окна с сообщением (для успеха)
-function showMessageModal(title, message, type = 'info', callback = null) {
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    const modalId = `messageModal_${Date.now()}`;
-    modalContainer.id = modalId;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
-    modalContainer.setAttribute('aria-hidden', 'true');
-
-    const buttonClass = (type === 'error' || type === 'warning') ? 'btn-cancel' : 'btn-save';
-
-    modalContainer.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="${modalId}Label">${title}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    ${message}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn ${buttonClass}" data-bs-dismiss="modal">OK</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modalContainer);
-
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
-
-    modalContainer.addEventListener('hidden.bs.modal', function () {
-        document.body.removeChild(modalContainer);
-        if (callback && typeof callback === 'function') {
-            callback();
-        }
-    });
 }
 
+function checkAccessAndRedirect() {
+    const level = Number(localStorage.getItem('level') || 0);
+    
+    if (level < 3) {
+        // Показываем модальное окно о недостатке прав
+        const modalContainer = document.createElement('div');
+        modalContainer.className = 'modal fade';
+        modalContainer.id = 'accessDeniedModal';
+        modalContainer.setAttribute('tabindex', '-1');
+        modalContainer.setAttribute('aria-hidden', 'true');
+        modalContainer.innerHTML = `
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Доступ запрещён</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <p class="mb-3">Страница "Права доступа" доступна только администраторам.</p>
+                        <p class="text-muted small">Обратитесь к администратору для получения доступа.</p>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Подтвердить</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalContainer);
+        const modal = new bootstrap.Modal(modalContainer);
+        modal.show();
+        modalContainer.addEventListener('hidden.bs.modal', () => modalContainer.remove());
+    } else {
+        window.location.href = 'accessPanel.html';
+    }
+}
