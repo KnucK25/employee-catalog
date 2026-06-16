@@ -239,6 +239,7 @@
     background-color: transparent;
     border: 1px solid #cba564;
     padding: 0.5rem 1rem;
+    border-radius: 0;
 }
 
 .btn-details a {

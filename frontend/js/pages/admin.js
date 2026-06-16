@@ -1,4 +1,4 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
+const API_BASE = window.location.origin
 
 // const currentToken = localStorage.getItem('authToken');
 // const currentLevel = Number(localStorage.getItem('level') || 0);
