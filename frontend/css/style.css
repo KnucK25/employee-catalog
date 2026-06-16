@@ -9,7 +9,7 @@
     display: flex;
     align-items: center;
     position: relative;
-
+    
 }
 
 .hero-section .container {
@@ -49,7 +49,6 @@
     min-width: 200px;
     transition: all 0.3s ease;
     font-size: 1rem;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .hero-section .btn:first-child {
@@ -230,66 +229,51 @@ section h2::after {
     font-size: 0.9rem;
 }
 
-/* ===== Адаптив для главной страницы ===== */
+/* Адаптив для главной страницы */
 @media (max-width: 768px) {
-    /* Шапка и подвал компактнее */
-    header, footer {
-        padding: 0.5rem 0;
-    }
-
-    header .navbar-brand {
-        font-size: 1.1rem; /* название сайта меньше */
-    }
-
-    footer {
-        font-size: 0.8rem;
-    }
-
     .hero-section {
         min-height: 25vh;
         padding: 1rem 0;
     }
-
+    
     .hero-section h1 {
-        font-size: 1.8rem;
+        font-size: 1rem;
         letter-spacing: 1px;
     }
-
+    
     .hero-section .lead {
         font-size: 1rem;
     }
 
     .hero-section .mx-auto {
-        font-size: 0.9rem;
+        font-size: 1rem;
         color: var(--white);
     }
-
+    
     .hero-section .btn {
-        padding: 0.6rem 1rem;
-        min-width: auto;
-        font-size: 0.85rem;
-        white-space: nowrap; /* текст в одну строку */
+        padding: 0.6rem 1.5rem;
+        min-width: 160px;
+        font-size: 0.9rem;
     }
-
+    
     section h2 {
-        font-size: 1.5rem;
+        font-size: 1rem;
         margin-bottom: 2rem;
     }
-
+    
     .stats-section .fs-1 {
         font-size: 1.8rem;
     }
-
     .advantages-section img {
-        width: 45px;
-        height: 45px;
+        width: 3px;
+        height: 3px;
     }
 
     .advantages-section .col-md-4 {
         flex: 0 0 33.333%;
         max-width: 33.333%;
     }
-
+    
     .advantages-section,
     .about-section,
     .stats-section,
@@ -299,25 +283,8 @@ section h2::after {
 }
 
 @media (max-width: 576px) {
-    /* Шапка и подвал ещё компактнее */
-    header, footer {
-        padding: 0;
-    }
-
-    header .navbar-brand {
-        font-size: 0.95rem;
-    }
-
-    footer {
-        font-size: 0.7rem;
-    }
-
-    .hero-section {
-        min-height: 20vh;
-    }
-
     .hero-section h1 {
-        font-size: 1.5rem;
+        font-size: 1rem;
     }
 
     .hero-section .lead {
@@ -328,20 +295,18 @@ section h2::after {
         font-size: 0.8rem;
         color: var(--white);
     }
-
+    
     .hero-section .d-flex {
-        flex-direction: row;
-        justify-content: center;
-        gap: 0.8rem !important;
+        flex-direction: row;           /* ← меняем column на row */
+        justify-content: center;       /* ← центрируем по горизонтали */
+        gap: 1rem !important;
     }
-
+    
     .hero-section .btn {
-        width: auto;
-        max-width: none;
-        margin: 0;
-        font-size: 0.72rem;
-        padding: 0.5rem 1rem;
-        white-space: nowrap; /* текст в одну строку */
+        width: 40%;
+        max-width: 250px;
+        margin: 0 0;
+        font-size: 0.74rem;
     }
 
     .about-section p {
@@ -358,50 +323,48 @@ section h2::after {
     .about-section .small {
         font-size: 0.6rem;
     }
-
+    
     .about-section .d-flex {
         gap: 1.5rem !important;
-
+        
     }
 
     /* преимущества */
+
     .advantages-section {
         padding: 2rem 0;
     }
-
+    
     .advantages-section h4 {
         font-size: 0.8rem;
     }
-
+    
     .advantages-section p {
         font-size: 0.8rem;
         max-width: 70%;
     }
-
+    
     .advantages-section img {
-        width: 40px !important;
+        width: 40px !important;     
         height: 40px !important;
     }
-
+    
     /* СТАТА */
+    
     .stats-section .fs-1 {
         font-size: 0.9rem;
     }
 
     .stats-section .small {
-        font-size: 0.65rem;
-    }
-
+    font-size: 0.65rem;
+}
     .stats-section .row {
         gap: 1.5rem 0;
-    }
-
-    section h2 {
-        font-size: 1.2rem;
     }
 }
 
 /* Модальное окно авторизации */
+
 #authModal .modal-header {
     background-color: var(--black);
     border-bottom: none;
@@ -449,7 +412,6 @@ section h2::after {
     transition: all 0.3s ease;
     border: 1px solid var(--black);
     font-size: 0.9rem;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 #authModal .btn-auth:hover {
@@ -471,7 +433,6 @@ section h2::after {
 
 #authRequiredModal .btn {
     border-radius: 0px;
-    white-space: nowrap; /* ← текст в одну строку */
 }
 
 #authRequiredModal .modal-title {

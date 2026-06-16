@@ -322,7 +322,7 @@ function createAccessRow(account) {
                 <div class="admin-employee-text">ID: ${String(account.employeeId).padStart(4, '0')}</div>
             </div>
         </div>
-        <div class="col-md-3 mb-2 mb-md-0" data-label="Email">
+        <div class="col-md-3 mb-2 mb-md-0" data-label="Логин">
             <div class="login-text">${escapeHtml(account.login)}</div>
         </div>
         <div class="col-md-2 mb-2 mb-md-0" data-label="Пароль">
@@ -416,7 +416,7 @@ async function saveAccountFromModal() {
     let hasError = false;
     
     if (!login) {
-        showFieldError(loginInput, 'Введите Email');
+        showFieldError(loginInput, 'Введите логин');
         hasError = true;
     } else if (!isValidEmail(login)) {
         showFieldError(loginInput, 'Неверный формат email');
@@ -499,11 +499,7 @@ async function createAccount() {
     }
     
     if (!login) {
-<<<<<<< HEAD
-        showFieldError(loginInput, 'Введите Email');
-=======
         showFieldError(loginInput, 'Введите email');
->>>>>>> main
         hasError = true;
     } else if (!isValidEmail(login)) {
         showFieldError(loginInput, 'Неверный формат email');

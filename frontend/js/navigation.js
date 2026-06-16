@@ -20,6 +20,10 @@ function updateNavigation() {
             addNavItem(navList, 'Админ панель', 'adminPanel.html');
         }
         
+        if (isSuperAdmin) {
+            addNavItem(navList, 'Права доступа', 'accessPanel.html');
+        }
+        
         if (isAuth) {
             addNavItem(navList, 'Профиль', 'profile.html');
         }
