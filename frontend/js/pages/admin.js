@@ -426,15 +426,6 @@ async function saveEmployee(employeeId) {
         return;
     }
 }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-=======
-
->>>>>>> Stashed changes
-
-
->>>>>>> Stashed changes
 // Функция, которая будет вызвана после подтверждения в модальном окне
 async function performDeleteAction(employeeId) {
     try {
