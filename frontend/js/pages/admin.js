@@ -288,7 +288,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('departamentFilter').addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
-    document.getElementById('exportBtn')?.addEventListener('click', exportAllEmployees);
     connectSSE();
 });
 
