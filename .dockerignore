@@ -1,0 +1,22 @@
+# Исключаем node_modules из всех папок
+**/node_modules
+**/npm-debug.log
+**/dist
+
+# Исключаем системные файлы
+.git
+.gitignore
+.dockerignore
+Dockerfile
+
+# Исключаем IDE и временные файлы
+.vscode
+.idea
+*.log
+.env
+.env.local
+
+# Исключаем тестовые файлы если не нужны
+**/*.test.ts
+**/*.spec.ts
+coverage

@@ -36,11 +36,79 @@ export const accountQueries = {
   `,
 
   /**
+   * Принимает employee_id.
+   * Отдает аккаунт сотрудника (id, login, employee_id).
+   */
+  getByEmployeeId: `
+    SELECT id, login, employee_id
+    FROM account
+    WHERE employee_id = ?;
+  `,
+
+  /**
+   * Принимает логин, employee_id.
+   * Обновляет логин аккаунта.
+   */
+  updateLogin: `
+    UPDATE account
+    SET login = ?
+    WHERE employee_id = ?;
+  `,
+
+  /**
    * Принимает id аккаунта.
    * Удаляет аккаунт.
    */
   removeByEmployeeId: `
     DELETE FROM account
     WHERE employee_id = ?;
+  `,
+
+  /**
+   * Принимает id аккаунта.
+   * Удаляет аккаунт по его id.
+   */
+  removeById: `
+    DELETE FROM account
+    WHERE id = ?;
+  `,
+
+  /**
+   * Отдает все аккаунты с уровнем прав.
+   */
+  getAll: `
+    SELECT account.id, account.login, account.employee_id, root.level AS access_level
+    FROM account
+    LEFT JOIN root ON root.employee_id = account.employee_id;
+  `,
+
+  /**
+   * Принимает id аккаунта.
+   * Отдает аккаунт по его id.
+   */
+  getById: `
+    SELECT id, login, employee_id
+    FROM account
+    WHERE id = ?;
+  `,
+
+  /**
+   * Принимает логин, id аккаунта.
+   * Обновляет логин аккаунта по его id.
+   */
+  updateLoginById: `
+    UPDATE account
+    SET login = ?
+    WHERE id = ?;
+  `,
+
+  /**
+   * Принимает хэш, соль, id аккаунта.
+   * Обновляет пароль аккаунта по его id.
+   */
+  updatePasswordById: `
+    UPDATE account
+    SET hash = ?, salt = ?
+    WHERE id = ?;
   `
 } as const;

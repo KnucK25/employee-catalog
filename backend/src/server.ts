@@ -17,22 +17,6 @@ import { rootQueries } from './database/queries/rootQueries';
 const app = express();
 app.use(express.json());
 
-// Хранилище подключённых SSE-клиентов
-const sseClients = new Set<Response>();
-
-// Функция для отправки события всем подключённым клиентам
-function broadcastEvent(eventType: string, data?: any) {
-    const message = {
-        type: eventType,
-        data: data || {},
-        timestamp: Date.now()
-    };
-
-    sseClients.forEach(client => {
-        client.write(`data: ${JSON.stringify(message)}\n\n`);
-    });
-}
-
 const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: {
@@ -578,24 +562,81 @@ async function seedDB() {
 }
 
 // SSE эндпоинт для уведомлений клиентов
+// Хранилище подключённых SSE-клиентов
+const sseClients = new Set<Response>();
+
+// ✅ Функция отправки события с проверкой активности клиентов
+function broadcastEvent(eventType: string, data?: any) {
+    const message = {
+        type: eventType,
+        data: data || {},
+        timestamp: Date.now()
+    };
+    const payload = `data: ${JSON.stringify(message)}\n\n`;
+
+    sseClients.forEach(client => {
+        try {
+            // Проверяем, что соединение ещё открыто
+            if (!client.writable) {
+                sseClients.delete(client);
+                return;
+            }
+            client.write(payload);
+        } catch (err) {
+            // Если запись упала — удаляем мёртвого клиента
+            console.log('🗑️ Удаляем мёртвого SSE-клиента');
+            sseClients.delete(client);
+        }
+    });
+}
+
+// ✅ Периодический пинг каждые 15 секунд для обнаружения мёртвых соединений
+setInterval(() => {
+    sseClients.forEach(client => {
+        try {
+            // SSE-комментарий (начинается с ":") — игнорируется клиентом, но поддерживает TCP-соединение
+            client.write(`: heartbeat\n\n`);
+        } catch (err) {
+            console.log('🗑️ Удаляем мёртвого клиента (heartbeat failed)');
+            sseClients.delete(client);
+        }
+    });
+}, 15000);
+
+// ✅ SSE эндпоинт с корректной очисткой
 app.get('/api/events', (req: Request, res: Response) => {
-    // Устанавливаем заголовки для SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Accel-Buffering', 'no'); // Для Nginx/Railway прокси
 
-    // Добавляем клиент в список
     sseClients.add(res);
-    console.log(`SSE клиент подключён. Всего клиентов: ${sseClients.size}`);
+    console.log(`✅ SSE клиент подключён. Всего: ${sseClients.size}`);
 
-    // Отправляем приветственное событие
+    // Отправляем приветствие
     res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
 
-    // Удаляем клиент при отключении
+    // Локальный heartbeat для этого клиента
+    const heartbeat = setInterval(() => {
+        try {
+            res.write(`: ping\n\n`);
+        } catch {
+            clearInterval(heartbeat);
+        }
+    }, 15000);
+
+    // ✅ При закрытии соединения — очищаем
     req.on('close', () => {
+        clearInterval(heartbeat);
         sseClients.delete(res);
-        console.log(`SSE клиент отключён. Всего клиентов: ${sseClients.size}`);
+        console.log(`❌ SSE клиент отключён. Осталось: ${sseClients.size}`);
+    });
+
+    // На всякий случай — обработчик ошибки
+    req.on('error', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
     });
 });
 
@@ -634,7 +675,36 @@ app.get('/api/auth/public-key', (req: Request, res: Response) => {
     });
 });
 
+// Проверка актуальности токена
+app.get('/api/auth/me', (req: Request, res: Response) => {
+    // Пробуем получить токен из Authorization header
+    let token: string | null | undefined = req.headers['authorization']?.replace('Bearer ', '');
 
+    // Если нет — пробуем из cookie
+    if (!token) {
+        token = getCookieToken(req);
+    }
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) sessions.delete(token);
+        res.clearCookie('authToken');  // Очищаем cookie при истечении
+        res.status(401).json({ error: 'Сессия истекла' });
+        return;
+    }
+
+    res.json({
+        employeeId: session.employeeId,
+        level: session.level,
+        expiresAt: session.expiresAt
+    });
+});
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
@@ -775,59 +845,136 @@ app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, r
     }
 });
 
-// Маршруты аккаунтов
+//Маршруты аккаунтов
+
+app.get('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
+    try {
+        const row = await db.get(accountQueries.getByEmployeeId, [req.params.employeeId]);
+        if (!row) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
+        res.json({ login: row.login });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка получения аккаунта' });
+    }
+});
+
+app.put('/api/accounts/by-employee/:employeeId', async (req: Request, res: Response) => {
+    try {
+        const { login, password } = req.body;
+        const employeeId = parseInt(req.params.employeeId as string);
+
+        const account = await db.get(accountQueries.getByEmployeeId, [employeeId]);
+
+        if (!account) {
+            // Аккаунта нет — создаём
+            if (!login || !password) {
+                res.status(400).json({ error: 'Для создания аккаунта нужны логин и пароль' });
+                return;
+            }
+            const existing = await db.get(accountQueries.getByLogin, [login]);
+            if (existing) {
+                res.status(409).json({ error: 'Логин уже занят' });
+                return;
+            }
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = hashPassword(password, salt);
+            await db.run(accountQueries.create, [login, hash, salt, employeeId]);
+        } else {
+            // Аккаунт есть — обновляем только заполненные поля
+            if (login) {
+                const existing = await db.get(accountQueries.getByLogin, [login]);
+                if (existing && existing.employee_id !== employeeId) {
+                    res.status(409).json({ error: 'Логин уже занят' });
+                    return;
+                }
+                await db.run(accountQueries.updateLogin, [login, employeeId]);
+            }
+            if (password) {
+                const salt = crypto.randomBytes(16).toString('hex');
+                const hash = hashPassword(password, salt);
+                await db.run(accountQueries.updatePassword, [hash, salt, account.id]);
+            }
+        }
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(400).json({ error: err.message ?? 'Ошибка обновления аккаунта' });
+    }
+});
 
 app.get('/api/accounts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(`
-            SELECT
-                a.id,
-                a.login,
-                a.employee_id,
-                COALESCE(r.level, 1) as access_level
-            FROM account a
-            LEFT JOIN root r
-            ON r.employee_id = a.employee_id
-            ORDER BY a.id
-        `);
-
-        res.json(rows);
+        const accounts = await db.all(accountQueries.getAll);
+        res.json(accounts);
     } catch (err) {
-        res.status(500).json({
-            error: 'Ошибка получения аккаунтов'
-        });
+        res.status(500).json({ error: 'Ошибка получения аккаунтов' });
     }
 });
 
 app.put('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            res.status(400).json({ error: 'Невалидный параметр' });
+            return;
+        }
+        const id = Number(req.params.id);
+        const { login, password, access_level } = req.body;
 
-        res.json({
-            message: 'Редактирование аккаунтов пока отключено'
-        });
+        const account = await db.get(accountQueries.getById, [id]);
+        if (!account) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
 
-    } catch (err) {
+        if (login) {
+            const existing = await db.get(accountQueries.getByLogin, [login]);
+            if (existing && existing.id !== id) {
+                res.status(409).json({ error: 'Логин уже занят' });
+                return;
+            }
+            await db.run(accountQueries.updateLoginById, [login, id]);
+        }
 
-        res.status(500).json({
-            error: 'Ошибка обновления аккаунта'
-        });
+        if (password) {
+            const salt = crypto.randomBytes(16).toString('hex');
+            const hash = hashPassword(password, salt);
+            await db.run(accountQueries.updatePasswordById, [hash, salt, id]);
+        }
 
+        if (access_level !== undefined && account.employee_id) {
+            await db.run(rootQueries.updateLevel, [Number(access_level), account.employee_id]);
+        }
+
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message ?? 'Ошибка обновления аккаунта' });
     }
 });
 
 app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            res.status(400).json({ error: 'Невалидный параметр' });
+            return;
+        }
+        const id = Number(req.params.id);
 
-        res.json({
-            message: 'Удаление аккаунтов пока отключено'
-        });
+        const account = await db.get(accountQueries.getById, [id]);
+        if (!account) {
+            res.status(404).json({ error: 'Аккаунт не найден' });
+            return;
+        }
 
-    } catch (err) {
+        if (account.employee_id) {
+            await db.run(rootQueries.removeByEmployeeId, [account.employee_id]);
+        }
+        await db.run(accountQueries.removeById, [id]);
 
-        res.status(500).json({
-            error: 'Ошибка удаления аккаунта'
-        });
-
+        res.json({ success: true });
+    } catch (err: any) {
+        res.status(500).json({ error: err.message ?? 'Ошибка удаления аккаунта' });
     }
 });
 

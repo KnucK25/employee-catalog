@@ -1,4 +1,4 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
+const API_BASE = window.location.origin
 
 // const currentToken = localStorage.getItem('authToken');
 // const currentLevel = Number(localStorage.getItem('level') || 0);
@@ -187,7 +187,12 @@ async function loadEmployees() {
             fetch(`${API_BASE}/api/departaments`),
             fetch(`${API_BASE}/api/posts`)
         ]);
-        
+        if (employeesRes.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+        }
         if (!employeesRes.ok) throw new Error('Ошибка сервера');
         
         // Парсим все ответы
@@ -285,137 +290,158 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
     connectSSE();
 });
+
+// Принудительно закрываем SSE при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        console.log('🔌 Закрываем SSE при уходе со страницы');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Также закрываем при скрытии вкладки (на всякий случай)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && eventSource) {
+        console.log('👁️ Вкладка скрыта, закрываем SSE');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Переподключаемся, когда вкладка снова стала активной
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !eventSource) {
+        console.log('👁️ Вкладка активна, переподключаем SSE');
+        connectSSE();
+    }
+});
 //---------------------------------------------------------------------------------------------------------
 
-async function deleteEmployee(employeeId) {
-    try {
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-    });
-    } catch (err) {
-        console.warn('Ошибка удаления на сервере:', err);
+
+// Функция редактирования
+async function editEmployee(employeeId) {
+    // Если уже редактируется ДРУГАЯ строка — отменяем предыдущую
+    if (editingEmployeeId !== null && editingEmployeeId !== employeeId) {
+        cancelEdit(editingEmployeeId);
     }
+
+    // Если эта же строка уже редактируется — ничего не делаем
+    if (editingEmployeeId === employeeId) return;
+
+    editingEmployeeId = employeeId;
+
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return;
 
     const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (!row) return;
 
-    if (row) {
-        row.remove();
+    let currentLogin = '';
+    try {
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`);
+        if (res.ok) {
+            const data = await res.json();
+            currentLogin = data.login ?? '';
+        }
+    } catch (err) {
+        console.warn('Не удалось загрузить логин:', err);
     }
 
-    const index = employees.findIndex(emp => emp.id === employeeId);
+    const hasAccount = currentLogin !== '';
+    const passwordPlaceholder = hasAccount ? 'Новый пароль (оставьте пустым, чтобы не менять)' : 'Пароль (обязательно)';
 
-    if (index !== -1) {
-        employees.splice(index, 1);
-    }
-
-    if (employees.length === 0) {
-        const container = document.getElementById('employeesContainer');
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted">Сотрудники не найдены</p>
-                </div>
-            </div>
-        `;
-    }
-
-    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
-    //Обновляем поиск чтобы при удалении последнего пользователя вывелось что по поиску сотрудников не найдено
-    filter_and_search()
-}
-
-// Добавляем функцию для отображения модального окна подтверждения удаления
-function confirmDeleteModal(employeeId) {
-    // Создаем элементы модального окна
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    modalContainer.id = `confirmDeleteModal_${employeeId}`;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `confirmDeleteModalLabel_${employeeId}`);
-    modalContainer.setAttribute('aria-hidden', 'true');
-
-    modalContainer.innerHTML = `
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmDeleteModalLabel_${employeeId}">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить этого сотрудника? Действие нельзя будет отменить.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" onclick="performDeleteAction(${employeeId})">Удалить</button>
-                </div>
+    row.innerHTML = `
+        <div class="col-md-4 d-flex align-items-center mb-3 mb-md-0">
+            <img src="${employee.avatar || 'img/bio.png'}" alt="${employee.name}" class="admin-employee-photo me-3">
+            <div>
+                <div class="admin-employee-name">${employee.name}</div>
+                ${!hasAccount ? '<div class="text-warning small">Аккаунт не создан</div>' : ''}
             </div>
         </div>
+        <div class="col-md-6 mb-3 mb-md-0">
+            <input type="text" class="form-control form-control-sm border-light mb-1 edit-login" value="${currentLogin}" placeholder="Логин">
+            <input type="password" class="form-control form-control-sm border-light edit-password" placeholder="${passwordPlaceholder}">
+        </div>
+        <div class="col-md-2 d-flex gap-2 justify-content-md-end">
+            <button type="button" class="btn btn-success btn-sm" onclick="saveEmployee(${employeeId})" title="Сохранить">✓</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEdit(${employeeId})" title="Отмена">✕</button>
+        </div>
     `;
-
-    // Добавляем модальное окно в DOM
-    document.body.appendChild(modalContainer);
-
-    // Создаем экземпляр модального окна Bootstrap
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
 }
 
+// Сохранение изменений
+async function saveEmployee(employeeId) {
+    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
+    if (!row) return;
+
+    const login = row.querySelector('.edit-login').value.trim();
+    const password = row.querySelector('.edit-password').value;
+
+    if (!login) {
+        alert('Логин не может быть пустым');
+        return;
+    }
+}
 // Функция, которая будет вызвана после подтверждения в модальном окне
 async function performDeleteAction(employeeId) {
     try {
-        // Закрываем модальное окно подтверждения
-        const modalElement = document.getElementById(`confirmDeleteModal_${employeeId}`);
-        if (modalElement) {
-            bootstrap.Modal.getInstance(modalElement).hide();
-            modalElement.remove(); // Удаляем модальное окно из DOM после закрытия
-        }
-
-        // Выполняем фактическое удаление
-        await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+        const res = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login, password: password || undefined })
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
     } catch (err) {
         console.warn('Ошибка удаления на сервере:', err);
         alert('Произошла ошибка при удалении сотрудника.');
         return; // Прерываем дальнейшее выполнение, если произошла ошибка
     }
 
-    // Удаляем строку из таблицы
-    const row = document.querySelector(`.admin-employee-row[data-id="${employeeId}"]`);
-    if (row) {
-        row.remove();
-    }
-
-    // Удаляем сотрудника из массива employees
-    const index = employees.findIndex(emp => emp.id === employeeId);
-    if (index !== -1) {
-        employees.splice(index, 1);
-    }
-
-    // Обновляем отображение, если таблица стала пустой
-    if (employees.length === 0) {
-        const container = document.getElementById('employeesContainer');
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted">Сотрудники не найдены</p>
-                </div>
-            </div>
-        `;
-    } else {
-        // Если остались сотрудники, запускаем фильтрацию заново, чтобы обновить видимость
-        filter_and_search();
-    }
-
-    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
+    editingEmployeeId = null;
+    filter_and_search();
+    console.log(`Аккаунт сотрудника ${employeeId} обновлён`);
 }
 
-// Измененная функция deleteEmployee
+// Отмена редактирования
+function cancelEdit(employeeId) {
+    editingEmployeeId = null;
+    filter_and_search();
+}
+
 async function deleteEmployee(employeeId) {
-    // Перед фактическим удалением показываем модальное окно подтверждения
-    confirmDeleteModal(employeeId);
+    const employee = employees.find(emp => emp.id === employeeId);
+    const name = employee ? employee.name : `#${employeeId}`;
+
+    if (!confirm(`Удалить сотрудника "${name}"?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
+        if (!res.ok) {
+            const data = await res.json();
+            alert('Ошибка удаления: ' + (data.error ?? 'Неизвестная ошибка'));
+            return;
+        }
+    } catch (err) {
+        console.warn('Ошибка удаления на сервере:', err);
+        alert('Ошибка сети при удалении');
+    }
 }
 
 
@@ -541,6 +567,12 @@ async function saveEmployeeFromModal() {
                 headers: getAuthHeaders(),
                 body: json_body
             });
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
 
             const data = await res.json()
         
@@ -576,6 +608,12 @@ async function saveEmployeeFromModal() {
 },
                 body:blob
             })
+            if (res.status === 401) {
+                alert('Сессия истекла. Войдите снова.');
+                localStorage.clear();
+                window.location.href = '/';
+                return;
+            }
             const data = await res.json()
             if (!res.ok) {
                 alert("Ошибка " + res.status + ` ${data.error}`)
@@ -784,6 +822,13 @@ async function addDepartment() {
             body: JSON.stringify({ name })
         });
 
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
          * @type {({error:string } | {id:number, name:string })}
          */
@@ -809,9 +854,16 @@ async function addDepartment() {
 async function deleteDepartment(id) {
     try {
         const res = await fetch(`${API_BASE}/api/departaments/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         /**
         * @typedef {Object} PostItem
@@ -882,6 +934,12 @@ async function addPost() {
             departament_id: parseInt(departamentId)
         })
         });
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
         /**
          * @type {({error:string}|{id:number, name:string, departament_id:number})}
          */
@@ -909,9 +967,17 @@ async function addPost() {
 async function deletePost(id) {
     try {
         const res = await fetch(`${API_BASE}/api/posts/${id}`, {
-    method: 'DELETE',
-    headers: getAuthHeaders()
-});
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
         /**
         * @typedef {Object} EmployeeItem
         * @property {number} id
@@ -970,6 +1036,13 @@ async function addEmptyEmployee() {
             headers: getAuthHeaders(),
             body: JSON.stringify(emptyEmployee)
         });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         if (!res.ok) {
             const data = await res.json();
@@ -1031,6 +1104,13 @@ async function createAccountFromAdmin() {
                 level
             })
         });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
 
         const data = await res.json();
 

@@ -1,77 +1,5 @@
 // script.js - только авторизация с полной диагностикой ошибок
 
-// Шифрование пароля
-async function getPublicKey() {
-    const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
-    try {
-        const res = await fetch(`${API_BASE}/api/auth/public-key`);
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        const data = await res.json();
-        return data.publicKey;
-    } catch (err) {
-        console.error('Ошибка получения публичного ключа:', err);
-        throw new Error('Не удалось получить ключ шифрования. Проверьте сервер.');
-    }
-}
-
-async function encryptPassword(password) {
-    try {
-        const publicKeyPem = await getPublicKey();
-        
-        const publicKey = await window.crypto.subtle.importKey(
-            'spki',
-            pemToArrayBuffer(publicKeyPem),
-            {
-                name: 'RSA-OAEP',
-                hash: 'SHA-256'
-            },
-            false,
-            ['encrypt']
-        );
-
-        const encodedPassword = new TextEncoder().encode(password);
-        const encrypted = await window.crypto.subtle.encrypt(
-            { name: 'RSA-OAEP' },
-            publicKey,
-            encodedPassword
-        );
-
-        return arrayBufferToBase64(encrypted);
-    } catch (err) {
-        console.error('Ошибка шифрования пароля:', err);
-        throw new Error('Ошибка шифрования данных');
-    }
-}
-
-function pemToArrayBuffer(pem) {
-    const base64 = pem
-        .replace('-----BEGIN PUBLIC KEY-----', '')
-        .replace('-----END PUBLIC KEY-----', '')
-        .replace(/\s/g, '');
-
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-
-    return bytes.buffer;
-}
-
-function arrayBufferToBase64(buffer) {
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-
-    for (let i = 0; i < bytes.length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-
-    return btoa(binary);
-}
-
 // Функция для отображения сообщения об ошибке в модальном окне
 function showAuthError(message, details = null) {
     const existingError = document.querySelector('#loginForm .auth-error');
@@ -118,12 +46,12 @@ function showAuthSuccess(message, modal, form) {
         if (modal) modal.hide();
         form.reset();
         window.location.href = 'index.html';
-    }, 3000);
+    }, 1500);
 }
 
 // Функция для проверки состояния сервера
 async function checkServerStatus() {
-    const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+    const API_BASE = window.location.origin;
     try {
         const res = await fetch(`${API_BASE}/api/employees`, { method: 'HEAD' });
         return res.ok;
@@ -174,11 +102,11 @@ if (loginForm) {
             return emailRegex.test(email);
         }
 
-        if (!isValidEmail(login)) {
-            showAuthError('Неверный формат email');
-            return;
+        if (!login) { 
+            showAuthError('Введите логин'); 
+            return; 
         }
-        
+
         //  ПРОВЕРКА СЕРВЕРА 
         const serverAvailable = await checkServerStatus();
         if (!serverAvailable) {
@@ -187,7 +115,7 @@ if (loginForm) {
         }
         
         try {
-            const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
+            const API_BASE = window.location.origin;
             
             //  ШИФРОВАНИЕ ПАРОЛЯ 
             let encryptedPassword;
@@ -287,6 +215,39 @@ document.addEventListener('DOMContentLoaded', function() {
             const existingSuccess = document.querySelector('#loginForm .auth-success');
             if (existingSuccess) existingSuccess.remove();
         });
+    }
+});
+// ========================================
+// АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТОКЕНА
+// ========================================
+
+document.addEventListener('DOMContentLoaded', async function() {
+    const token = localStorage.getItem('authToken');
+    
+    // Если токена нет — ничего не делаем
+    if (!token) return;
+    
+    // Проверяем валидность токена на сервере
+    try {
+        const API_BASE = window.location.origin;
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include'
+        });
+        
+        // Если токен невалиден — очищаем localStorage
+        if (!res.ok) {
+            console.log('Токен невалиден, очищаем localStorage');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('level');
+            localStorage.removeItem('employeeId');
+            
+            // Перезагружаем страницу, чтобы UI обновился
+            window.location.reload();
+        }
+    } catch (err) {
+        console.error('Ошибка проверки токена:', err);
+        // При сетевой ошибке не делаем ничего (сервер может быть временно недоступен)
     }
 });
 
