@@ -289,6 +289,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+// ========================================
+// АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТОКЕНА
+// ========================================
+
+document.addEventListener('DOMContentLoaded', async function() {
+    const token = localStorage.getItem('authToken');
+    
+    // Если токена нет — ничего не делаем
+    if (!token) return;
+    
+    // Проверяем валидность токена на сервере
+    try {
+        const API_BASE = window.location.origin;
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            credentials: 'include'
+        });
+        
+        // Если токен невалиден — очищаем localStorage
+        if (!res.ok) {
+            console.log('Токен невалиден, очищаем localStorage');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('level');
+            localStorage.removeItem('employeeId');
+            
+            // Перезагружаем страницу, чтобы UI обновился
+            window.location.reload();
+        }
+    } catch (err) {
+        console.error('Ошибка проверки токена:', err);
+        // При сетевой ошибке не делаем ничего (сервер может быть временно недоступен)
+    }
+});
 
 // Удаляем сообщения при вводе в поля
 if (loginEmail) {
