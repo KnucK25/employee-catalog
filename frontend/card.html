@@ -7,33 +7,37 @@
     
     <!-- Подключение Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Ваш файл стилей -->
     <link rel="stylesheet" href="css/card.css">
+    <link rel="stylesheet" href="css/common.css">
+
 </head>
 <body>
 
-    <!-- НАВИГАЦИЯ -->
-    <nav class="navbar navbar-expand-lg sticky-top">
-        <div class="container">
-            <div class="d-flex align-items-center">
-                <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
-                <a class="navbar-brand ms-2" href="index.html">Staff</a>
-            </div>
+    <header>
+        <!-- НАВИГАЦИЯ -->
+        <nav class="navbar navbar-expand-lg sticky-top">
+            <div class="container">
+                <div class="d-flex align-items-center">
+                    <img src="img/logo.png" alt="лого" style="width: 30px; height: 30px;">
+                    <a class="navbar-brand ms-2" href="index.html">Staff</a>
+                </div>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button> <!-- бургер для телефонов -->
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
-                    <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудника</a></li>
-                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
-                        <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#authModal">Зарегистрироваться</a></li>               
-                </ul>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
+                        <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li>   
+                        <li class="nav-item"><a class="nav-link" href="profile.html">Профиль</a></li>
+
+                    </ul>
+                </div>
             </div>
-        </div>
-    </nav>
+        </nav>        
+    </header>
 
     <main>
         <div class="container my-5">
@@ -102,9 +106,7 @@
                         </div>
 
                         <div class="card-footer bg-transparent border-0 text-end pb-4 pe-4">
-                            <button type="button" class="btn btn-custom-outline ms-2">
-                                <a class="nav-link" href="catalog.html" style="display: inline-block; padding: 0;">Назад</a>
-                            </button>
+                            <a href="catalog.html" class="btn btn-custom-outline ms-2 text-decoration-none">Назад</a>
                         </div>
                     </div>
                 </div>
@@ -122,5 +124,7 @@
 
     <script src="js/pages/card.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/authGuard.js"></script>
+    <script src="js/navigation.js"></script>
 </body>
 </html>

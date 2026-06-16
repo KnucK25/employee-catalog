@@ -1,4 +1,6 @@
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`
+const API_BASE = window.location.origin
+
+let photovers = 1
 
 function getEmployeeIdFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -24,7 +26,8 @@ function renderCard(employee) {
 
     const photoImg = document.querySelector('.employee-photo');
     if (photoImg) {
-        photoImg.src = employee.avatar || 'img/team1.png';
+        const photoUrl = employee.avatar? `${employee.avatar}?v=${photovers}` : "img/bio.png"
+        photoImg.src = photoUrl
     }
 
     const nameEl = document.querySelector('.employee-name');
@@ -34,7 +37,7 @@ function renderCard(employee) {
 
     const positionEl = document.querySelector('.employee-name + p');
     if (positionEl) {
-        positionEl.textContent = employee.position;
+        positionEl.textContent = employee.post;
     }
 
     const emailValue = document.querySelector('.info-box .col-sm-6:first-child .info-value');
@@ -49,7 +52,7 @@ function renderCard(employee) {
 
     const deptValue = document.querySelectorAll('.info-box .col-sm-6 .info-value')[2];
     if (deptValue) {
-        deptValue.textContent = employee.department;
+        deptValue.textContent = employee.departament;
     }
 
     const dateValue = document.querySelectorAll('.info-box .col-sm-6 .info-value')[3];
@@ -61,6 +64,64 @@ function renderCard(employee) {
     if (bioValue) {
         bioValue.textContent = employee.bio;
     }
+}
+
+let eventSource = null;
+
+function connectSSE() {
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    eventSource = new EventSource(`${API_BASE}/api/events`);
+    
+    eventSource.onopen = () => {
+        console.log('✅ SSE подключение установлено');
+    };
+    
+    eventSource.onmessage = async (event) => {
+        try {
+            const message = JSON.parse(event.data);
+            console.log('📨 Получено событие:', message);
+            
+            // Обрабатываем разные типы событий
+            if (message.type === 'employees.updated') {
+                console.log('🔄 Сотрудники обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'departments.updated') {
+                console.log('🔄 Отделы обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'posts.updated') {
+                console.log('🔄 Должности обновлены, перезагружаем...');
+                photovers++
+                const id = getEmployeeIdFromURL()
+                const employee = await loadEmployeeById(id)
+                renderCard(employee)
+            }
+            
+            if (message.type === 'connected') {
+                console.log('✅ Подключён к серверу уведомлений');
+            }
+            
+        } catch (err) {
+            console.error('Ошибка обработки SSE события:', err);
+        }
+    };
+    
+    eventSource.onerror = (err) => {
+        console.error('❌ SSE ошибка:', err);
+        // Браузер автоматически попытается переподключиться через 3 секунды
+    };
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -75,5 +136,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (card) {
             card.innerHTML = '<div class="alert alert-danger m-4">Сотрудник не найден или сервер недоступен</div>';
         }
+    }
+    connectSSE()
+});
+
+// Принудительно закрываем SSE при уходе со страницы
+window.addEventListener('beforeunload', () => {
+    if (eventSource) {
+        console.log('🔌 Закрываем SSE при уходе со страницы');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Также закрываем при скрытии вкладки (на всякий случай)
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && eventSource) {
+        console.log('👁️ Вкладка скрыта, закрываем SSE');
+        eventSource.close();
+        eventSource = null;
+    }
+});
+
+// Переподключаемся, когда вкладка снова стала активной
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !eventSource) {
+        console.log('👁️ Вкладка активна, переподключаем SSE');
+        connectSSE();
     }
 });

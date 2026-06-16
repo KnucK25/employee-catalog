@@ -12,15 +12,30 @@ import { departamentQueries } from './database/queries/departamentQueries';
 import { postQueries } from './database/queries/postQueries';
 import { imageQueries } from './database/queries/imageQueries';
 import { accountQueries } from './database/queries/accountQueries';
+import { rootQueries } from './database/queries/rootQueries';
 
 const app = express();
 app.use(express.json());
+
+const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem'
+    },
+    privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem'
+    }
+});
+
 
 // Разрешаем запросы с любого источника — иначе браузер опрокинет
 app.use((req: Request, res: Response, next: NextFunction) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
+    // ✅ Добавили кастомные заголовки
+    res.header('Access-Control-Allow-Headers', 'Content-Type, X-Employee-Data, Size-File');
 
     if (req.method === 'OPTIONS') {
         res.sendStatus(204);
@@ -31,14 +46,44 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 //Отдаём HTML/CSS/JS фронта
-app.use(express.static(path.join(__dirname, '../../frontend')));
+app.use('/css', express.static(path.join(__dirname, '../../frontend/css')));
 
+app.use('/js', express.static(path.join(__dirname, '../../frontend/js')));
+
+app.use('/img', express.static(path.join(__dirname, '../../frontend/img')));
+
+app.use(
+    '/assets',
+    express.static(path.join(__dirname, '../../frontend/assets'))
+);
+
+app.use(
+    '/css',
+    express.static(path.join(__dirname, '../../frontend/css'))
+);
+
+app.use(
+    '/js',
+    express.static(path.join(__dirname, '../../frontend/js'))
+);
+
+app.use(
+    '/img',
+    express.static(path.join(__dirname, '../../frontend/img'))
+);
 //Глобальная переменная для экземпляра БД
 let db: Database;
 
 // Токены хранятся в памяти: token → { employeeId, expiresAt }
-const sessions = new Map<string, { employeeId: number; expiresAt: number }>();
+const sessions = new Map<string, { employeeId: number | null; level: number; expiresAt: number }>();
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 часов
+const ACCESS_LEVELS = {
+    GUEST: 0,
+    USER: 1,
+    HR: 2,
+    ADMIN: 3,
+    SUPER_ADMIN: 4
+} as const;
 
 function hashPassword(password: string, salt: string): string {
     return crypto.createHmac('sha256', salt).update(password).digest('hex');
@@ -46,6 +91,17 @@ function hashPassword(password: string, salt: string): string {
 
 function generateToken(): string {
     return crypto.randomBytes(32).toString('hex');
+}
+
+function decryptPassword(encryptedPassword: string): string {
+    return crypto.privateDecrypt(
+        {
+            key: privateKey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        },
+        Buffer.from(encryptedPassword, 'base64')
+    ).toString('utf8');
 }
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -67,17 +123,133 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
     next();
 }
 
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+    const token = req.headers['authorization']?.replace('Bearer ', '');
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) {
+            sessions.delete(token);
+        }
+
+        res.status(401).json({ error: 'Сессия истекла, войдите снова' });
+        return;
+    }
+
+    if (session.level < ACCESS_LEVELS.HR) {
+        res.status(403).json({ error: 'Недостаточно прав' });
+        return;
+    }
+
+    next();
+}
+
+function getCookieToken(req: Request): string | null {
+    const cookie = req.headers.cookie;
+
+    if (!cookie) {
+        return null;
+    }
+
+    const cookies = cookie.split(';').map(c => c.trim());
+
+    for (const item of cookies) {
+        const [name, value] = item.split('=');
+
+        if (name === 'authToken') {
+            return value;
+        }
+    }
+
+    return null;
+}
+
+function requirePageLevel(minLevel: number) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const token = getCookieToken(req);
+
+        if (!token) {
+            res.redirect('/');
+            return;
+        }
+
+        const session = sessions.get(token);
+
+        if (!session || session.expiresAt < Date.now()) {
+            if (token) {
+                sessions.delete(token);
+            }
+
+            res.clearCookie('authToken');
+            res.redirect('/');
+            return;
+        }
+
+        if (session.level < minLevel) {
+            res.redirect('/');
+            return;
+        }
+
+        next();
+    };
+}
+
+interface getEmployee {
+    id: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    post_name: string,
+    departament_name: string,
+    departament_id: number,
+    post_id: number,
+    email: string,
+    phone: string,
+    date_admission: string,
+    description: string,
+    image_id: number | null
+}
+
+interface setEmployee {
+    id?: number,
+    firstname: string,
+    lastname: string,
+    middlename: string,
+    phone: string,
+    email: string,
+    description?: string,
+    date_admission?: string,
+    post_id: number,
+    image_id: number | null
+}
+
+interface departaments {
+    id: number,
+    name: string
+}
+
+interface post {
+    id: number,
+    name: string,
+    departament_id: number
+}
 
 //Переводим строку из базы к формату фронта
-function mapEmployee(row: any) {
+function mapEmployee(row: getEmployee) {
     return {
         id: row.id,
         name: `${row.lastname} ${row.firstname} ${row.middlename}`,
         firstname: row.firstname,
         lastname: row.lastname,
         middlename: row.middlename,
-        position: row.post_name,
-        department: row.departament_name,
+        post: row.post_name,
+        departament: row.departament_name,
         departament_id: row.departament_id,
         post_id: row.post_id,
         email: row.email,
@@ -88,6 +260,112 @@ function mapEmployee(row: any) {
         image_id: row.image_id
     };
 }
+
+interface CacheEntry<T> {
+    data: T;
+    expiresAt: number;
+}
+
+class DataCache {
+    private employees: CacheEntry<Array<ReturnType<typeof mapEmployee>>> | null = null
+    private departaments: CacheEntry<Array<departaments>> | null = null
+    private posts: CacheEntry<Array<post>> | null = null
+
+    private TTL = 60 * 1000; //Устаревание через минуту
+
+    async getEmployees(): Promise<Array<ReturnType<typeof mapEmployee>>> {
+        if (this.employees && this.employees.expiresAt > Date.now()) {
+            return this.employees.data
+        }
+
+        const rows: Array<getEmployee> = await db.all(employeeQueries.getAll)
+        const data = rows.map(mapEmployee)
+
+        this.employees = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getDepartaments(): Promise<Array<departaments>> {
+        if (this.departaments && this.departaments.expiresAt > Date.now()) {
+            return this.departaments.data
+        }
+
+        const data = await db.all(departamentQueries.getAll)
+
+        this.departaments = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getPosts(): Promise<Array<post>> {
+        if (this.posts && this.posts.expiresAt > Date.now()) {
+            return this.posts.data
+        }
+
+        const data = await db.all(postQueries.getAll)
+
+        this.posts = {
+            data,
+            expiresAt: Date.now() + this.TTL
+        }
+
+        return data
+    }
+
+    async getEmployeeById(id: number) {
+        const employees = await this.getEmployees()
+        return employees.find(e => e.id === id)
+    }
+
+    async getDepartamentById(id: number) {
+        const departaments = await this.getDepartaments()
+        return departaments.find(d => d.id === id)
+    }
+
+    async getPostById(id: number) {
+        const posts = await this.getPosts()
+        return posts.find(p => p.id === id)
+    }
+
+    async departamentExistByName(name: string) {
+        const departaments = await this.getDepartaments()
+        const departament = departaments.find(d => d.name === name)
+        return departament?.id
+    }
+
+    async postExistByName(name: string) {
+        const posts = await this.getPosts()
+        const post = posts.find(p => p.name === name)
+        return post?.id
+    }
+
+    invalidateEmployees(): void {
+        this.employees = null
+    }
+
+    invalidateDepartaments(): void {
+        this.departaments = null
+    }
+
+    invalidatePosts(): void {
+        this.posts = null
+    }
+
+    invalidateAll(): void {
+        this.employees = null
+        this.departaments = null
+        this.posts = null
+    }
+}
+
+const dataCache = new DataCache()
 
 // Загружает тестовые фотографии из папки test_images. Не использовать для загрузки с клиента.
 async function seedImg(filename: string): Promise<number | null> {
@@ -129,6 +407,7 @@ async function seedImg(filename: string): Promise<number | null> {
 
 //Если база пустая — вставляются тестовые данные при первом запуске (иначе ничего не увидим)
 async function seedDB() {
+
     const depCount = await db.get('SELECT COUNT(*) as cnt FROM departament');
 
     if (depCount && depCount.cnt > 0) {
@@ -259,16 +538,179 @@ async function seedDB() {
     }
     console.log('Тестовые сотрудники записаны');
 
+    const adminLogin = 'admin@admin';
+    const adminPassword = 'admin123';
+
+    const adminSalt = crypto.randomBytes(16).toString('hex');
+    const adminHash = hashPassword(adminPassword, adminSalt);
+
+    await db.run(accountQueries.create, [
+        adminLogin,
+        adminHash,
+        adminSalt,
+        1
+    ]);
+
+    await db.run(rootQueries.create, [
+        1,
+        ACCESS_LEVELS.SUPER_ADMIN
+    ]);
+
+    console.log('Стартовый администратор создан: login admin@admin, password admin123');
+
     console.log('Seed-данные вставлены');
 }
 
+// SSE эндпоинт для уведомлений клиентов
+// Хранилище подключённых SSE-клиентов
+const sseClients = new Set<Response>();
+
+// ✅ Функция отправки события с проверкой активности клиентов
+function broadcastEvent(eventType: string, data?: any) {
+    const message = {
+        type: eventType,
+        data: data || {},
+        timestamp: Date.now()
+    };
+    const payload = `data: ${JSON.stringify(message)}\n\n`;
+
+    sseClients.forEach(client => {
+        try {
+            // Проверяем, что соединение ещё открыто
+            if (!client.writable) {
+                sseClients.delete(client);
+                return;
+            }
+            client.write(payload);
+        } catch (err) {
+            // Если запись упала — удаляем мёртвого клиента
+            console.log('🗑️ Удаляем мёртвого SSE-клиента');
+            sseClients.delete(client);
+        }
+    });
+}
+
+// ✅ Периодический пинг каждые 15 секунд для обнаружения мёртвых соединений
+setInterval(() => {
+    sseClients.forEach(client => {
+        try {
+            // SSE-комментарий (начинается с ":") — игнорируется клиентом, но поддерживает TCP-соединение
+            client.write(`: heartbeat\n\n`);
+        } catch (err) {
+            console.log('🗑️ Удаляем мёртвого клиента (heartbeat failed)');
+            sseClients.delete(client);
+        }
+    });
+}, 15000);
+
+// ✅ SSE эндпоинт с корректной очисткой
+app.get('/api/events', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Accel-Buffering', 'no'); // Для Nginx/Railway прокси
+
+    sseClients.add(res);
+    console.log(`✅ SSE клиент подключён. Всего: ${sseClients.size}`);
+
+    // Отправляем приветствие
+    res.write(`data: ${JSON.stringify({ type: 'connected', timestamp: Date.now() })}\n\n`);
+
+    // Локальный heartbeat для этого клиента
+    const heartbeat = setInterval(() => {
+        try {
+            res.write(`: ping\n\n`);
+        } catch {
+            clearInterval(heartbeat);
+        }
+    }, 15000);
+
+    // ✅ При закрытии соединения — очищаем
+    req.on('close', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
+        console.log(`❌ SSE клиент отключён. Осталось: ${sseClients.size}`);
+    });
+
+    // На всякий случай — обработчик ошибки
+    req.on('error', () => {
+        clearInterval(heartbeat);
+        sseClients.delete(res);
+    });
+});
+
 //Авторизация
+app.get('/profile.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/profile.html'));
+});
+
+app.get('/', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/index.html', (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
+});
+
+app.get('/catalog.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/catalog.html'));
+});
+
+app.get('/card.html', requirePageLevel(1), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/card.html'));
+});
+
+app.get('/adminPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/adminPanel.html'));
+});
+
+app.get('/accessPanel.html', requirePageLevel(2), (req: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, '../../frontend/accessPanel.html'));
+});
+
+app.get('/api/auth/public-key', (req: Request, res: Response) => {
+    res.json({
+        publicKey
+    });
+});
+
+// Проверка актуальности токена
+app.get('/api/auth/me', (req: Request, res: Response) => {
+    // Пробуем получить токен из Authorization header
+    let token: string | null | undefined = req.headers['authorization']?.replace('Bearer ', '');
+
+    // Если нет — пробуем из cookie
+    if (!token) {
+        token = getCookieToken(req);
+    }
+
+    if (!token) {
+        res.status(401).json({ error: 'Требуется авторизация' });
+        return;
+    }
+
+    const session = sessions.get(token);
+
+    if (!session || session.expiresAt < Date.now()) {
+        if (token) sessions.delete(token);
+        res.clearCookie('authToken');  // Очищаем cookie при истечении
+        res.status(401).json({ error: 'Сессия истекла' });
+        return;
+    }
+
+    res.json({
+        employeeId: session.employeeId,
+        level: session.level,
+        expiresAt: session.expiresAt
+    });
+});
 
 app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword } = req.body;
 
-        if (!login || !password) {
+        if (!login || !encryptedPassword) {
             res.status(400).json({ error: 'Укажите логин и пароль' });
             return;
         }
@@ -280,6 +722,15 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const expectedHash = hashPassword(password, account.salt);
 
         if (expectedHash !== account.hash) {
@@ -287,21 +738,69 @@ app.post('/api/auth/login', async (req: Request, res: Response) => {
             return;
         }
 
-        const token = generateToken();
-        sessions.set(token, { employeeId: account.employee_id, expiresAt: Date.now() + SESSION_TTL_MS });
+        let level = 0;
 
-        res.json({ token });
+        if (account.employee_id) {
+            const root = await db.get(rootQueries.getByEmployeeId, [account.employee_id]);
+            level = root?.level ?? 1;
+        }
+
+        const token = generateToken();
+
+        sessions.set(token, {
+            employeeId: account.employee_id,
+            level,
+            expiresAt: Date.now() + SESSION_TTL_MS
+        });
+
+        res.cookie('authToken', token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: SESSION_TTL_MS
+        });
+
+        res.json({
+            token,
+            employeeId: account.employee_id,
+            level
+        });
+        // Никогда не произойдет
+        // res.json({ token });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка авторизации' });
     }
 });
 
-app.post('/api/auth/register', async (req: Request, res: Response) => {
+app.post('/api/auth/register', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { login, password } = req.body;
+        const { login, encryptedPassword, employee_id, level } = req.body;
 
-        if (!login || !password) {
-            res.status(400).json({ error: 'Укажите логин и пароль' });
+        if (!login || !encryptedPassword || !employee_id || level === undefined) {
+            res.status(400).json({ error: 'Укажите логин, пароль, id сотрудника и уровень прав' });
+            return;
+        }
+
+        const token = req.headers['authorization']?.replace('Bearer ', '');
+        const session = token ? sessions.get(token) : null;
+
+        if (!session) {
+            res.status(401).json({ error: 'Сессия не найдена' });
+            return;
+        }
+
+        const newLevel = Number(level);
+
+        if (
+            Number.isNaN(newLevel) ||
+            newLevel < ACCESS_LEVELS.USER ||
+            newLevel >= ACCESS_LEVELS.SUPER_ADMIN
+        ) {
+            res.status(400).json({ error: 'Уровень прав должен быть от 1 до 3' });
+            return;
+        }
+
+        if (newLevel >= session.level) {
+            res.status(403).json({ error: 'Нельзя создать аккаунт с уровнем равным или выше своего' });
             return;
         }
 
@@ -312,11 +811,35 @@ app.post('/api/auth/register', async (req: Request, res: Response) => {
             return;
         }
 
+        let password: string;
+
+        try {
+            password = decryptPassword(encryptedPassword);
+        } catch {
+            res.status(400).json({ error: 'Ошибка расшифровки пароля' });
+            return;
+        }
+
         const salt = crypto.randomBytes(16).toString('hex');
         const hash = hashPassword(password, salt);
-        await db.run(accountQueries.create, [login, hash, salt, null]);
 
-        res.status(201).json({ message: 'Аккаунт создан' });
+        await db.run(accountQueries.create, [
+            login,
+            hash,
+            salt,
+            employee_id
+        ]);
+
+        await db.run(rootQueries.create, [
+            employee_id,
+            newLevel
+        ]);
+
+        res.status(201).json({
+            message: 'Аккаунт создан',
+            employee_id,
+            level: newLevel
+        });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка регистрации' });
     }
@@ -385,8 +908,8 @@ app.put('/api/accounts/by-employee/:employeeId', async (req: Request, res: Respo
 
 app.get('/api/employees', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
-        res.json(rows.map(mapEmployee));
+        const employees = await dataCache.getEmployees()
+        res.status(200).json(employees)
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудников', err });
     }
@@ -394,8 +917,7 @@ app.get('/api/employees', async (req: Request, res: Response) => {
 
 app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(employeeQueries.getAll);
-        const employees = rows.map(mapEmployee);
+        const employees = await dataCache.getEmployees()
 
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
 
@@ -413,8 +935,8 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
                 e.lastname,
                 e.firstname,
                 e.middlename,
-                e.position,
-                e.department,
+                e.post,
+                e.departament,
                 e.email,
                 e.phone,
                 e.hireDate,
@@ -431,35 +953,41 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
         res.status(500).json({ error: 'Ошибка экспорта' });
     }
 });
-
-app.get('/api/employees/search', async (req: Request, res: Response) => {
-    try {
-        const q = `%${req.query.q ?? ''}%`;
-        const rows = await db.all(employeeQueries.search, { search: q });
-        res.json(rows.map(mapEmployee));
-    } catch (err) {
-        res.status(500).json({ error: 'Ошибка поиска' });
-    }
-});
+// Не используется
+// app.get('/api/employees/search', async (req: Request, res: Response) => {
+//     try {
+//         const q = `%${req.query.q ?? ''}%`;
+//         const rows = await db.all(employeeQueries.search, { search: q });
+//         res.json(rows.map(mapEmployee));
+//     } catch (err) {
+//         res.status(500).json({ error: 'Ошибка поиска' });
+//     }
+// });
 
 app.get('/api/employees/:id', async (req: Request, res: Response) => {
     try {
-        const row = await db.get(employeeQueries.getById, [req.params.id]);
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+            // Перенаправлять на 404 стр?
+        }
+        const id = Number(req.params.id)
+        const employee = await dataCache.getEmployeeById(id)
 
-        if (!row) {
+
+        if (!employee) {
             res.status(404).json({ error: 'Сотрудник не найден' });
             return;
         }
 
-        res.json(mapEmployee(row));
+        res.json(employee);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения сотрудника' });
     }
 });
 
-app.post('/api/employees', async (req: Request, res: Response) => {
+app.post('/api/employees', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body;
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee;
 
         const result = await db.run(employeeQueries.create, [
             firstname,
@@ -473,28 +1001,30 @@ app.post('/api/employees', async (req: Request, res: Response) => {
             image_id ?? null
         ]);
 
-        const newRow = await db.get(employeeQueries.getById, [result.lastID]);
-        res.status(201).json(mapEmployee(newRow));
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated')
+
+        if (!result.lastID) {
+            res.status(500).json({ error: "Запрос на создание был отправлен, но создания не произошло" })
+            return
+        }
+
+        const employee = await dataCache.getEmployeeById(result.lastID)
+
+        res.status(201).json({ ...employee, message: "Сотрудник успешно создан" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка создания' });
     }
 });
 
-app.put('/api/employees/:id', async (req: Request, res: Response) => {
-    interface body {
-        firstname: string,
-        lastname: String,
-        middlename: String,
-        email: String,
-        phone: String,
-        date_admission: String,
-        description: String,
-        departament_id: number,
-        post_id: number,
-        image_id: number;
-    }
+app.put('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        const { firstname, lastname, middlename, email, phone, date_admission, description, departament_id, post_id, image_id } = req.body as body
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+
+        const { firstname, lastname, middlename, email, phone, date_admission, description, post_id, image_id } = req.body as setEmployee
 
         await db.run(employeeQueries.update, [
             firstname,
@@ -504,56 +1034,295 @@ app.put('/api/employees/:id', async (req: Request, res: Response) => {
             phone,
             date_admission,
             description ?? '',
-            departament_id,
             post_id,
             image_id ?? null,
-            req.params.id
+            id
         ]);
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated', { id })
+        const employee = await dataCache.getEmployeeById(id)
 
-        const updated = await db.get(employeeQueries.getById, [req.params.id]);
-
-        if (!updated) {
-            res.status(404).json({ error: 'Сотрудник не найден' });
+        if (!employee) {
+            res.status(500).json({ error: 'Сотрудник был обновлен, но не был найден' });
             return;
         }
 
-        res.json(mapEmployee(updated));
+        res.json({ ...employee, message: "Сотрудник успешно сохранен" });
     } catch (err: any) {
         res.status(400).json({ error: err.message ?? 'Ошибка обновления' });
     }
-    return;
 });
 
-app.delete('/api/employees/:id', async (req: Request, res: Response) => {
+app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
-        await db.run(employeeQueries.remove, [req.params.id]);
-        res.json({ success: true });
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        await db.run(employeeQueries.remove, [id]);
+        dataCache.invalidateEmployees()
+        broadcastEvent('employees.updated', { id })
+        res.status(200).json({ message: "Сотрудник удален" });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка удаления' });
     }
 });
 
+// Обновление сотрудника + загрузка нового фото одним запросом
+app.put('/api/employees-and-photo/:id',
+    requireAuth,
+    requireAdmin,
+    express.raw({ type: 'image/*', limit: '5mb' }),
+    async (req: Request, res: Response) => {
+        try {
+            if (!/^\d+$/.test(req.params.id as string)) {
+                return res.status(404).json({ error: 'Невалидный параметр' })
+            }
+            const id = Number(req.params.id)
+
+            const existing = await dataCache.getEmployeeById(id)
+            if (!existing) {
+                res.status(404).json({ error: 'Сотрудник не найден' });
+                return;
+            }
+
+            const employeeHeader = req.headers['x-employee-data'];
+            if (!employeeHeader) {
+                res.status(400).json({ error: 'Отсутствуют данные сотрудника (X-Employee-Data)' });
+                return;
+            }
+
+            let employeeData: setEmployee;
+            try {
+                const decoded = decodeURIComponent(employeeHeader as string);
+                employeeData = JSON.parse(decoded);
+            } catch (e) {
+                return res.status(400).json({ error: 'Некорректный JSON в X-Employee-Data' });
+            }
+
+            // Валидация бинарных данных
+            const imageBuffer: Buffer = req.body;
+            if (!Buffer.isBuffer(imageBuffer) || imageBuffer.length === 0) {
+                res.status(400).json({ error: 'Отсутствует файл изображения' });
+                return;
+            }
+
+            const declaredSizeHeader = req.headers['size-file'];
+            if (!declaredSizeHeader) {
+                res.status(400).json({ error: 'Отсутствует заголовок Size-File' });
+                return;
+            }
+
+            const declaredSize = parseInt(declaredSizeHeader as string, 10);
+            if (isNaN(declaredSize)) {
+                return res.status(400).json({ error: 'Некорректный размер файла в заголовке Size-File' });
+            }
+
+            const actualSize = imageBuffer.length;
+            if (declaredSize !== actualSize) {
+                return res.status(400).json({ error: `Несоответствие размера файла: заявлено ${declaredSize} байт, получено ${actualSize} байт.` });
+            }
+
+            const mimeType = (req.headers['content-type'] ?? '').toLowerCase();
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+            if (!allowedTypes.includes(mimeType)) {
+                return res.status(400).json({ error: 'Недопустимый формат изображения' });
+            }
+
+            if (actualSize > 5 * 1024 * 1024) {
+                return res.status(400).json({ error: 'Файл слишком большой (макс. 5 МБ)' });
+            }
+
+            const dbMimeType = mimeType.replace('image/', '');
+
+            let finalImageId: number | null;
+
+            if (!employeeData.image_id) {
+                // Создаём новую запись, если у сотрудника нет фото
+                const imgResult = await db.run(imageQueries.create, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize
+                ]);
+                finalImageId = imgResult.lastID ?? null;
+            } else {
+                // Обновляем существующую запись, если у сотрудника уже была фотография
+                await db.run(imageQueries.update, [
+                    imageBuffer,
+                    dbMimeType,
+                    actualSize,
+                    employeeData.image_id
+                ]);
+                finalImageId = employeeData.image_id;
+            }
+
+            // Обновляем сотрудника
+            await db.run(employeeQueries.update, [
+                employeeData.firstname,
+                employeeData.lastname,
+                employeeData.middlename ?? '',
+                employeeData.email,
+                employeeData.phone,
+                employeeData.date_admission ?? existing.hireDate,
+                employeeData.description ?? '',
+                employeeData.post_id,
+                finalImageId,  // ✅ Теперь всегда корректный ID
+                id
+            ]);
+
+            dataCache.invalidateEmployees()
+            broadcastEvent('employees.updated', { id })
+
+            const employee = await dataCache.getEmployeeById(id)
+
+            if (!employee) {
+                return res.status(500).json({ error: 'Сотрудник обновлён, но не найден после сохранения' });
+            }
+
+            res.json({ ...employee, message: 'Сотрудник и фото успешно обновлены' });
+
+        } catch (err: any) {
+            console.error('Ошибка в /api/employees-and-photo/:id', err);
+            res.status(500).json({ error: err.message ?? 'Ошибка сервера' });
+        }
+    });
+
 //Маршруты отделов
 
-app.get('/api/departments', async (req: Request, res: Response) => {
+app.get('/api/departaments', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(departamentQueries.getAll);
-        res.json(rows);
+        const departaments = await dataCache.getDepartaments()
+        res.json(departaments);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения отделов' });
     }
 });
 
+app.post('/api/departaments', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { name } = req.body as { name: string };
+
+        if (name.trim() === '') {
+            return res.status(400).json({ error: 'Не введено название отдела' })
+        }
+
+        const exist = await dataCache.departamentExistByName(name)
+        if (exist) return res.status(409).json({ error: 'Такой отдел уже существует' })
+
+        const result = await db.run(departamentQueries.create, [name])
+
+        dataCache.invalidateDepartaments()
+        broadcastEvent('departments.updated');
+
+        if (!result.lastID) {
+            return res.status(500).json({ error: "Строка не была создана" })
+        }
+
+        const departament = await dataCache.getDepartamentById(result.lastID)
+        if (!departament) {
+            return res.status(500).json({ error: "Отдел создан, но не найден" })
+        }
+        return res.status(201).json(departament)
+    } catch (err: any) {
+        return res.status(500).json({ error: err.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/departaments/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        const exist = await dataCache.getDepartamentById(id)
+        if (!exist) return res.status(404).json({ error: "Не найден отдел с таким id" })
+
+        const posts = await dataCache.getPosts()
+        const deleted_posts = posts.filter(p => p.departament_id === id)
+
+        const deleted_posts_ids = new Set(deleted_posts.map(p => p.id))
+
+        const employees = await dataCache.getEmployees()
+        const deleted_employees = employees.filter(e => deleted_posts_ids.has(e.post_id))
+
+        await db.run(departamentQueries.remove, [id])
+        dataCache.invalidateAll()
+        broadcastEvent('departments.updated');
+        broadcastEvent('posts.updated')
+        broadcastEvent('employees.updated')
+        const existAfterDelete = await dataCache.getDepartamentById(id)
+
+        if (existAfterDelete) {
+            return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+        }
+
+        return res.status(200).json({ message: `Отдел с id ${id} был удален`, deleted_posts, deleted_employees })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
+
 //Маршруты должностей
 
 app.get('/api/posts', async (req: Request, res: Response) => {
     try {
-        const rows = await db.all(postQueries.getAll);
-        res.json(rows);
+        const posts = await dataCache.getPosts()
+        res.json(posts);
     } catch (err) {
         res.status(500).json({ error: 'Ошибка получения должностей' });
     }
 });
+
+app.post('/api/posts', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        const { departament_id, name } = req.body as post
+        if (name.trim() === '') return res.status(400).json({ error: "Не введено название должности" })
+
+        const exist = await dataCache.postExistByName(name)
+        if (exist) return res.status(409).json({ error: "Такая должность уже существует" })
+
+        const result = await db.run(postQueries.create, [departament_id, name])
+        dataCache.invalidatePosts()
+        broadcastEvent('posts.updated')
+        if (!result.lastID) {
+            return res.status(500).json({ message: "Новая должность была создана, но не была найдена" })
+        }
+        const post = await dataCache.getPostById(result.lastID)
+        if (!post) {
+            return res.status(500).json({ error: "Должность создана, но не найдена" })
+        }
+        return res.status(201).json(post)
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? 'Ошибка сервера' })
+    }
+})
+
+app.delete('/api/posts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
+    try {
+        if (!/^\d+$/.test(req.params.id as string)) {
+            return res.status(404).json({ error: 'Невалидный параметр' })
+        }
+        const id = Number(req.params.id)
+        const exist = await dataCache.getPostById(id)
+
+        if (!exist) return res.status(404).json({ error: `Не найдена должность с id ${id}` })
+
+        const employees = await dataCache.getEmployees()
+        const deleted_employees = employees.filter(e => e.post_id === id)
+
+        await db.run(postQueries.remove, [id])
+        dataCache.invalidateAll()
+        broadcastEvent('posts.updated')
+        broadcastEvent('employees.updated')
+        const existAfterDelete = await dataCache.getPostById(id)
+
+        if (existAfterDelete) return res.status(500).json({ error: "Запрос на удаление был отправлен, но удаления не произошло" })
+
+        return res.status(200).json({ message: `Должность с id ${id} была удалена`, deleted_employees })
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message ?? "Ошибка сервера" })
+    }
+})
 
 //Отдаём изображение по его id из таблицы image
 

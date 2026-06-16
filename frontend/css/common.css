@@ -1,0 +1,94 @@
+/* -- Цветовая палитра (СТРОГО 4 ЦВЕТА) -- */
+:root {
+    --alt: #F1EEE6;           /* бежевый для акцентных секций */
+    --white: #FFFFFF;         /* белый для карточек */
+    --black: #000000;         /* черный */
+    --accent-gold: #C29F64;   /* золотой акцентный */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--white);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* НАВИГАЦИЯ */
+.navbar.navbar {
+    background-color: var(--black);
+    padding: 1rem 0;
+}
+
+.navbar .navbar-brand {
+    color: var(--accent-gold);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    letter-spacing: normal;
+}
+
+.navbar .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+    margin-left: 1rem;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+}
+
+.navbar .navbar-nav .nav-link.active,
+.navbar .navbar-nav .nav-link:hover {
+    color: var(--accent-gold);
+}
+
+/* Стили для кнопок авторизации/выхода в навигации */
+.navbar-nav .nav-link.auth-btn,
+.navbar-nav .nav-link.logout-btn {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border: 1px solid var(--accent-gold);
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 0;
+    text-align: center;
+}
+
+.navbar-nav .nav-link.auth-btn:hover,
+.navbar-nav .nav-link.logout-btn:hover {
+    background-color: var(--accent-gold);
+    color: var(--black);
+    border-color: var(--accent-gold);
+}
+
+
+/* Бургер-меню (белый цвет) */
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* ФУТЕР */
+footer {
+    background-color: var(--black);
+    padding: 2rem 0;
+    margin-top: auto;
+    max-height: 130px;
+}
+
+footer p {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+    margin: 0;
+}

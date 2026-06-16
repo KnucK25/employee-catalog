@@ -12,7 +12,7 @@ export const postQueries = {
 
   /**
    * Принимает id должности.
-   * Возвращает id должности, название.
+   * Возвращает id должности, название, id отдела.
    */
   getById: `
     SELECT id, name, departament_id
@@ -46,5 +46,20 @@ export const postQueries = {
   remove: `
     DELETE FROM post
     WHERE id = ?;
+  `,
+
+  /**
+   * Принимает название должности.
+   * Возвращает id должности или undefined/null.
+   */
+  existByNameExceptId: `
+  SELECT id FROM post
+  WHERE name = ?
+  `,
+
+  getByDepId: `
+  SELECT id, name, departament_id FROM post
+  WHERE departament_id = ?
   `
+
 } as const;
