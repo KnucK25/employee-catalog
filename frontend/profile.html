@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,12 +7,11 @@
 
     <!-- Подключение Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/profile.css">
+    <link rel="stylesheet" href="css/card.css">
     <link rel="stylesheet" href="css/common.css">
 
 
 </head>
-
 <body>
 
     <header>
@@ -29,16 +27,16 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
+                   <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" href="index.html">Главная</a></li>
                         <li class="nav-item"><a class="nav-link" href="catalog.html">Каталог сотрудников</a></li>
-                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li>
+                        <li class="nav-item"><a class="nav-link" href="adminPanel.html">Админ панель</a></li> 
                         <li class="nav-item"><a class="nav-link active" href="profile.html">Профиль</a></li>
 
                     </ul>
                 </div>
             </div>
-        </nav>
+        </nav>        
     </header>
 
     <main>
@@ -52,9 +50,7 @@
 
                         <div class="card-body text-center p-4">
                             <!-- Фото пользователя -->
-                            <img src="img/icon_3.png" alt="Фото профиля"
-                                class="employee-photo rounded-circle mx-auto d-block mb-3"
-                                style="width: 150px; height: 150px;">
+                            <img src="img/user-placeholder.png" alt="Фото профиля" class="employee-photo rounded-circle mx-auto d-block mb-3" style="width: 150px; height: 150px;">
 
                             <!-- Секция для просмотра данных -->
                             <div id="view-profile">
@@ -79,42 +75,44 @@
                                         <div class="info-value" id="user-registration-date">01.01.2025</div>
                                     </div>
                                 </div>
+
+                                <div class="bio-text text-start mt-4">
+                                    <h6 class="text-uppercase mb-2">О себе</h6>
+                                    <p id="user-bio">Краткое описание пользователя, его интересов и профессиональной деятельности. Стараюсь писать лаконично и по делу.</p>
+                                </div>
                             </div>
 
                             <!-- Секция для редактирования (скрыта по умолчанию) -->
                             <div id="edit-profile" class="d-none">
-                                <h3 class="employee-name mt-3">
-                                    <!-- Имя - только просмотр -->
-                                    <div class="form-control form-control-lg text-center bg-light" id="edit-name-view">
-                                        Иван Иванов</div>
+                                <h3 class="employee-name mt-3editable">
+                                    <input type="text" class="form-control form-control-lg text-center" id="edit-name" value="Иван Иванов">
                                 </h3>
                                 <p class="text-uppercase">
-                                    <!-- Роль - только просмотр -->
-                                <div class="form-control text-center bg-light" id="edit-role-view">Разработчик</div>
+                                    <input type="text" class="form-control text-center" id="edit-role" value="Разработчик">
                                 </p>
 
                                 <div class="info-box mt-4 text-start">
                                     <div class="mb-3">
                                         <label for="edit-email" class="form-label info-label">Email</label>
-                                        <input type="email" class="form-control" id="edit-email"
-                                            value="ivan.ivanov@example.com">
+                                        <input type="email" class="form-control" id="edit-email" value="ivan.ivanov@example.com">
                                     </div>
                                     <div class="mb-3">
                                         <label for="edit-phone" class="form-label info-label">Телефон</label>
-                                        <input type="tel" class="form-control" id="edit-phone"
-                                            value="+7 (123) 456-78-90">
+                                        <input type="tel" class="form-control" id="edit-phone" value="+7 (123) 456-78-90">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="edit-password" class="form-label info-label">Новый пароль</label>
-                                        <input type="password" class="form-control" id="edit-password"
-                                            placeholder="Введите новый пароль">
+                                        <label for="edit-department" class="form-label info-label">Отдел</label>
+                                        <input type="text" class="form-control" id="edit-department" value="IT">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="edit-confirm-password" class="form-label info-label">Подтвердите
-                                            пароль</label>
-                                        <input type="password" class="form-control" id="edit-confirm-password"
-                                            placeholder="Повторите новый пароль">
+                                        <label for="edit-registration-date" class="form-label info-label">Дата регистрации</label>
+                                        <input type="text" class="form-control" id="edit-registration-date" value="01.01.2025" readonly> <!-- Дата регистрации обычно не редактируется -->
                                     </div>
+                                </div>
+
+                                <div class="bio-text text-start mt-4">
+                                    <h6 class="text-uppercase mb-2">О себе</h6>
+                                    <textarea class="form-control" id="edit-bio" rows="4">Краткое описание пользователя, его интересов и профессиональной деятельности. Стараюсь писать лаконично и по делу.</textarea>
                                 </div>
 
                                 <div class="d-flex justify-content-center gap-2 mt-4">
@@ -123,13 +121,15 @@
                                 </div>
                             </div>
 
-
                             <!-- Кнопка редактировать -->
                             <div class="text-center mt-4" id="edit-button-container">
                                 <button class="btn btn-custom-outline" id="edit-profile-btn">Редактировать</button>
                             </div>
                         </div>
 
+                        <div class="card-footer text-center">
+                            <!-- Футер -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -139,14 +139,12 @@
     <footer class="text-center py-5">
         <div class="container">
             <p class="mb-0">© 2026 STAFF.<br>
-                <span class="small opacity-50">Все права защищены.</span>
-            </p>
+            <span class="small opacity-50">Все права защищены.</span></p>
         </div>
     </footer>
 
-    <script src="js/pages/profile.js"></script>
+    <script src="js/pages/profile.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/navigation.js"></script>
 </body>
-
 </html>

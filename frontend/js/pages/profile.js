@@ -1,78 +1,3 @@
-// Функция для отображения модального окна с сообщением (оставляем для успеха)
-function showMessageModal(title, message, type = 'info', callback = null) {
-    // Создаем элементы модального окна
-    const modalContainer = document.createElement('div');
-    modalContainer.className = 'modal fade';
-    const modalId = `messageModal_${Date.now()}`;
-    modalContainer.id = modalId;
-    modalContainer.setAttribute('tabindex', '-1');
-    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
-    modalContainer.setAttribute('aria-hidden', 'true');
-
-    // Определяем стиль кнопки в зависимости от типа сообщения
-    const buttonClass = (type === 'error' || type === 'warning') ? 'btn-cancel' : 'btn-save';
-
-    modalContainer.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="${modalId}Label">${title}</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-                </div>
-                <div class="modal-body">
-                    ${message}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn ${buttonClass}" data-bs-dismiss="modal">OK</button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Добавляем модальное окно в DOM
-    document.body.appendChild(modalContainer);
-
-    // Создаем экземпляр модального окна Bootstrap
-    const modal = new bootstrap.Modal(modalContainer);
-    modal.show();
-
-    // Обработчик закрытия модального окна
-    modalContainer.addEventListener('hidden.bs.modal', function () {
-        document.body.removeChild(modalContainer);
-        if (callback && typeof callback === 'function') {
-            callback();
-        }
-    });
-}
-
-// Функция для отображения сообщения об ошибке в стиле всплывающего предупреждения
-function showProfileError(message, details = null) {
-    const existingError = document.querySelector('#edit-profile .profile-error');
-    if (existingError) existingError.remove();
-
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'profile-error alert alert-danger mt-3';
-    errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem; margin-bottom: 0;';
-
-    // Основное сообщение
-    errorDiv.innerHTML = `${message}`;
-
-    // Если есть детали, добавляем их
-    if (details) {
-        const detailsSpan = document.createElement('div');
-        detailsSpan.style.cssText = 'font-size: 0.75rem; margin-top: 0.3rem; opacity: 0.8;';
-        detailsSpan.textContent = details;
-        errorDiv.appendChild(detailsSpan);
-    }
-
-    const editProfileForm = document.getElementById('edit-profile');
-    editProfileForm.appendChild(errorDiv);
-
-    setTimeout(() => {
-        if (errorDiv) errorDiv.remove();
-    }, 10000);
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     // Находим нужные элементы DOM
     const viewProfileDiv = document.getElementById('view-profile');
@@ -82,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelEditBtn = document.getElementById('cancel-edit-btn');
     const editButtonContainer = document.getElementById('edit-button-container');
 
-    // Элементы для отображения данных в режиме просмотра
+    // Элементы для отображения данных
     const userNameDisplay = viewProfileDiv.querySelector('.employee-name');
     const userEmailDisplay = document.getElementById('user-email');
     const userPhoneDisplay = document.getElementById('user-phone');
@@ -90,136 +15,78 @@ document.addEventListener('DOMContentLoaded', () => {
     const userRegistrationDateDisplay = document.getElementById('user-registration-date');
     const userBioDisplay = document.getElementById('user-bio');
 
-    // Элементы для полей ввода (редактируемые)
+    // Элементы для полей ввода
+    const editNameInput = document.getElementById('edit-name');
+    const editRoleInput = document.getElementById('edit-role');
     const editEmailInput = document.getElementById('edit-email');
     const editPhoneInput = document.getElementById('edit-phone');
-    const editPasswordInput = document.getElementById('edit-password');
-    const editConfirmPasswordInput = document.getElementById('edit-confirm-password');
+    const editDepartmentInput = document.getElementById('edit-department');
+    const editRegistrationDateInput = document.getElementById('edit-registration-date');
+    const editBioTextarea = document.getElementById('edit-bio');
 
     // Функция для переключения между режимами просмотра и редактирования
     function toggleEditMode(isEditing) {
         if (isEditing) {
             // Переход в режим редактирования
-            viewProfileDiv.classList.add('d-none');
-            editProfileDiv.classList.remove('d-none');
-            editButtonContainer.classList.add('d-none');
+            viewProfileDiv.classList.add('d-none'); // Скрываем просмотр
+            editProfileDiv.classList.remove('d-none'); // Показываем редактирование
+            editButtonContainer.classList.add('d-none'); // Скрываем кнопку "Редактировать"
 
-            // Заполняем поля ввода текущими данными
+            // Заполняем поля ввода текущими данными (на случай, если они были изменены)
+            editNameInput.value = userNameDisplay.textContent;
+            editRoleInput.value = userNameDisplay.nextElementSibling.textContent; // Следующий элемент после имени - роль
             editEmailInput.value = userEmailDisplay.textContent;
             editPhoneInput.value = userPhoneDisplay.textContent;
-
-            // Очищаем поля пароля
-            editPasswordInput.value = '';
-            editConfirmPasswordInput.value = '';
+            editDepartmentInput.value = userDepartmentDisplay.textContent;
+            editRegistrationDateInput.value = userRegistrationDateDisplay.textContent; // Дата - только для чтения, но значение остается
+            editBioTextarea.value = userBioDisplay.textContent;
 
         } else {
             // Переход в режим просмотра
             viewProfileDiv.classList.remove('d-none');
             editProfileDiv.classList.add('d-none');
-            editButtonContainer.classList.remove('d-none');
+            editButtonContainer.classList.remove('d-none'); // Показываем кнопку "Редактировать"
         }
     }
 
     // Обработчик клика по кнопке "Редактировать"
     editProfileBtn.addEventListener('click', () => {
-        toggleEditMode(true);
+        toggleEditMode(true); // Включаем режим редактирования
     });
 
     // Обработчик клика по кнопке "Отменить"
     cancelEditBtn.addEventListener('click', () => {
-        toggleEditMode(false);
+        // Опционально: можно сбросить значения полей ввода к исходным, если нужно
+        // Для простоты, просто возвращаемся в режим просмотра
+        toggleEditMode(false); // Выключаем режим редактирования
     });
 
     // Обработчик клика по кнопке "Сохранить"
     saveProfileBtn.addEventListener('click', () => {
-        // Получаем новые значения
-        const newEmail = editEmailInput.value.trim();
-        const newPhone = editPhoneInput.value.trim();
-        const newPassword = editPasswordInput.value;
-        const confirmPassword = editConfirmPasswordInput.value;
+        // --- Логика сохранения ---
+        // Здесь вы можете добавить код для отправки данных на сервер (AJAX запрос)
+        // или просто обновить отображаемые данные на странице.
 
-        // Валидация с всплывающими сообщениями
-        if (!newEmail && !newPhone) {
-            showProfileError('Заполните обязательные поля', 'Email и Телефон не могут быть пустыми');
-            return;
-        }
+        // Пример обновления отображаемых данных:
+        const newName = editNameInput.value;
+        const newRole = editRoleInput.value;
+        const newEmail = editEmailInput.value;
+        const newPhone = editPhoneInput.value;
+        const newDepartment = editDepartmentInput.value;
+        const newBio = editBioTextarea.value;
 
-        if (!newEmail) {
-            showProfileError('Email обязателен для заполнения', 'Пожалуйста, укажите ваш email адрес');
-            return;
-        }
-
-        if (!newPhone) {
-            showProfileError('Телефон обязателен для заполнения', 'Пожалуйста, укажите ваш номер телефона');
-            return;
-        }
-
-        // Проверка email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(newEmail)) {
-            showProfileError('Некорректный Email', 'Пожалуйста, введите email в формате example@domain.com');
-            return;
-        }
-
-        // Проверка номера телефона (только цифры, знаки + и -)
-        const phoneRegex = /^[0-9+\-() ]+$/;
-        if (!phoneRegex.test(newPhone)) {
-            showProfileError('Некорректный номер телефона', 'Номер телефона может содержать только цифры, знаки +, -, скобки и пробелы');
-            return;
-        }
-
-        // Проверка пароля (если пользователь ввёл новый пароль)
-        if (newPassword || confirmPassword) {
-            if (newPassword.length < 6) {
-                showProfileError('Слишком короткий пароль', 'Пароль должен содержать минимум 6 символов');
-                return;
-            }
-            if (newPassword !== confirmPassword) {
-                showProfileError('Пароли не совпадают', 'Проверьте правильность ввода пароля в обоих полях');
-                return;
-            }
-        }
-
-        // Здесь будет отправка данных на сервер (AJAX запрос)
-        // Например:
-        /*
-        fetch('/api/update-profile', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: newEmail,
-                phone: newPhone,
-                password: newPassword || undefined
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                userEmailDisplay.textContent = newEmail;
-                userPhoneDisplay.textContent = newPhone;
-                showMessageModal('Успех', 'Профиль успешно обновлен!', 'success', () => {
-                    toggleEditMode(false);
-                });
-            } else {
-                showProfileError('Ошибка при обновлении', data.message || 'Попробуйте позже или обратитесь в поддержку');
-            }
-        })
-        .catch(error => {
-            console.error('Ошибка:', error);
-            showProfileError('Ошибка соединения', 'Проверьте подключение к интернету');
-        });
-        */
-
-        // Обновляем данные на странице (без сервера)
+        userNameDisplay.textContent = newName;
+        userNameDisplay.nextElementSibling.textContent = newRole; // Обновляем роль
         userEmailDisplay.textContent = newEmail;
         userPhoneDisplay.textContent = newPhone;
+        userDepartmentDisplay.textContent = newDepartment;
+        userBioDisplay.textContent = newBio;
 
-        // Успех — показываем модальное окно
-        showMessageModal('Успех', 'Профиль успешно обновлен!', 'success', () => {
-            toggleEditMode(false);
-        });
+        // Показываем уведомление об успешном сохранении (опционально)
+        alert('Профиль успешно обновлен!');
+
+        // После сохранения возвращаемся в режим просмотра
+        toggleEditMode(false);
     });
 
     // Изначально показываем режим просмотра
