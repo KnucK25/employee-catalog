@@ -118,7 +118,7 @@ function showAuthSuccess(message, modal, form) {
         if (modal) modal.hide();
         form.reset();
         window.location.href = 'index.html';
-    }, 3000);
+    }, 1500);
 }
 
 // Функция для проверки состояния сервера
@@ -184,7 +184,7 @@ if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        const login = loginEmail.value.trim();
+        const login = loginEmail.value.trim().toLowerCase();
         const password = loginPassword.value;
         
         // Удаляем старые сообщения
@@ -217,11 +217,11 @@ if (loginForm) {
             return emailRegex.test(email);
         }
 
-        if (!isValidEmail(login)) {
-            showAuthError('Неверный формат email');
-            return;
+        if (!login) { 
+            showAuthError('Введите email'); 
+            return; 
         }
-        
+
         //  ПРОВЕРКА СЕРВЕРА 
         const serverAvailable = await checkServerStatus();
         if (!serverAvailable) {

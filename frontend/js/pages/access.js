@@ -12,6 +12,78 @@ function getAuthHeaders(contentType = 'application/json') {
     return headers;
 }
 
+async function getPublicKey() {
+    const API_BASE = window.location.origin;
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/public-key`);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        const data = await res.json();
+        return data.publicKey;
+    } catch (err) {
+        console.error('Ошибка получения публичного ключа:', err);
+        throw new Error('Не удалось получить ключ шифрования. Проверьте сервер.');
+    }
+}
+
+async function encryptPassword(password) {
+    try {
+        const publicKeyPem = await getPublicKey();
+        
+        const publicKey = await window.crypto.subtle.importKey(
+            'spki',
+            pemToArrayBuffer(publicKeyPem),
+            {
+                name: 'RSA-OAEP',
+                hash: 'SHA-256'
+            },
+            false,
+            ['encrypt']
+        );
+
+        const encodedPassword = new TextEncoder().encode(password);
+        const encrypted = await window.crypto.subtle.encrypt(
+            { name: 'RSA-OAEP' },
+            publicKey,
+            encodedPassword
+        );
+
+        return arrayBufferToBase64(encrypted);
+    } catch (err) {
+        console.error('Ошибка шифрования пароля:', err);
+        throw new Error('Ошибка шифрования данных');
+    }
+}
+
+function pemToArrayBuffer(pem) {
+    const base64 = pem
+        .replace('-----BEGIN PUBLIC KEY-----', '')
+        .replace('-----END PUBLIC KEY-----', '')
+        .replace(/\s/g, '');
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+
+    return btoa(binary);
+}
+
+
 // Функция для отображения сообщения об ошибке под конкретным полем
 function showFieldError(inputElement, message) {
     const parent = inputElement.parentElement;
@@ -113,12 +185,36 @@ function confirmDeleteModal(accountId, accountName) {
     const modal = new bootstrap.Modal(modalContainer);
     modal.show();
     
-    modalContainer.addEventListener('hidden.bs.modal', () => {
+    modalContainer.addEventListener('hidden.bs.modal', function() {
         modalContainer.remove();
     });
 }
 
 async function performDeleteAccount(accountId) {
+    const currentEmployeeId = localStorage.getItem('employeeId');
+    const account = allAccountsData.find(acc => acc.id === accountId);
+    if (account && account.employee_id === Number(currentEmployeeId)) {
+        const errorContainer = document.getElementById('accessContainer');
+        if (errorContainer) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-warning mt-3';
+            errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+            errorDiv.textContent = 'Вы не можете удалить свой собственный аккаунт';
+            errorContainer.prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
+        return;
+    }
+    
+    const modalElement = document.getElementById(`confirmDeleteModal_${accountId}`);
+    if (modalElement) {
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        if (modal) modal.hide();
+        setTimeout(() => {
+            if (modalElement.parentNode) modalElement.remove();
+        }, 300);
+    }
+    
     try {
         const res = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
             method: 'DELETE',
@@ -127,14 +223,31 @@ async function performDeleteAccount(accountId) {
         
         if (!res.ok) {
             const error = await res.json();
-            alert('Ошибка удаления: ' + (error.error || 'Неизвестная ошибка'));
+            const errorContainer = document.getElementById('accessContainer');
+            if (errorContainer) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger mt-3';
+                errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+                errorDiv.textContent = 'Ошибка удаления: ' + (error.error || 'Неизвестная ошибка');
+                errorContainer.prepend(errorDiv);
+                setTimeout(() => errorDiv.remove(), 10000);
+            }
             return;
         }
         
         await loadAccessData();
+        
     } catch (err) {
         console.error('Ошибка удаления:', err);
-        alert('Ошибка сети при удалении');
+        const errorContainer = document.getElementById('accessContainer');
+        if (errorContainer) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger mt-3';
+            errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem;';
+            errorDiv.textContent = 'Ошибка сети при удалении';
+            errorContainer.prepend(errorDiv);
+            setTimeout(() => errorDiv.remove(), 10000);
+        }
     }
 }
 
@@ -376,7 +489,6 @@ async function createAccount() {
     const loginInput = document.getElementById('newAccountLogin');
     const passwordInput = document.getElementById('newAccountPassword');
     
-    // Очищаем старые ошибки
     clearAllFieldErrors('createAccountForm');
     
     let hasError = false;
@@ -387,7 +499,11 @@ async function createAccount() {
     }
     
     if (!login) {
+<<<<<<< HEAD
         showFieldError(loginInput, 'Введите Email');
+=======
+        showFieldError(loginInput, 'Введите email');
+>>>>>>> main
         hasError = true;
     } else if (!isValidEmail(login)) {
         showFieldError(loginInput, 'Неверный формат email');
@@ -405,16 +521,26 @@ async function createAccount() {
     if (hasError) return;
     
     try {
+        let encryptedPassword;
+        try {
+            encryptedPassword = await encryptPassword(password);
+        } catch (encryptErr) {
+            console.error('Ошибка шифрования:', encryptErr);
+            showFieldError(loginInput, 'Ошибка шифрования данных');
+            return;
+        }
+        
         const res = await fetch(`${API_BASE}/api/auth/register`, {
             method: 'POST',
             headers: getAuthHeaders(),
             body: JSON.stringify({
                 login: login,
-                encryptedPassword: password,
+                encryptedPassword: encryptedPassword, 
                 employee_id: parseInt(employeeId),
                 level: level
             })
         });
+
         
         const data = await res.json();
         
@@ -432,7 +558,6 @@ async function createAccount() {
         showFieldError(loginInput, 'Ошибка сети при создании аккаунта');
     }
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     loadAccessData();
     

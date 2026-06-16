@@ -432,51 +432,44 @@ async function performDeleteAction(employeeId) {
     }
 
     editingEmployeeId = null;
-    renderEmployees();
+    filter_and_search();
     console.log(`Аккаунт сотрудника ${employeeId} обновлён`);
 }
 
 // Отмена редактирования
 function cancelEdit(employeeId) {
-    editingEmployeeId = null; // ✅ Сбрасываем флаг
-    renderEmployees();
+    editingEmployeeId = null;
+    filter_and_search();
 }
 
-function renderEmployees() {
-    const container = document.getElementById('employeesContainer');
-    if (!container) {
-        console.error('Контейнер employeesContainer НЕ найден!');
-        return;
-    }
-
-    // Удаляем сотрудника из массива employees
-    const index = employees.findIndex(emp => emp.id === employeeId);
-    if (index !== -1) {
-        employees.splice(index, 1);
-    }
-
-    // Обновляем отображение, если таблица стала пустой
-    if (employees.length === 0) {
-        const container = document.getElementById('employeesContainer');
-        container.innerHTML = `
-            <div class="row">
-                <div class="col-12 text-center py-4">
-                    <p class="text-muted">Сотрудники не найдены</p>
-                </div>
-            </div>
-        `;
-    } else {
-        // Если остались сотрудники, запускаем фильтрацию заново, чтобы обновить видимость
-        filter_and_search();
-    }
-
-    console.log(`Сотрудник ${employeeId} удалён. Осталось: ${employees.length}`);
-}
-
-// Измененная функция deleteEmployee
 async function deleteEmployee(employeeId) {
-    // Перед фактическим удалением показываем модальное окно подтверждения
-    confirmDeleteModal(employeeId);
+    const employee = employees.find(emp => emp.id === employeeId);
+    const name = employee ? employee.name : `#${employeeId}`;
+
+    if (!confirm(`Удалить сотрудника "${name}"?`)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
+        if (!res.ok) {
+            const data = await res.json();
+            alert('Ошибка удаления: ' + (data.error ?? 'Неизвестная ошибка'));
+            return;
+        }
+    } catch (err) {
+        console.warn('Ошибка удаления на сервере:', err);
+        alert('Ошибка сети при удалении');
+    }
 }
 
 

@@ -69,8 +69,7 @@
                         <div class="d-flex gap-2 justify-content-between">
                             <button class="btn btn-gold flex-fill" onclick="openControlModal()">Добавить</button>
                             <button class="btn btn-outline-dark flex-fill" id="exportBtn">Экспорт</button>
-                            <!-- <button class="btn btn-outline-dark flex-fill" onclick="openAccountModal()">Аккаунты</button> -->
-                            <a href="accessPanel.html" class="btn btn-outline-dark flex-fill text-center">Аккаунты</a>
+                            <button class="btn btn-outline-dark flex-fill" onclick="checkAccessAndRedirect()">Аккаунты</button>                        
                         </div>
                     </div>
                 </div>
@@ -291,7 +290,7 @@
                     </div>
                     <div class="mb-3">
                         <label for="regEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="regEmail" required>
+                        <input type="text" class="form-control" id="regEmail" required>
                     </div>
                     <div class="mb-3">
                         <label for="regPassword" class="form-label">Пароль</label>
