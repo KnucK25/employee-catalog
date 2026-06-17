@@ -102,7 +102,7 @@
 }
 
 .btn-custom-outline:hover {
-    background-color: var(--black);
+    background-color: var(--white);
     border-color: var(--black);
 }
 
