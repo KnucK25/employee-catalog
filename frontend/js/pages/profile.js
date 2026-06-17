@@ -228,10 +228,17 @@ async function loadUserProfile() {
             editRoleDisplay.textContent = employee.post || 'Сотрудник';
         }
 
-        // Контактные данные
+        // ===== КОНТАКТНЫЕ ДАННЫЕ =====
+
+        // Для email: если пустой или null - показываем "Не указан" для просмотра
         const userEmailDisplay = document.getElementById('user-email');
         if (userEmailDisplay) {
-            userEmailDisplay.textContent = employee.email || 'Не указан';
+            const emailValue = employee.email;
+            if (emailValue && emailValue.trim() !== '' && emailValue !== 'null') {
+                userEmailDisplay.textContent = emailValue;
+            } else {
+                userEmailDisplay.textContent = 'Не указан';
+            }
         }
 
         // Для телефона: если пустой или null - показываем "Не указан" для просмотра
@@ -277,7 +284,7 @@ async function loadUserProfile() {
         const userData = {
             id: employee.id,
             name: employee.name,
-            email: employee.email,
+            email: employee.email || '', // Сохраняем как есть (может быть пустым)
             phone: employee.phone || '', // Сохраняем как есть (может быть пустым)
             post: employee.post,
             departament: employee.departament,
@@ -477,8 +484,13 @@ document.addEventListener('DOMContentLoaded', () => {
             editProfileDiv.classList.remove('d-none');
             editButtonContainer.classList.add('d-none');
 
-            // Заполняем поля ввода текущими данными
-            editEmailInput.value = userEmailDisplay.textContent;
+            // Для email: если в просмотре "Не указан", то в поле ввода ставим пустую строку
+            const emailDisplayValue = userEmailDisplay.textContent;
+            if (emailDisplayValue === 'Не указан') {
+                editEmailInput.value = '';
+            } else {
+                editEmailInput.value = emailDisplayValue;
+            }
 
             // Для телефона: если в просмотре "Не указан", то в поле ввода ставим пустую строку
             const phoneDisplayValue = userPhoneDisplay.textContent;
@@ -596,7 +608,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (allSuccess) {
                 // Обновляем отображаемые данные
-                userEmailDisplay.textContent = newEmail;
+                // Для email: если пустая строка - показываем "Не указан"
+                if (newEmail && newEmail.trim() !== '') {
+                    userEmailDisplay.textContent = newEmail;
+                } else {
+                    userEmailDisplay.textContent = 'Не указан';
+                }
 
                 // Для телефона: если пустая строка - показываем "Не указан"
                 if (newPhone && newPhone.trim() !== '') {
@@ -607,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Обновляем данные в localStorage
                 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                currentUser.email = newEmail;
+                currentUser.email = newEmail; // Сохраняем как есть (может быть пустым)
                 currentUser.phone = newPhone; // Сохраняем как есть (может быть пустым)
                 localStorage.setItem('user', JSON.stringify(currentUser));
 
