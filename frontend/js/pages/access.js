@@ -633,3 +633,27 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sortSelect) sortSelect.addEventListener('change', filterAndSearch);
 });
 
+// ============================================================
+// ПОЛУЧЕНИЕ ID ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ИЗ ТОКЕНА
+// ============================================================
+
+async function getCurrentEmployeeId() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) return null;
+        
+        const data = await res.json();
+        return data.employeeId;
+    } catch (err) {
+        console.error('Ошибка получения ID текущего пользователя:', err);
+        return null;
+    }
+}
