@@ -14,11 +14,10 @@ import { imageQueries } from './database/queries/imageQueries';
 import { accountQueries } from './database/queries/accountQueries';
 import { rootQueries } from './database/queries/rootQueries';
 
-const app = express();
-app.use(express.json());
-
 const PROTECTED_EMPLOYEE_ID = 1; // ID первого администратора (создается при seed)
 
+const app = express();
+app.use(express.json());
 
 const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
@@ -969,6 +968,25 @@ app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, 
             res.status(404).json({ error: 'Аккаунт не найден' });
             return;
         }
+        
+        // Получаем текущего пользователя из токена
+        const token = req.headers['authorization']?.replace('Bearer ', '');
+        const session = token ? sessions.get(token) : null;
+        const currentEmployeeId = session?.employeeId;
+        
+        // Запрещаем удаление аккаунта первого администратора (employee_id = 1)
+        if (account.employee_id === PROTECTED_EMPLOYEE_ID) {
+            return res.status(403).json({ 
+                error: 'Невозможно удалить аккаунт первого администратора системы' 
+            });
+        }
+        
+        // Запрещаем удаление своего собственного аккаунта
+        if (currentEmployeeId === account.employee_id) {
+            return res.status(403).json({ 
+                error: 'Вы не можете удалить свой собственный аккаунт' 
+            });
+        }
 
         if (account.employee_id) {
             await db.run(rootQueries.removeByEmployeeId, [account.employee_id]);
@@ -996,20 +1014,17 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
     try {
         const employees = await dataCache.getEmployees()
 
-        const delimiter = ';';
-        
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
 
         const escape = (val: any) => {
             const str = val == null ? '' : String(val);
-            if (str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
+            return str.includes(',') || str.includes('"') || str.includes('\n')
+                ? `"${str.replace(/"/g, '""')}"`
+                : str;
         };
 
         const lines = [
-            headers.join(delimiter),
+            headers.join(','),
             ...employees.map(e => [
                 e.id,
                 e.lastname,
@@ -1021,25 +1036,18 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
                 e.phone,
                 e.hireDate,
                 e.bio
-            ].map(escape).join(delimiter))
+            ].map(escape).join(','))
         ];
 
-        // Добавляем BOM для правильного отображения кириллицы в Excel
-        const BOM = '\uFEFF';
-        const csvContent = lines.join('\n');
-        const csvWithBom = BOM + csvContent;
+        const csv = '﻿' + lines.join('\r\n');
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.send(csvWithBom);
-        
+        res.send(csv);
     } catch (err) {
-        console.error('Ошибка экспорта CSV:', err);
         res.status(500).json({ error: 'Ошибка экспорта' });
     }
 });
-
 // Не используется
 // app.get('/api/employees/search', async (req: Request, res: Response) => {
 //     try {
@@ -1442,8 +1450,9 @@ async function startServer() {
 }
 
 
-// ВМЕСТО существующего DELETE /api/employees/:id
+// ЗАЩИТА ОТ УДАЛЕНИЯ ПЕРВОГО АДМИНИСТРАТОРА И САМОГО СЕБЯ
 
+// ЗАМЕНИТЕ существующий DELETE /api/employees/:id на этот:
 app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
     try {
         if (!/^\d+$/.test(req.params.id as string)) {
@@ -1479,50 +1488,6 @@ app.delete('/api/employees/:id', requireAuth, requireAdmin, async (req: Request,
     }
 });
 
-// ВМЕСТО существующего DELETE /api/accounts/:id
 
-app.delete('/api/accounts/:id', requireAuth, requireAdmin, async (req: Request, res: Response) => {
-    try {
-        if (!/^\d+$/.test(req.params.id as string)) {
-            res.status(400).json({ error: 'Невалидный параметр' });
-            return;
-        }
-        const id = Number(req.params.id);
-
-        const account = await db.get(accountQueries.getById, [id]);
-        if (!account) {
-            res.status(404).json({ error: 'Аккаунт не найден' });
-            return;
-        }
-        
-        // Получаем текущего пользователя из токена
-        const token = req.headers['authorization']?.replace('Bearer ', '');
-        const session = token ? sessions.get(token) : null;
-        const currentEmployeeId = session?.employeeId;
-        
-        // Запрещаем удаление аккаунта первого администратора (employee_id = 1)
-        if (account.employee_id === PROTECTED_EMPLOYEE_ID) {
-            return res.status(403).json({ 
-                error: 'Невозможно удалить аккаунт первого администратора системы' 
-            });
-        }
-        
-        // Запрещаем удаление своего собственного аккаунта
-        if (currentEmployeeId === account.employee_id) {
-            return res.status(403).json({ 
-                error: 'Вы не можете удалить свой собственный аккаунт' 
-            });
-        }
-
-        if (account.employee_id) {
-            await db.run(rootQueries.removeByEmployeeId, [account.employee_id]);
-        }
-        await db.run(accountQueries.removeById, [id]);
-
-        res.json({ success: true });
-    } catch (err: any) {
-        res.status(500).json({ error: err.message ?? 'Ошибка удаления аккаунта' });
-    }
-});
 
 startServer().catch(console.error)
