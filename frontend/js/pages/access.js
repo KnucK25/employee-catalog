@@ -423,8 +423,8 @@ async function saveAccountFromModal() {
         hasError = true;
     }
     
-    if (password && password.length < 4) {
-        showFieldError(passwordInput, 'Пароль должен содержать минимум 4 символа');
+    if (password && password.length < 6) {
+        showFieldError(passwordInput, 'Пароль должен содержать минимум 6 символа');
         hasError = true;
     }
     
@@ -565,3 +565,109 @@ document.addEventListener('DOMContentLoaded', function() {
     if (accessFilter) accessFilter.addEventListener('change', filterAndSearch);
     if (sortSelect) sortSelect.addEventListener('change', filterAndSearch);
 });
+
+// УДАЛЕНИЕ АККАУНТА (с защитой)
+
+function confirmDeleteAccount(accountId, login, employeeId) {
+    // Проверяем, является ли аккаунт первого администратора (employee_id = 1)
+    if (employeeId === 1) {
+        showMessageModal(
+            'Невозможно удалить', 
+            'Аккаунт первого администратора системы не может быть удален.', 
+            'warning'
+        );
+        return;
+    }
+
+    // Проверяем, не пытается ли пользователь удалить свой собственный аккаунт
+    const currentEmployeeId = Number(localStorage.getItem('employeeId'));
+    if (currentEmployeeId === employeeId) {
+        showMessageModal(
+            'Действие запрещено', 
+            'Вы не можете удалить свой собственный аккаунт.', 
+            'warning'
+        );
+        return;
+    }
+
+    const modalContainer = document.createElement('div');
+    modalContainer.className = 'modal fade';
+    const modalId = `confirmDeleteAccountModal_${accountId}`;
+    modalContainer.id = modalId;
+    modalContainer.setAttribute('tabindex', '-1');
+    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
+    modalContainer.setAttribute('aria-hidden', 'true');
+
+    modalContainer.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="${modalId}Label">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-2">Вы уверены, что хотите удалить аккаунт?</p>
+                    <p class="fw-bold">${login}</p>
+                    <p class="text-muted small mt-2">Это действие нельзя будет отменить. Пользователь потеряет доступ к системе.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-save" id="confirmDeleteAccountBtn_${accountId}">Удалить</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modalContainer);
+
+    const modal = new bootstrap.Modal(modalContainer);
+    modal.show();
+
+    document.getElementById(`confirmDeleteAccountBtn_${accountId}`).addEventListener('click', async function() {
+        modal.hide();
+        await performDeleteAccount(accountId);
+    });
+
+    modalContainer.addEventListener('hidden.bs.modal', function () {
+        document.body.removeChild(modalContainer);
+    });
+}
+
+async function performDeleteAccount(accountId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/accounts/${accountId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/';
+            }, 2000);
+            return;
+        }
+
+        // Обработка ошибок от сервера
+        if (res.status === 403) {
+            const data = await res.json();
+            showMessageModal('Действие запрещено', data.error || 'У вас нет прав на удаление этого аккаунта.', 'warning');
+            return;
+        }
+
+        if (!res.ok) {
+            const data = await res.json();
+            showMessageModal('Ошибка ' + res.status, data.error || 'Попробуйте позже', 'error');
+            return;
+        }
+
+        showMessageModal('Успех', 'Аккаунт успешно удален!', 'success', async () => {
+            await loadAccounts();
+        });
+
+    } catch (err) {
+        console.warn('Ошибка удаления аккаунта:', err);
+        showMessageModal('Ошибка сети', 'Не удалось удалить аккаунт. Проверьте подключение к интернету.', 'error');
+    }
+}
