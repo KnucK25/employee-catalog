@@ -1253,3 +1253,150 @@ function checkAccessAndRedirect() {
         window.location.href = 'accessPanel.html';
     }
 }
+
+// ============================================================
+// ПОЛУЧЕНИЕ ID ТЕКУЩЕГО ПОЛЬЗОВАТЕЛЯ ИЗ ТОКЕНА
+// ============================================================
+
+async function getCurrentEmployeeId() {
+    const token = localStorage.getItem('authToken');
+    if (!token) return null;
+    
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!res.ok) return null;
+        
+        const data = await res.json();
+        return data.employeeId;
+    } catch (err) {
+        console.error('Ошибка получения ID текущего пользователя:', err);
+        return null;
+    }
+}
+
+// ============================================================
+// МОДАЛЬНОЕ ОКНО ПОДТВЕРЖДЕНИЯ УДАЛЕНИЯ СОТРУДНИКА
+// ============================================================
+
+async function confirmDeleteModal(employeeId) {
+    const employee = employees.find(emp => emp.id === employeeId);
+    const name = employee ? employee.name : `#${employeeId}`;
+
+    // Проверка: нельзя удалить первого администратора (id = 1)
+    if (employeeId === 1) {
+        showMessageModal(
+            'Невозможно удалить',
+            'Первый администратор системы не может быть удален.',
+            'warning'
+        );
+        return;
+    }
+
+    // Получаем ID текущего пользователя с сервера
+    const currentEmployeeId = await getCurrentEmployeeId();
+    
+    // Проверка: нельзя удалить самого себя
+    if (currentEmployeeId === employeeId) {
+        showMessageModal(
+            'Действие запрещено',
+            'Вы не можете удалить самого себя.',
+            'warning'
+        );
+        return;
+    }
+
+    const modalContainer = document.createElement('div');
+    modalContainer.className = 'modal fade';
+    const modalId = `confirmDeleteModal_${employeeId}`;
+    modalContainer.id = modalId;
+   modalContainer.setAttribute('tabindex', '-1');
+    modalContainer.setAttribute('aria-labelledby', `${modalId}Label`);
+    modalContainer.setAttribute('aria-hidden', 'true');
+
+    modalContainer.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="${modalId}Label">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-2">Вы уверены, что хотите удалить сотрудника?</p>
+                    <p class="fw-bold">${name}</p>
+                    <p class="text-muted small mt-2">Это действие нельзя будет отменить.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-save" id="confirmDeleteBtn_${employeeId}">Удалить</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modalContainer);
+
+    const modal = new bootstrap.Modal(modalContainer);
+    modal.show();
+
+    document.getElementById(`confirmDeleteBtn_${employeeId}`).addEventListener('click', async function() {
+        modal.hide();
+        await performDeleteEmployee(employeeId);
+    });
+
+    modalContainer.addEventListener('hidden.bs.modal', function () {
+        document.body.removeChild(modalContainer);
+    });
+}
+
+async function performDeleteEmployee(employeeId) {
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+
+        if (res.status === 401) {
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/';
+            }, 2000);
+            return;
+        }
+
+        // Обработка 403 ошибки от сервера
+        if (res.status === 403) {
+            const data = await res.json();
+            showMessageModal('Действие запрещено', data.error || 'У вас нет прав на удаление этого сотрудника.', 'warning');
+            return;
+        }
+
+        if (!res.ok) {
+            const data = await res.json();
+            showMessageModal('Ошибка ' + res.status, data.error || 'Попробуйте позже', 'error');
+            return;
+        }
+
+        // Проверка: если пользователь удалил сам себя (защита на случай ошибки)
+        const currentEmployeeId = await getCurrentEmployeeId();
+        if (currentEmployeeId === employeeId) {
+            localStorage.clear();
+            window.location.href = 'index.html';
+            return;
+        }
+
+        showMessageModal('Успех', 'Сотрудник успешно удален!', 'success', async () => {
+            await loadEmployees();
+            filter_and_search();
+        });
+
+    } catch (err) {
+        console.warn('Ошибка удаления на сервере:', err);
+        showMessageModal('Ошибка сети', 'Не удалось удалить сотрудника. Проверьте подключение к интернету.', 'error');
+    }
+}
