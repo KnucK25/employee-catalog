@@ -9,6 +9,7 @@
     display: flex;
     align-items: center;
     position: relative;
+
 }
 
 .hero-section .container {
@@ -40,14 +41,14 @@
     opacity: 0.8;
 }
 
-/* КНОПКИ HERO - УБРАН transition, добавлен white-space */
+/* КНОПКИ HERO */
 .hero-section .btn {
     padding: 0.8rem 2rem;
     font-weight: 600;
     border-radius: 0;
     min-width: 200px;
     font-size: 1rem;
-    white-space: nowrap;
+    white-space: nowrap; /* ← текст в одну строку */
 }
 
 .hero-section .btn:first-child {
@@ -159,6 +160,8 @@ section h2::after {
     margin-right: auto;
 }
 
+
+
 /* Секция статистики */
 .stats-section {
     background-color: var(--black);
@@ -207,6 +210,7 @@ section h2::after {
 }
 
 .team-section img:hover {
+    transform: scale(1.05);
     border-color: var(--black);
 }
 
@@ -224,10 +228,7 @@ section h2::after {
     font-size: 0.9rem;
 }
 
-/* ============================================================
-   АДАПТИВНОСТЬ (из кода напарницы)
-   ============================================================ */
-
+/* ===== Адаптив для главной страницы ===== */
 @media (max-width: 768px) {
     /* Шапка и подвал компактнее */
     header, footer {
@@ -235,7 +236,7 @@ section h2::after {
     }
 
     header .navbar-brand {
-        font-size: 1.1rem;
+        font-size: 1.1rem; /* название сайта меньше */
     }
 
     footer {
@@ -265,7 +266,7 @@ section h2::after {
         padding: 0.6rem 1rem;
         min-width: auto;
         font-size: 0.85rem;
-        white-space: nowrap;
+        white-space: nowrap; /* текст в одну строку */
     }
 
     section h2 {
@@ -338,7 +339,7 @@ section h2::after {
         margin: 0;
         font-size: 0.72rem;
         padding: 0.5rem 1rem;
-        white-space: nowrap;
+        white-space: nowrap; /* текст в одну строку */
     }
 
     .about-section p {
@@ -358,6 +359,7 @@ section h2::after {
 
     .about-section .d-flex {
         gap: 1.5rem !important;
+
     }
 
     /* преимущества */
@@ -397,10 +399,7 @@ section h2::after {
     }
 }
 
-/* ============================================================
-   МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ
-   ============================================================ */
-
+/* Модальное окно авторизации */
 #authModal .modal-header {
     background-color: var(--black);
     border-bottom: none;
@@ -447,7 +446,7 @@ section h2::after {
     font-weight: 500;
     border: 1px solid var(--black);
     font-size: 0.9rem;
-    white-space: nowrap;
+    white-space: nowrap; /* ← текст в одну строку */
 }
 
 #authModal .btn-auth:hover {
@@ -469,7 +468,7 @@ section h2::after {
 
 #authRequiredModal .btn {
     border-radius: 0px;
-    white-space: nowrap;
+    white-space: nowrap; /* ← текст в одну строку */
 }
 
 #authRequiredModal .modal-title {

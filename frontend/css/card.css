@@ -81,7 +81,7 @@
     font-size: 0.9rem;
 }
 
-/* Иконки - УБРАН transition */
+/* Иконки */
 .info-icon {
     opacity: 0.6;
     width: 18px;
@@ -92,7 +92,7 @@
     opacity: 1;
 }
 
-/* Кнопка назад - УБРАН transition */
+/* Кнопка назад */
 .btn-custom-outline {
     background-color: transparent;
     border: 1px solid var(--black);

@@ -498,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ===== ВАЖНО: Шифруем пароль перед отправкой =====
+            // Шифруем пароль перед отправкой =====
             try {
                 encryptedPassword = await encryptPassword(newPassword);
                 console.log('Пароль успешно зашифрован');

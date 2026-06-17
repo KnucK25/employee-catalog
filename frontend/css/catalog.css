@@ -53,6 +53,11 @@
     flex-direction: column;
 }
 
+.employee-card:hover {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
 /* Фото сотрудника */
 .employee-photo {
     width: 100%;
@@ -69,6 +74,10 @@
     height: 100%;
     object-fit: cover;
     object-position: center;
+}
+
+.employee-card:hover .employee-photo img {
+    transform: scale(1.05);
 }
 
 /* Информация о сотруднике */
@@ -99,7 +108,6 @@
     margin-bottom: 1rem;
 }
 
-/* Кнопка "Подробнее" */
 .btn-details {
     margin-top: auto;
     display: inline-block;
@@ -123,11 +131,7 @@
     color: white;
 }
 
-/* ============================================================
-   АДАПТИВНОСТЬ (через Bootstrap)
-   ============================================================ */
-
-/* Планшеты и телефоны (до 768px) */
+/* Адаптивность для мобильных устройств */
 @media (max-width: 768px) {
     /* Контейнер */
     .container {
@@ -166,9 +170,30 @@
         padding: 0.6rem 0.8rem;
     }
 
-    /* Карточка сотрудника - Bootstrap колонки уже работают через .col-6 */
+    /* Сетка карточек - принудительно 2 колонки через CSS Grid */
+    .employees-section .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1rem;
+    }
+
+    /* Сбрасываем Bootstrap классы для колонок */
+    .col-md-4, .col-lg-3 {
+        width: 100% !important;
+        flex: none !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    /* Карточка сотрудника */
+    .employee-card {
+        border-radius: 6px;
+    }
+
     .employee-photo {
+        width: 80%;
         height: 180px;
+        margin: 1rem auto 0;
     }
 
     .employee-info {
@@ -199,19 +224,35 @@
     }
 }
 
-/* Маленькие мобильные устройства (до 480px) */
+/* Адаптивность для маленьких мобильных устройств */
 @media (max-width: 480px) {
     .container h1 {
         font-size: 1.3rem;
     }
 
+    /* Секция поиска - элементы в столбик */
     .search-section .row > div {
         margin-bottom: 0.6rem;
     }
 
-    /* Карточка сотрудника */
+    /* Сетка карточек - 2 колонки */
+    .employees-section .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.8rem;
+    }
+
+    .col-md-4, .col-lg-3 {
+        width: 100% !important;
+        flex: none !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
     .employee-photo {
+        width: 85%;
         height: 140px;
+        margin: 0.8rem auto 0;
     }
 
     .employee-info {
@@ -239,10 +280,25 @@
     }
 }
 
-/* Очень маленькие экраны (до 360px) */
+/* Для очень маленьких экранов - всё ещё 2 колонки */
 @media (max-width: 360px) {
+    .employees-section .row {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.6rem;
+    }
+
+    .col-md-4, .col-lg-3 {
+        width: 100% !important;
+        flex: none !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
     .employee-photo {
+        width: 88%;
         height: 120px;
+        margin: 0.6rem auto 0;
     }
 
     .employee-name {
