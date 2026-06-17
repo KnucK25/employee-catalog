@@ -1014,17 +1014,21 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
     try {
         const employees = await dataCache.getEmployees()
 
+        const delimiter = ';';  // ← Используем ; вместо ,
+        
         const headers = ['ID', 'Фамилия', 'Имя', 'Отчество', 'Должность', 'Отдел', 'Email', 'Телефон', 'Дата приёма', 'Описание'];
 
         const escape = (val: any) => {
             const str = val == null ? '' : String(val);
-            return str.includes(',') || str.includes('"') || str.includes('\n')
-                ? `"${str.replace(/"/g, '""')}"`
-                : str;
+            // Проверяем на delimiter (;) вместо запятой
+            if (str.includes(delimiter) || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
         };
 
         const lines = [
-            headers.join(','),
+            headers.join(delimiter),
             ...employees.map(e => [
                 e.id,
                 e.lastname,
@@ -1036,15 +1040,21 @@ app.get('/api/employees/export/csv', requireAuth, async (req: Request, res: Resp
                 e.phone,
                 e.hireDate,
                 e.bio
-            ].map(escape).join(','))
+            ].map(escape).join(delimiter))
         ];
 
-        const csv = '﻿' + lines.join('\r\n');
+        // Добавляем BOM для правильного отображения кириллицы в Excel
+        const BOM = '\uFEFF';
+        const csvContent = lines.join('\n');
+        const csvWithBom = BOM + csvContent;
 
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
         res.setHeader('Content-Disposition', 'attachment; filename="employees.csv"');
-        res.send(csv);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.send(csvWithBom);
+        
     } catch (err) {
+        console.error('Ошибка экспорта CSV:', err);
         res.status(500).json({ error: 'Ошибка экспорта' });
     }
 });
