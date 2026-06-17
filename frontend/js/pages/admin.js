@@ -190,7 +190,7 @@ async function loadEmployees() {
             window.location.href = '/';
             return;
         }
-        
+
         if (!employeesRes.ok) throw new Error('Ошибка сервера');
         employees = await employeesRes.json();
         departamentsList = await departamentsRes.json();
@@ -274,6 +274,43 @@ function connectSSE() {
     eventSource.onerror = (err) => {
         console.error('SSE ошибка:', err);
     };
+}
+
+// повторение - мать учение
+// Экспорт сотрудников в CSV
+async function exportAllEmployees() {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        alert('Для экспорта необходимо войти в аккаунт');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/api/employees/export/csv`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+            alert('Сессия истекла. Войдите снова.');
+            localStorage.removeItem('authToken');
+            return;
+        }
+
+        if (!res.ok) {
+            alert('Ошибка экспорта');
+            return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'employees.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        alert('Ошибка сети при экспорте');
+    }
 }
 
 //Первая отрисовка страницы и слушатели фильтров + поиска
