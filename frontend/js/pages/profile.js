@@ -70,7 +70,9 @@ function showProfileError(message, details = null) {
     }, 10000);
 }
 
-// ФУНКЦИЯ ШИФРОВАНИЯ ПАРОЛЯ  
+// ============================================================
+// ФУНКЦИЯ ШИФРОВАНИЯ ПАРОЛЯ (для входа в систему)
+// ============================================================
 
 async function getPublicKey() {
     try {
@@ -134,7 +136,9 @@ async function encryptPassword(password) {
     }
 }
 
-// АГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ 
+// ============================================================
+// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
+// ============================================================
 
 async function loadUserProfile() {
     const token = localStorage.getItem('authToken');
@@ -200,7 +204,7 @@ async function loadUserProfile() {
             console.warn('Не удалось загрузить логин:', err);
         }
 
-        //  ЗАПОЛНЯЕМ ДАННЫЕ НА СТРАНИЦЕ 
+        // ===== ЗАПОЛНЯЕМ ДАННЫЕ НА СТРАНИЦЕ =====
 
         // Имя и должность (для режима просмотра)
         const userNameDisplay = document.querySelector('#view-profile .employee-name');
@@ -230,9 +234,15 @@ async function loadUserProfile() {
             userEmailDisplay.textContent = employee.email || 'Не указан';
         }
 
+        // Для телефона: если пустой или null - показываем "Не указан" для просмотра
         const userPhoneDisplay = document.getElementById('user-phone');
         if (userPhoneDisplay) {
-            userPhoneDisplay.textContent = employee.phone || 'Не указан';
+            const phoneValue = employee.phone;
+            if (phoneValue && phoneValue.trim() !== '' && phoneValue !== 'null') {
+                userPhoneDisplay.textContent = phoneValue;
+            } else {
+                userPhoneDisplay.textContent = 'Не указан';
+            }
         }
 
         // Отдел
@@ -253,7 +263,7 @@ async function loadUserProfile() {
             userBioDisplay.textContent = employee.bio || 'Информация отсутствует';
         }
 
-        //  ФОТО ПОЛЬЗОВАТЕЛЯ 
+        // ===== ФОТО ПОЛЬЗОВАТЕЛЯ =====
         const photoImg = document.querySelector('.employee-photo');
         if (photoImg) {
             if (employee.avatar) {
@@ -268,7 +278,7 @@ async function loadUserProfile() {
             id: employee.id,
             name: employee.name,
             email: employee.email,
-            phone: employee.phone,
+            phone: employee.phone || '', // Сохраняем как есть (может быть пустым)
             post: employee.post,
             departament: employee.departament,
             hireDate: employee.hireDate,
@@ -295,7 +305,7 @@ async function loadUserProfile() {
 
 // ОБНОВЛЕНИЕ ПРОФИЛЯ
 
-async function updateUserProfile(email, phone, encryptedPassword) {
+async function updateUserProfile(email, phone, plainPassword) {
     const token = localStorage.getItem('authToken');
     if (!token) {
         showProfileError('Ошибка авторизации', 'Пожалуйста, войдите в систему заново');
@@ -318,7 +328,7 @@ async function updateUserProfile(email, phone, encryptedPassword) {
             lastname: userData.lastname || '',
             middlename: userData.middlename || '',
             email: email,
-            phone: phone,
+            phone: phone, // Может быть пустой строкой
             date_admission: userData.hireDate || new Date().toISOString().split('T')[0],
             description: userData.bio || '',
             post_id: userData.post_id || 1,
@@ -350,8 +360,9 @@ async function updateUserProfile(email, phone, encryptedPassword) {
             return false;
         }
 
-        // Если передан зашифрованный пароль - обновляем его через аккаунт
-        if (encryptedPassword) {
+        // Если передан пароль - обновляем его через аккаунт
+        // ВАЖНО: отправляем пароль в открытом виде, бэкенд сам его захеширует
+        if (plainPassword) {
             const accountRes = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
                 method: 'PUT',
                 headers: {
@@ -359,7 +370,7 @@ async function updateUserProfile(email, phone, encryptedPassword) {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    password: encryptedPassword
+                    password: plainPassword  // Отправляем в открытом виде, бэкенд захеширует
                 })
             });
 
@@ -414,8 +425,16 @@ document.addEventListener('DOMContentLoaded', () => {
             editProfileDiv.classList.remove('d-none');
             editButtonContainer.classList.add('d-none');
 
+            // Заполняем поля ввода текущими данными
             editEmailInput.value = userEmailDisplay.textContent;
-            editPhoneInput.value = userPhoneDisplay.textContent;
+
+            // Для телефона: если в просмотре "Не указан", то в поле ввода ставим пустую строку
+            const phoneDisplayValue = userPhoneDisplay.textContent;
+            if (phoneDisplayValue === 'Не указан') {
+                editPhoneInput.value = '';
+            } else {
+                editPhoneInput.value = phoneDisplayValue;
+            }
 
             editPasswordInput.value = '';
             editConfirmPasswordInput.value = '';
@@ -442,12 +461,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Обработчик клика по кнопке "Сохранить"
     saveProfileBtn.addEventListener('click', async () => {
         const newEmail = editEmailInput.value.trim();
-        const newPhone = editPhoneInput.value.trim();
+        const newPhone = editPhoneInput.value.trim(); // Может быть пустой строкой
         const newPassword = editPasswordInput.value;
         const confirmPassword = editConfirmPasswordInput.value;
 
-        //  ВАЛИДАЦИЯ С ВЫВОДОМ ОШИБОК ПОД ПОЛЯМИ 
+        // ===== ВАЛИДАЦИЯ С ВЫВОДОМ ОШИБОК ПОД ПОЛЯМИ =====
 
+        // Проверка email (обязательное поле)
         if (!newEmail) {
             showProfileError('Email обязателен для заполнения', 'Пожалуйста, укажите ваш email адрес');
             return;
@@ -459,19 +479,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!newPhone) {
-            showProfileError('Телефон обязателен для заполнения', 'Пожалуйста, укажите ваш номер телефона');
-            return;
-        }
-
-        const phoneRegex = /^[0-9+\-() ]+$/;
-        if (!phoneRegex.test(newPhone)) {
-            showProfileError('Некорректный номер телефона', 'Номер телефона может содержать только цифры, знаки +, -, скобки и пробелы');
-            return;
+        // Проверка телефона (НЕОБЯЗАТЕЛЬНОЕ поле)
+        // Если телефон не пустой - проверяем формат
+        if (newPhone && newPhone.length > 0) {
+            const phoneRegex = /^[0-9+\-() ]+$/;
+            if (!phoneRegex.test(newPhone)) {
+                showProfileError('Некорректный номер телефона', 'Номер телефона может содержать только цифры, знаки +, -, скобки и пробелы');
+                return;
+            }
         }
 
         // Проверка пароля (если пользователь ввёл новый пароль)
-        let encryptedPassword = null;
+        let plainPassword = null;
         if (newPassword || confirmPassword) {
             if (newPassword.length < 6) {
                 showProfileError('Слишком короткий пароль', 'Пароль должен содержать минимум 6 символов');
@@ -481,36 +500,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 showProfileError('Пароли не совпадают', 'Проверьте правильность ввода пароля в обоих полях');
                 return;
             }
-
-            // Шифруем пароль перед отправкой 
-            try {
-                encryptedPassword = await encryptPassword(newPassword);
-                console.log('Пароль успешно зашифрован');
-            } catch (encryptErr) {
-                console.error('Ошибка шифрования пароля:', encryptErr);
-                showProfileError('Ошибка шифрования', 'Не удалось зашифровать пароль. Попробуйте позже.');
-                return;
-            }
+            plainPassword = newPassword; // Сохраняем в открытом виде для отправки
         }
 
-        //  ОТПРАВКА ДАННЫХ НА СЕРВЕР 
+        // ===== ОТПРАВКА ДАННЫХ НА СЕРВЕР =====
 
         // Показываем состояние загрузки
         saveProfileBtn.disabled = true;
         saveProfileBtn.textContent = 'Сохранение...';
 
         try {
-            const success = await updateUserProfile(newEmail, newPhone, encryptedPassword);
+            const success = await updateUserProfile(newEmail, newPhone, plainPassword);
 
             if (success) {
-                // Обновляем отображаемые данные (email и телефон)
+                // Обновляем отображаемые данные
                 userEmailDisplay.textContent = newEmail;
-                userPhoneDisplay.textContent = newPhone;
+
+                // Для телефона: если пустая строка - показываем "Не указан"
+                if (newPhone && newPhone.trim() !== '') {
+                    userPhoneDisplay.textContent = newPhone;
+                } else {
+                    userPhoneDisplay.textContent = 'Не указан';
+                }
 
                 // Обновляем данные в localStorage
                 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                 currentUser.email = newEmail;
-                currentUser.phone = newPhone;
+                currentUser.phone = newPhone; // Сохраняем как есть (может быть пустым)
                 localStorage.setItem('user', JSON.stringify(currentUser));
 
                 // Показываем модальное окно об успехе
