@@ -71,6 +71,72 @@ function showProfileError(message, details = null) {
 }
 
 // ============================================================
+// ФУНКЦИЯ ШИФРОВАНИЯ ПАРОЛЯ (копия из script.js)
+// ============================================================
+
+async function getPublicKey() {
+    try {
+        const res = await fetch(`${API_BASE}/api/auth/public-key`);
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        const data = await res.json();
+        return data.publicKey;
+    } catch (err) {
+        console.error('Ошибка получения публичного ключа:', err);
+        throw new Error('Не удалось получить ключ шифрования');
+    }
+}
+
+function pemToArrayBuffer(pem) {
+    const base64 = pem
+        .replace('-----BEGIN PUBLIC KEY-----', '')
+        .replace('-----END PUBLIC KEY-----', '')
+        .replace(/\s/g, '');
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
+
+async function encryptPassword(password) {
+    try {
+        const publicKeyPem = await getPublicKey();
+        const publicKey = await window.crypto.subtle.importKey(
+            'spki',
+            pemToArrayBuffer(publicKeyPem),
+            {
+                name: 'RSA-OAEP',
+                hash: 'SHA-256'
+            },
+            false,
+            ['encrypt']
+        );
+        const encodedPassword = new TextEncoder().encode(password);
+        const encrypted = await window.crypto.subtle.encrypt(
+            { name: 'RSA-OAEP' },
+            publicKey,
+            encodedPassword
+        );
+        return arrayBufferToBase64(encrypted);
+    } catch (err) {
+        console.error('Ошибка шифрования пароля:', err);
+        throw new Error('Ошибка шифрования данных');
+    }
+}
+
+// ============================================================
 // ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
 // ============================================================
 
@@ -202,7 +268,12 @@ async function loadUserProfile() {
             bio: employee.bio,
             avatar: employee.avatar,
             login: login,
-            level: meData.level
+            level: meData.level,
+            firstname: employee.firstname,
+            lastname: employee.lastname,
+            middlename: employee.middlename,
+            post_id: employee.post_id,
+            image_id: employee.image_id
         };
         localStorage.setItem('user', JSON.stringify(userData));
 
@@ -219,7 +290,7 @@ async function loadUserProfile() {
 // ОБНОВЛЕНИЕ ПРОФИЛЯ
 // ============================================================
 
-async function updateUserProfile(email, phone, password) {
+async function updateUserProfile(email, phone, encryptedPassword) {
     const token = localStorage.getItem('authToken');
     if (!token) {
         showProfileError('Ошибка авторизации', 'Пожалуйста, войдите в систему заново');
@@ -232,32 +303,21 @@ async function updateUserProfile(email, phone, password) {
         return false;
     }
 
-    // Сначала получаем текущие данные сотрудника
     try {
-        const currentRes = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        });
+        // Получаем данные пользователя из localStorage
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
-        if (!currentRes.ok) {
-            showProfileError('Ошибка', 'Не удалось загрузить текущие данные');
-            return false;
-        }
-
-        const currentData = await currentRes.json();
-
-        // Формируем запрос на обновление
+        // Формируем запрос на обновление данных сотрудника
         const updateBody = {
-            firstname: currentData.firstname,
-            lastname: currentData.lastname,
-            middlename: currentData.middlename || '',
+            firstname: userData.firstname || '',
+            lastname: userData.lastname || '',
+            middlename: userData.middlename || '',
             email: email,
             phone: phone,
-            date_admission: currentData.hireDate,
-            description: currentData.bio || '',
-            post_id: currentData.post_id,
-            image_id: currentData.image_id || null
+            date_admission: userData.hireDate || new Date().toISOString().split('T')[0],
+            description: userData.bio || '',
+            post_id: userData.post_id || 1,
+            image_id: userData.image_id || null
         };
 
         // Обновляем данные сотрудника
@@ -285,8 +345,8 @@ async function updateUserProfile(email, phone, password) {
             return false;
         }
 
-        // Если передан пароль - обновляем его через аккаунт
-        if (password) {
+        // Если передан зашифрованный пароль - обновляем его через аккаунт
+        if (encryptedPassword) {
             const accountRes = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
                 method: 'PUT',
                 headers: {
@@ -294,7 +354,7 @@ async function updateUserProfile(email, phone, password) {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    password: password
+                    password: encryptedPassword
                 })
             });
 
@@ -412,6 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Проверка пароля (если пользователь ввёл новый пароль)
+        let encryptedPassword = null;
         if (newPassword || confirmPassword) {
             if (newPassword.length < 6) {
                 showProfileError('Слишком короткий пароль', 'Пароль должен содержать минимум 6 символов');
@@ -419,6 +480,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             if (newPassword !== confirmPassword) {
                 showProfileError('Пароли не совпадают', 'Проверьте правильность ввода пароля в обоих полях');
+                return;
+            }
+
+            // Шифруем пароль перед отправкой
+            try {
+                encryptedPassword = await encryptPassword(newPassword);
+            } catch (encryptErr) {
+                console.error('Ошибка шифрования пароля:', encryptErr);
+                showProfileError('Ошибка шифрования', 'Не удалось зашифровать пароль. Попробуйте позже.');
                 return;
             }
         }
@@ -430,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         saveProfileBtn.textContent = 'Сохранение...';
 
         try {
-            const success = await updateUserProfile(newEmail, newPhone, newPassword || null);
+            const success = await updateUserProfile(newEmail, newPhone, encryptedPassword);
 
             if (success) {
                 // Обновляем отображаемые данные

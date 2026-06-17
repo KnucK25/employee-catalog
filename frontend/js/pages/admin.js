@@ -14,7 +14,7 @@ let selectedDepartament = null
 let photovers = 1
 
 function getAuthHeaders(contentType = 'application/json') {
-
+    
     const token = localStorage.getItem('authToken');
     return {
         'Content-Type': contentType,
@@ -178,16 +178,18 @@ function renderEmployees(employeesList) {
 //Получает с сервера и записывает профили должности и отделы, отрисовывает отделы, должности и пользователей
 async function loadEmployees() {
     try {
-    // Загружаем всё параллельно и ждём завершения
+        // Загружаем всё параллельно и ждём завершения
         const [employeesRes, departamentsRes, postsRes] = await Promise.all([
             fetch(`${API_BASE}/api/employees`),
             fetch(`${API_BASE}/api/departaments`),
             fetch(`${API_BASE}/api/posts`)
         ]);
         if (employeesRes.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.clear();
-            window.location.href = '/';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
             return;
         }
 
@@ -276,43 +278,6 @@ function connectSSE() {
     };
 }
 
-// повторение - мать учение
-// Экспорт сотрудников в CSV
-async function exportAllEmployees() {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        alert('Для экспорта необходимо войти в аккаунт');
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_BASE}/api/employees/export/csv`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
-            localStorage.removeItem('authToken');
-            return;
-        }
-
-        if (!res.ok) {
-            alert('Ошибка экспорта');
-            return;
-        }
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'employees.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        alert('Ошибка сети при экспорте');
-    }
-}
-
 //Первая отрисовка страницы и слушатели фильтров + поиска
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM загружен, загружаем данные с сервера');
@@ -320,7 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('departamentFilter').addEventListener('change', filter_and_search);
     document.getElementById('postFilter')?.addEventListener('change', filter_and_search);
     document.getElementById('searchInput')?.addEventListener('input', filter_and_search);
-    document.getElementById('exportBtn')?.addEventListener('click', exportAllEmployees);
+        document.getElementById('exportBtn')?.addEventListener('click', exportAllEmployees);
     connectSSE();
 });
 
@@ -349,7 +314,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ============================================================
-// НОВЫЕ ФУНКЦИИ ДЛЯ МОДАЛЬНЫХ ОКОН И ВАЛИДАЦИИ
+// ФУНКЦИИ ДЛЯ МОДАЛЬНЫХ ОКОН И ВАЛИДАЦИИ
 // ============================================================
 
 // Функция для отображения сообщения об ошибке в стиле всплывающего предупреждения
@@ -583,6 +548,7 @@ async function deleteDepartment(id) {
 
         } catch (error) {
             console.error("Ошибка сети: ", error)
+            showProfileError('Ошибка сети', 'Не удалось удалить отдел. Проверьте подключение к интернету.');
         }
     });
 
@@ -887,7 +853,7 @@ async function saveEmployeeFromModal() {
 }
 
 // ============================================================
-// ОСТАЛЬНЫЕ ФУНКЦИИ (БЕЗ ИЗМЕНЕНИЙ)
+// ОСТАЛЬНЫЕ ФУНКЦИИ
 // ============================================================
 
 // Загрузка отделов для модалки
@@ -940,7 +906,10 @@ async function loadDepartmentsForPostModal() {
 // Добавление отдела
 async function addDepartment() {
     const name = document.getElementById('newDepartmentName').value.trim();
-    if (!name) return;
+    if (!name) {
+        showProfileError('Ошибка', 'Введите название отдела');
+        return;
+    }
     try {
         const res = await fetch(`${API_BASE}/api/departaments`, {
             method: 'POST',
@@ -949,27 +918,29 @@ async function addDepartment() {
         });
 
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.clear();
-            window.location.href = '/';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
             return;
         }
 
         const data = await res.json()
 
         if (!res.ok) {
-            alert('Ошибка ' + res.status + ` ${data.error}`)
+            showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
             return
         }
 
         document.getElementById('newDepartmentName').value = '';
         await loadDepartmentsForModal();
         await loadEmployees();
+        showMessageModal('Успех', 'Отдел успешно добавлен!', 'success');
     
     } catch (error) {
-        alert('Сервер не доступен')
-        console.error("Ошибка сети: ",error)
-        return
+        console.error("Ошибка сети: ", error);
+        showProfileError('Ошибка сети', 'Сервер не доступен. Проверьте подключение.');
     }
 }
 
@@ -979,13 +950,13 @@ async function addPost() {
     const departamentId = document.getElementById('postDepartmentSelect').value;
     
     if (!name) {
-        alert('Введите название должности');
-        return false;
+        showProfileError('Ошибка', 'Введите название должности');
+        return;
     }
     
     if (!departamentId) {
-        alert('Выберите отдел для должности');
-        return false;
+        showProfileError('Ошибка', 'Выберите отдел для должности');
+        return;
     }
     try {
         const res = await fetch(`${API_BASE}/api/posts`, {
@@ -997,15 +968,17 @@ async function addPost() {
             })
         });
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.clear();
-            window.location.href = '/';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
             return;
         }
         const data = await res.json()
 
         if (!res.ok) {
-            alert('Ошибка ' + res.status + ` ${data.error}`)
+            showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
             return
         }
 
@@ -1013,12 +986,11 @@ async function addPost() {
         document.getElementById('postDepartmentSelect').value = '';
         await loadPostsForModal();
         await loadEmployees();
-        return
+        showMessageModal('Успех', 'Должность успешно добавлена!', 'success');
 
     } catch (error) {
-        alert('Сервер не доступен')
-        console.error("Ошибка сети: ",error)
-        return
+        console.error("Ошибка сети: ", error);
+        showProfileError('Ошибка сети', 'Сервер не доступен. Проверьте подключение.');
     }
 }
 
@@ -1044,15 +1016,17 @@ async function addEmptyEmployee() {
         });
 
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.clear();
-            window.location.href = '/';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
             return;
         }
 
         if (!res.ok) {
             const data = await res.json();
-            alert('Ошибка ' + res.status + ` ${data.error}`);
+            showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
             return;
         }
 
@@ -1060,9 +1034,10 @@ async function addEmptyEmployee() {
         if (modal) modal.hide();
 
         await loadEmployees();
+        showMessageModal('Успех', 'Новый сотрудник создан!', 'success');
     } catch (err) {
         console.error('Ошибка создания сотрудника:', err);
-        alert('Ошибка сети при создании сотрудника');
+        showProfileError('Ошибка сети', 'Не удалось создать сотрудника. Проверьте подключение.');
     }
 }
 
@@ -1128,7 +1103,7 @@ async function createAccountFromAdmin() {
     const level = Number(document.getElementById('accountLevel').value);
 
     if (!employeeId || !login || !password || !level) {
-        alert('Заполните все поля');
+        showProfileError('Ошибка', 'Заполните все поля');
         return;
     }
 
@@ -1145,16 +1120,18 @@ async function createAccountFromAdmin() {
         });
 
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.clear();
-            window.location.href = '/';
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1500);
             return;
         }
 
         const data = await res.json();
 
         if (!res.ok) {
-            alert('Ошибка ' + res.status + ` ${data.error}`);
+            showProfileError('Ошибка ' + res.status, data.error || 'Попробуйте позже');
             return;
         }
 
@@ -1164,8 +1141,8 @@ async function createAccountFromAdmin() {
         if (modal) modal.hide();
 
     } catch (error) {
-        alert('Ошибка сети при создании аккаунта');
-        console.error(error);
+        console.error('Ошибка создания аккаунта:', error);
+        showProfileError('Ошибка сети', 'Не удалось создать аккаунт. Проверьте подключение.');
     }
 }
 
@@ -1173,7 +1150,7 @@ async function createAccountFromAdmin() {
 async function exportAllEmployees() {
     const token = localStorage.getItem('authToken');
     if (!token) {
-        alert('Для экспорта необходимо войти в аккаунт');
+        showProfileError('Ошибка', 'Для экспорта необходимо войти в аккаунт');
         return;
     }
 
@@ -1183,13 +1160,13 @@ async function exportAllEmployees() {
         });
 
         if (res.status === 401) {
-            alert('Сессия истекла. Войдите снова.');
+            showMessageModal('Сессия истекла', 'Пожалуйста, войдите снова', 'error');
             localStorage.removeItem('authToken');
             return;
         }
 
         if (!res.ok) {
-            alert('Ошибка экспорта');
+            showProfileError('Ошибка экспорта', 'Попробуйте позже');
             return;
         }
 
@@ -1201,7 +1178,8 @@ async function exportAllEmployees() {
         a.click();
         URL.revokeObjectURL(url);
     } catch (err) {
-        alert('Ошибка сети при экспорте');
+        console.error('Ошибка экспорта:', err);
+        showProfileError('Ошибка сети', 'Не удалось экспортировать данные. Проверьте подключение.');
     }
 }
 
