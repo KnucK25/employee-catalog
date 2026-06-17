@@ -81,24 +81,26 @@
     font-size: 0.9rem;
 }
 
-/* Иконки - УБРАН transition */
+/* Иконки */
 .info-icon {
     opacity: 0.6;
     width: 18px;
     height: 18px;
+    transition: opacity 0.3s ease;
 }
 
 .info-box:hover .info-icon {
     opacity: 1;
 }
 
-/* Кнопка назад - УБРАН transition */
+/* Кнопка назад */
 .btn-custom-outline {
     background-color: transparent;
     border: 1px solid var(--black);
     color: var(--black);
     padding: 0.5rem 1.8rem;
     border-radius: 0;
+    transition: all 0.3s ease;
 }
 
 .btn-custom-outline:hover {
@@ -130,6 +132,76 @@
     border-top: none;
     color: var(--white);
 }
+
+.modal-content {
+    border-radius: 0;
+    border: none;
+}
+
+.modal-header {
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 0;
+    padding: 1rem 1.5rem;
+}
+
+.modal-header .modal-title {
+    color: var(--accent-gold);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 1.5rem;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+    color: white;
+}
+
+.btn-save {
+    background-color: var(--accent-gold);
+    color: var(--white);
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+}
+
+.btn-save:hover {
+    background-color: #A98751;
+    color: var(--white);
+}
+
+.btn-danger-square {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 0;
+    padding: 6px 20px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-danger-square:hover {
+    background-color: #b02a37;
+    color: white;
+}
+
 
 /* Адаптив для карточки */
 @media (max-width: 768px) {
@@ -183,5 +255,25 @@
     
     .row.g-4 {
         --bs-gutter-y: 1rem;
+    }
+}
+
+/*адаптив для модалки*/
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
     }
 }
