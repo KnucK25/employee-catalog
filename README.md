@@ -89,3 +89,20 @@
 * Изменять Телефон;
 
 Остальные данные изменяются только администратором.
+
+## Данные для проверки
+
+### Сотрудник
+
+- Email: `msalekseeva@company.ru`
+- Пароль: `qwerty`
+
+### HR
+
+- Email: `amsergeevna@company.ru`
+- Пароль: `qwerty`
+
+### Администратор
+
+- Email: `navasiliev@company.ru`
+- Пароль: `qwerty`

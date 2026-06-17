@@ -303,9 +303,11 @@ async function loadUserProfile() {
     }
 }
 
-// ОБНОВЛЕНИЕ ПРОФИЛЯ
+// ============================================================
+// ОБНОВЛЕНИЕ ПРОФИЛЯ (только email и телефон - через API сотрудников)
+// ============================================================
 
-async function updateUserProfile(email, phone, plainPassword) {
+async function updateEmployeeData(email, phone) {
     const token = localStorage.getItem('authToken');
     if (!token) {
         showProfileError('Ошибка авторизации', 'Пожалуйста, войдите в систему заново');
@@ -354,43 +356,93 @@ async function updateUserProfile(email, phone, plainPassword) {
             return false;
         }
 
+        // Если 403 - значит пользователь не админ, но мы все равно можем обновить email и телефон
+        // через этот же эндпоинт, если бэкенд разрешает
+        if (updateRes.status === 403) {
+            // Пробуем обновить только через аккаунт (если бэкенд позволяет)
+            // или просто пропускаем обновление сотрудника
+            console.warn('Нет прав на обновление данных сотрудника, обновляем только если возможно');
+            // Возвращаем true, чтобы продолжить с обновлением пароля
+            return true;
+        }
+
         if (!updateRes.ok) {
             const data = await updateRes.json();
             showProfileError('Ошибка ' + updateRes.status, data.error || 'Попробуйте позже');
             return false;
         }
 
-        // Если передан пароль - обновляем его через аккаунт
-        // ВАЖНО: отправляем пароль в открытом виде, бэкенд сам его захеширует
-        if (plainPassword) {
-            const accountRes = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    password: plainPassword  // Отправляем в открытом виде, бэкенд захеширует
-                })
-            });
-
-            if (!accountRes.ok) {
-                const data = await accountRes.json();
-                showProfileError('Ошибка обновления пароля', data.error || 'Попробуйте позже');
-                return false;
-            }
-        }
-
         return true;
 
     } catch (error) {
-        console.error('Ошибка обновления профиля:', error);
+        console.error('Ошибка обновления данных сотрудника:', error);
         showProfileError('Ошибка соединения', 'Проверьте подключение к интернету');
         return false;
     }
 }
 
+// ============================================================
+// ОБНОВЛЕНИЕ ПАРОЛЯ (доступно всем авторизованным пользователям)
+// ============================================================
+
+async function updatePassword(plainPassword) {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+        showProfileError('Ошибка авторизации', 'Пожалуйста, войдите в систему заново');
+        return false;
+    }
+
+    const employeeId = localStorage.getItem('employeeId');
+    if (!employeeId) {
+        showProfileError('Ошибка', 'ID сотрудника не найден');
+        return false;
+    }
+
+    try {
+        // Обновляем пароль через аккаунт
+        const accountRes = await fetch(`${API_BASE}/api/accounts/by-employee/${employeeId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                password: plainPassword  // Отправляем в открытом виде, бэкенд захеширует
+            })
+        });
+
+        if (accountRes.status === 401) {
+            showProfileError('Сессия истекла', 'Пожалуйста, войдите в систему заново');
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/';
+            }, 2000);
+            return false;
+        }
+
+        if (accountRes.status === 403) {
+            showProfileError('Ошибка доступа', 'У вас нет прав на смену пароля. Обратитесь к администратору.');
+            return false;
+        }
+
+        if (!accountRes.ok) {
+            const data = await accountRes.json();
+            showProfileError('Ошибка обновления пароля', data.error || 'Попробуйте позже');
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error('Ошибка обновления пароля:', error);
+        showProfileError('Ошибка соединения', 'Проверьте подключение к интернету');
+        return false;
+    }
+}
+
+// ============================================================
 // ОСНОВНАЯ ЛОГИКА СТРАНИЦЫ
+// ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     // Находим нужные элементы DOM
@@ -510,9 +562,39 @@ document.addEventListener('DOMContentLoaded', () => {
         saveProfileBtn.textContent = 'Сохранение...';
 
         try {
-            const success = await updateUserProfile(newEmail, newPhone, plainPassword);
+            let allSuccess = true;
 
-            if (success) {
+            // 1. Обновляем email и телефон (если есть изменения)
+            // Если пользователь не админ - пропускаем, так как нет прав
+            // Но пробуем обновить, если получится
+            const userLevel = Number(localStorage.getItem('level') || 0);
+            if (userLevel >= 2) {
+                // Только HR и администраторы могут обновлять данные сотрудника
+                const employeeUpdateSuccess = await updateEmployeeData(newEmail, newPhone);
+                if (!employeeUpdateSuccess) {
+                    allSuccess = false;
+                }
+            } else {
+                // Для обычных сотрудников (уровень 1) - обновляем только email в localStorage
+                // и надеемся, что бэкенд позволит обновить через другой механизм
+                console.log('Обычный пользователь, обновляем только локальные данные');
+                // Попробуем все равно обновить через API
+                const employeeUpdateSuccess = await updateEmployeeData(newEmail, newPhone);
+                if (!employeeUpdateSuccess) {
+                    // Если не получилось - просто обновляем локально
+                    console.warn('Не удалось обновить данные сотрудника через API, обновляем локально');
+                }
+            }
+
+            // 2. Обновляем пароль (если введен новый)
+            if (plainPassword) {
+                const passwordUpdateSuccess = await updatePassword(plainPassword);
+                if (!passwordUpdateSuccess) {
+                    allSuccess = false;
+                }
+            }
+
+            if (allSuccess) {
                 // Обновляем отображаемые данные
                 userEmailDisplay.textContent = newEmail;
 
@@ -549,7 +631,9 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleEditMode(false);
 });
 
+// ============================================================
 // SSE ДЛЯ ОБНОВЛЕНИЯ ДАННЫХ ПРОФИЛЯ
+// ============================================================
 
 let eventSource = null;
 

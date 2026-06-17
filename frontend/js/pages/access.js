@@ -292,7 +292,7 @@ async function loadAccessData() {
 
 function getAccessLevelText(level) {
     switch(Number(level)) {
-        case 1: return 'Пользователь';
+        case 1: return 'Сотрудник';
         case 2: return 'HR';
         case 3: return 'Администратор';
         default: return 'Не определено';
