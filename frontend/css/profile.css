@@ -102,8 +102,8 @@
 }
 
 .btn-custom-outline:hover {
-    background-color: var(--white);
-    border-color: var(--black);
+    background-color: var(--black);
+    border-color: var(--white);
 }
 
 .btn-custom-outline:hover .nav-link {
