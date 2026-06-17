@@ -70,9 +70,7 @@ function showProfileError(message, details = null) {
     }, 10000);
 }
 
-// ============================================================
-// ФУНКЦИЯ ШИФРОВАНИЯ ПАРОЛЯ (копия из script.js)
-// ============================================================
+// ФУНКЦИЯ ШИФРОВАНИЯ ПАРОЛЯ  
 
 async function getPublicKey() {
     try {
@@ -136,9 +134,7 @@ async function encryptPassword(password) {
     }
 }
 
-// ============================================================
-// ЗАГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ
-// ============================================================
+// АГРУЗКА ДАННЫХ ПОЛЬЗОВАТЕЛЯ 
 
 async function loadUserProfile() {
     const token = localStorage.getItem('authToken');
@@ -204,7 +200,7 @@ async function loadUserProfile() {
             console.warn('Не удалось загрузить логин:', err);
         }
 
-        // ===== ЗАПОЛНЯЕМ ДАННЫЕ НА СТРАНИЦЕ =====
+        //  ЗАПОЛНЯЕМ ДАННЫЕ НА СТРАНИЦЕ 
 
         // Имя и должность (для режима просмотра)
         const userNameDisplay = document.querySelector('#view-profile .employee-name');
@@ -257,7 +253,7 @@ async function loadUserProfile() {
             userBioDisplay.textContent = employee.bio || 'Информация отсутствует';
         }
 
-        // ===== ФОТО ПОЛЬЗОВАТЕЛЯ =====
+        //  ФОТО ПОЛЬЗОВАТЕЛЯ 
         const photoImg = document.querySelector('.employee-photo');
         if (photoImg) {
             if (employee.avatar) {
@@ -297,9 +293,7 @@ async function loadUserProfile() {
     }
 }
 
-// ============================================================
 // ОБНОВЛЕНИЕ ПРОФИЛЯ
-// ============================================================
 
 async function updateUserProfile(email, phone, encryptedPassword) {
     const token = localStorage.getItem('authToken');
@@ -385,9 +379,7 @@ async function updateUserProfile(email, phone, encryptedPassword) {
     }
 }
 
-// ============================================================
 // ОСНОВНАЯ ЛОГИКА СТРАНИЦЫ
-// ============================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     // Находим нужные элементы DOM
@@ -418,21 +410,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Функция для переключения между режимами просмотра и редактирования
     function toggleEditMode(isEditing) {
         if (isEditing) {
-            // Переход в режим редактирования
             viewProfileDiv.classList.add('d-none');
             editProfileDiv.classList.remove('d-none');
             editButtonContainer.classList.add('d-none');
 
-            // Заполняем поля ввода текущими данными (только email и телефон)
             editEmailInput.value = userEmailDisplay.textContent;
             editPhoneInput.value = userPhoneDisplay.textContent;
 
-            // Очищаем поля пароля
             editPasswordInput.value = '';
             editConfirmPasswordInput.value = '';
 
         } else {
-            // Переход в режим просмотра
             viewProfileDiv.classList.remove('d-none');
             editProfileDiv.classList.add('d-none');
             editButtonContainer.classList.remove('d-none');
@@ -441,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Обработчик клика по кнопке "Редактировать"
     editProfileBtn.addEventListener('click', () => {
-        // Удаляем старые ошибки при открытии
         const existingError = document.querySelector('#edit-profile .profile-error');
         if (existingError) existingError.remove();
         toggleEditMode(true);
@@ -454,15 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Обработчик клика по кнопке "Сохранить"
     saveProfileBtn.addEventListener('click', async () => {
-        // Получаем новые значения
         const newEmail = editEmailInput.value.trim();
         const newPhone = editPhoneInput.value.trim();
         const newPassword = editPasswordInput.value;
         const confirmPassword = editConfirmPasswordInput.value;
 
-        // ===== ВАЛИДАЦИЯ С ВЫВОДОМ ОШИБОК ПОД ПОЛЯМИ =====
+        //  ВАЛИДАЦИЯ С ВЫВОДОМ ОШИБОК ПОД ПОЛЯМИ 
 
-        // Проверка email
         if (!newEmail) {
             showProfileError('Email обязателен для заполнения', 'Пожалуйста, укажите ваш email адрес');
             return;
@@ -474,7 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Проверка телефона
         if (!newPhone) {
             showProfileError('Телефон обязателен для заполнения', 'Пожалуйста, укажите ваш номер телефона');
             return;
@@ -498,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Шифруем пароль перед отправкой =====
+            // Шифруем пароль перед отправкой 
             try {
                 encryptedPassword = await encryptPassword(newPassword);
                 console.log('Пароль успешно зашифрован');
@@ -509,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // ===== ОТПРАВКА ДАННЫХ НА СЕРВЕР =====
+        //  ОТПРАВКА ДАННЫХ НА СЕРВЕР 
 
         // Показываем состояние загрузки
         saveProfileBtn.disabled = true;
@@ -549,9 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleEditMode(false);
 });
 
-// ============================================================
 // SSE ДЛЯ ОБНОВЛЕНИЯ ДАННЫХ ПРОФИЛЯ
-// ============================================================
 
 let eventSource = null;
 
