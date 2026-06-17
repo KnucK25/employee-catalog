@@ -1,4 +1,3 @@
-// script.js - только авторизация с полной диагностикой ошибок
 
 // Шифрование пароля
 async function getPublicKey() {
@@ -81,10 +80,8 @@ function showAuthError(message, details = null) {
     errorDiv.className = 'auth-error alert alert-danger mt-3';
     errorDiv.style.cssText = 'border-radius: 0; font-size: 0.85rem; padding: 0.5rem 1rem; margin-bottom: 0;';
     
-    // Основное сообщение
     errorDiv.innerHTML = `${message}`;
     
-    // Если есть детали, добавляем их
     if (details) {
         const detailsSpan = document.createElement('div');
         detailsSpan.style.cssText = 'font-size: 0.75rem; margin-top: 0.3rem; opacity: 0.8;';
@@ -289,9 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-// ========================================
-// АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТОКЕНА
-// ========================================
+// АВТОМАТИЧЕСКАЯ ПРОВЕРКА ТОКЕНА========================================
 
 document.addEventListener('DOMContentLoaded', async function() {
     const token = localStorage.getItem('authToken');
