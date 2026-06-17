@@ -9,7 +9,6 @@
     display: flex;
     align-items: center;
     position: relative;
-    
 }
 
 .hero-section .container {
@@ -41,14 +40,14 @@
     opacity: 0.8;
 }
 
-/* КНОПКИ HERO */
+/* КНОПКИ HERO - УБРАН transition, добавлен white-space */
 .hero-section .btn {
     padding: 0.8rem 2rem;
     font-weight: 600;
     border-radius: 0;
     min-width: 200px;
-    transition: all 0.3s ease;
     font-size: 1rem;
+    white-space: nowrap;
 }
 
 .hero-section .btn:first-child {
@@ -160,8 +159,6 @@ section h2::after {
     margin-right: auto;
 }
 
-
-
 /* Секция статистики */
 .stats-section {
     background-color: var(--black);
@@ -207,11 +204,9 @@ section h2::after {
     object-fit: cover;
     border-radius: 50%;
     border: 3px solid var(--accent-gold);
-    transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
 .team-section img:hover {
-    transform: scale(1.05);
     border-color: var(--black);
 }
 
@@ -229,51 +224,69 @@ section h2::after {
     font-size: 0.9rem;
 }
 
-/* Адаптив для главной страницы */
+/* ============================================================
+   АДАПТИВНОСТЬ (из кода напарницы)
+   ============================================================ */
+
 @media (max-width: 768px) {
+    /* Шапка и подвал компактнее */
+    header, footer {
+        padding: 0.5rem 0;
+    }
+
+    header .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    footer {
+        font-size: 0.8rem;
+    }
+
     .hero-section {
         min-height: 25vh;
         padding: 1rem 0;
     }
-    
+
     .hero-section h1 {
-        font-size: 1rem;
+        font-size: 1.8rem;
         letter-spacing: 1px;
     }
-    
+
     .hero-section .lead {
         font-size: 1rem;
     }
 
     .hero-section .mx-auto {
-        font-size: 1rem;
+        font-size: 0.9rem;
         color: var(--white);
     }
-    
+
     .hero-section .btn {
-        padding: 0.6rem 1.5rem;
-        min-width: 160px;
-        font-size: 0.9rem;
+        padding: 0.6rem 1rem;
+        min-width: auto;
+        font-size: 0.85rem;
+        white-space: nowrap;
     }
-    
+
     section h2 {
-        font-size: 1rem;
+        font-size: 1.5rem;
         margin-bottom: 2rem;
     }
-    
+
     .stats-section .fs-1 {
         font-size: 1.8rem;
     }
+
     .advantages-section img {
-        width: 3px;
-        height: 3px;
+        width: 45px;
+        height: 45px;
     }
 
     .advantages-section .col-md-4 {
         flex: 0 0 33.333%;
         max-width: 33.333%;
     }
-    
+
     .advantages-section,
     .about-section,
     .stats-section,
@@ -283,8 +296,25 @@ section h2::after {
 }
 
 @media (max-width: 576px) {
+    /* Шапка и подвал ещё компактнее */
+    header, footer {
+        padding: 0;
+    }
+
+    header .navbar-brand {
+        font-size: 0.95rem;
+    }
+
+    footer {
+        font-size: 0.7rem;
+    }
+
+    .hero-section {
+        min-height: 20vh;
+    }
+
     .hero-section h1 {
-        font-size: 1rem;
+        font-size: 1.5rem;
     }
 
     .hero-section .lead {
@@ -295,18 +325,20 @@ section h2::after {
         font-size: 0.8rem;
         color: var(--white);
     }
-    
+
     .hero-section .d-flex {
-        flex-direction: row;           /* ← меняем column на row */
-        justify-content: center;       /* ← центрируем по горизонтали */
-        gap: 1rem !important;
+        flex-direction: row;
+        justify-content: center;
+        gap: 0.8rem !important;
     }
-    
+
     .hero-section .btn {
-        width: 40%;
-        max-width: 250px;
-        margin: 0 0;
-        font-size: 0.74rem;
+        width: auto;
+        max-width: none;
+        margin: 0;
+        font-size: 0.72rem;
+        padding: 0.5rem 1rem;
+        white-space: nowrap;
     }
 
     .about-section p {
@@ -323,47 +355,51 @@ section h2::after {
     .about-section .small {
         font-size: 0.6rem;
     }
-    
+
     .about-section .d-flex {
         gap: 1.5rem !important;
-        
     }
 
     /* преимущества */
-
     .advantages-section {
         padding: 2rem 0;
     }
-    
+
     .advantages-section h4 {
         font-size: 0.8rem;
     }
-    
+
     .advantages-section p {
         font-size: 0.8rem;
         max-width: 70%;
     }
-    
+
     .advantages-section img {
-        width: 40px !important;     
+        width: 40px !important;
         height: 40px !important;
     }
-    
+
     /* СТАТА */
-    
     .stats-section .fs-1 {
         font-size: 0.9rem;
     }
 
     .stats-section .small {
-    font-size: 0.65rem;
-}
+        font-size: 0.65rem;
+    }
+
     .stats-section .row {
         gap: 1.5rem 0;
     }
+
+    section h2 {
+        font-size: 1.2rem;
+    }
 }
 
-/* Модальное окно авторизации */
+/* ============================================================
+   МОДАЛЬНОЕ ОКНО АВТОРИЗАЦИИ
+   ============================================================ */
 
 #authModal .modal-header {
     background-color: var(--black);
@@ -409,9 +445,9 @@ section h2::after {
     border-radius: 0;
     padding: 0.7rem 1rem;
     font-weight: 500;
-    transition: all 0.3s ease;
     border: 1px solid var(--black);
     font-size: 0.9rem;
+    white-space: nowrap;
 }
 
 #authModal .btn-auth:hover {
@@ -433,6 +469,7 @@ section h2::after {
 
 #authRequiredModal .btn {
     border-radius: 0px;
+    white-space: nowrap;
 }
 
 #authRequiredModal .modal-title {
