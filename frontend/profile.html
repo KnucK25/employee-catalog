@@ -84,14 +84,11 @@
 
                             <!-- Секция для редактирования (скрыта по умолчанию) -->
                             <div id="edit-profile" class="d-none">
-                                <h3 class="employee-name mt-3editable">
-                                    <input type="text" class="form-control form-control-lg text-center" id="edit-name" value="Иван Иванов">
-                                </h3>
-                                <p class="text-uppercase">
-                                    <input type="text" class="form-control text-center" id="edit-role" value="Разработчик">
-                                </p>
+                                <h3 class="employee-name mt-3">Иван Иванов</h3>
+                                <p class="text-uppercase">Разработчик</p>
 
                                 <div class="info-box mt-4 text-start">
+                                    <!-- ТОЛЬКО EMAIL, ТЕЛЕФОН И ПАРОЛЬ (как в profile.js) -->
                                     <div class="mb-3">
                                         <label for="edit-email" class="form-label info-label">Email</label>
                                         <input type="email" class="form-control" id="edit-email" value="ivan.ivanov@example.com">
@@ -101,18 +98,13 @@
                                         <input type="tel" class="form-control" id="edit-phone" value="+7 (123) 456-78-90">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="edit-department" class="form-label info-label">Отдел</label>
-                                        <input type="text" class="form-control" id="edit-department" value="IT">
+                                        <label for="edit-password" class="form-label info-label">Новый пароль (оставьте пустым, чтобы не менять)</label>
+                                        <input type="password" class="form-control" id="edit-password" placeholder="Введите новый пароль">
                                     </div>
                                     <div class="mb-3">
-                                        <label for="edit-registration-date" class="form-label info-label">Дата регистрации</label>
-                                        <input type="text" class="form-control" id="edit-registration-date" value="01.01.2025" readonly> <!-- Дата регистрации обычно не редактируется -->
+                                        <label for="edit-confirm-password" class="form-label info-label">Подтверждение пароля</label>
+                                        <input type="password" class="form-control" id="edit-confirm-password" placeholder="Подтвердите новый пароль">
                                     </div>
-                                </div>
-
-                                <div class="bio-text text-start mt-4">
-                                    <h6 class="text-uppercase mb-2">О себе</h6>
-                                    <textarea class="form-control" id="edit-bio" rows="4">Краткое описание пользователя, его интересов и профессиональной деятельности. Стараюсь писать лаконично и по делу.</textarea>
                                 </div>
 
                                 <div class="d-flex justify-content-center gap-2 mt-4">
