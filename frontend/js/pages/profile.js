@@ -318,8 +318,7 @@ async function updateUserProfile(email, phone, encryptedPassword) {
         // Получаем данные пользователя из localStorage
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
-        // Формируем запрос на обновление данных сотрудника
-        // Имя, должность и другие поля НЕ МЕНЯЮТСЯ - только email и phone
+        // Формируем запрос на обновление данных сотрудника (email и phone)
         const updateBody = {
             firstname: userData.firstname || '',
             lastname: userData.lastname || '',
@@ -499,9 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Шифруем пароль перед отправкой
+            // ===== ВАЖНО: Шифруем пароль перед отправкой =====
             try {
                 encryptedPassword = await encryptPassword(newPassword);
+                console.log('Пароль успешно зашифрован');
             } catch (encryptErr) {
                 console.error('Ошибка шифрования пароля:', encryptErr);
                 showProfileError('Ошибка шифрования', 'Не удалось зашифровать пароль. Попробуйте позже.');
