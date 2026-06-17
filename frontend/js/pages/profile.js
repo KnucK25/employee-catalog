@@ -206,7 +206,7 @@ async function loadUserProfile() {
 
         // ===== ЗАПОЛНЯЕМ ДАННЫЕ НА СТРАНИЦЕ =====
 
-        // Имя и должность
+        // Имя и должность (для режима просмотра)
         const userNameDisplay = document.querySelector('#view-profile .employee-name');
         if (userNameDisplay) {
             userNameDisplay.textContent = employee.name || 'Сотрудник';
@@ -215,6 +215,17 @@ async function loadUserProfile() {
         const roleDisplay = document.querySelector('#view-profile .text-uppercase');
         if (roleDisplay) {
             roleDisplay.textContent = employee.post || 'Сотрудник';
+        }
+
+        // Имя и должность (для режима редактирования - НЕ РЕДАКТИРУЮТСЯ)
+        const editNameDisplay = document.getElementById('edit-name-display');
+        if (editNameDisplay) {
+            editNameDisplay.textContent = employee.name || 'Сотрудник';
+        }
+
+        const editRoleDisplay = document.getElementById('edit-role-display');
+        if (editRoleDisplay) {
+            editRoleDisplay.textContent = employee.post || 'Сотрудник';
         }
 
         // Контактные данные
@@ -308,6 +319,7 @@ async function updateUserProfile(email, phone, encryptedPassword) {
         const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
         // Формируем запрос на обновление данных сотрудника
+        // Имя, должность и другие поля НЕ МЕНЯЮТСЯ - только email и phone
         const updateBody = {
             firstname: userData.firstname || '',
             lastname: userData.lastname || '',
@@ -390,6 +402,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Элементы для отображения данных в режиме просмотра
     const userEmailDisplay = document.getElementById('user-email');
     const userPhoneDisplay = document.getElementById('user-phone');
+
+    // Элементы для отображения имени и должности в режиме редактирования (НЕ РЕДАКТИРУЮТСЯ)
+    const editNameDisplay = document.getElementById('edit-name-display');
+    const editRoleDisplay = document.getElementById('edit-role-display');
 
     // Элементы для полей ввода (только редактируемые поля: email, телефон, пароль)
     const editEmailInput = document.getElementById('edit-email');
@@ -503,7 +519,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const success = await updateUserProfile(newEmail, newPhone, encryptedPassword);
 
             if (success) {
-                // Обновляем отображаемые данные
+                // Обновляем отображаемые данные (email и телефон)
                 userEmailDisplay.textContent = newEmail;
                 userPhoneDisplay.textContent = newPhone;
 
