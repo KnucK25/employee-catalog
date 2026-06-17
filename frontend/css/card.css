@@ -81,24 +81,26 @@
     font-size: 0.9rem;
 }
 
-/* Иконки - УБРАН transition */
+/* Иконки */
 .info-icon {
     opacity: 0.6;
     width: 18px;
     height: 18px;
+    transition: opacity 0.3s ease;
 }
 
 .info-box:hover .info-icon {
     opacity: 1;
 }
 
-/* Кнопка назад - УБРАН transition */
+/* Кнопка назад */
 .btn-custom-outline {
     background-color: transparent;
     border: 1px solid var(--black);
     color: var(--black);
     padding: 0.5rem 1.8rem;
     border-radius: 0;
+    transition: all 0.3s ease;
 }
 
 .btn-custom-outline:hover {
