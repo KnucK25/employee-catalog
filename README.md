@@ -2,9 +2,9 @@
 
 «STAFF» - веб-приложение для хранения и управления информацией о сотрудниках организации.
 
-Проект развёрнут на хостинге Railway.
+Проект развёрнут на хостинге Render.
 
-Ссылка на сайт: https://employee-catalog-production.up.railway.app/
+Ссылка на сайт: https://employee-catalog.onrender.com
 
 ## Доступ к системе
 
